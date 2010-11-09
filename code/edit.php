@@ -6,7 +6,9 @@ if (is_file($page_path)) $text = file_get_contents($page_path);
 else $text = '';
 
 echo '<form method="post" action="plomwiki.php?title='.$title.'&action=write" >
-<textarea name="text" rows="10" cols="40">'.$text.'</textarea>
+<textarea name="text" rows="10" cols="40">
+'.$text.'
+</textarea>
 <input type="submit" value="Update!" />
 </form>
 </body>';
