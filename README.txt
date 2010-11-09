@@ -12,3 +12,5 @@ Right now, the PlomWiki is extremely simple:
   page names. Works case-sensitively. Links to unused page names are possible,
   will open empty pages that can be edited to create new pages.
 * Only ASCII-alphanumeric page names are possible.
+* An empty page text doesn't get posted. To delete a page, reduce the page text
+  to "delete". 
