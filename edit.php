@@ -4,7 +4,7 @@ $title = $_GET['title'];
 echo'<!DOCTYPE html>
 <html>
 <body>
-<p>'.$title.': <a href="view.php">Back to View</a></p>';
+<p>'.$title.': <a href="view.php?title='.$title.'">Back to View</a></p>';
 
 if (is_file($title)) $text = file_get_contents($title); 
 else $text = '';
