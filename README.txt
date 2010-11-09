@@ -11,3 +11,4 @@ Right now, the PlomWiki is extremely simple:
 * Linking to other Wiki-internal pages is possible by putting "[[" "]]" around 
   page names. Works case-sensitively. Links to unused page names are possible,
   will open empty pages that can be edited to create new pages.
+* Only ASCII-alphanumeric page names are possible.
