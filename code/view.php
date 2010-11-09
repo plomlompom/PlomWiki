@@ -13,7 +13,7 @@ $text = str_replace('>', '&gt;', $text);
 $text = str_replace("\r\n\r", "\n".'</p>'."\n".'<p>', $text);
 $text = str_replace("\r", '<br />', $text);
 
-# Wiki-internal linking markup [[like this]].
+# Wiki-internal linking markup [[LikeThis]].
 $text = preg_replace('/\[\[([A-Za-z0-9]+)\]\]/', 
                                '<a href="plomwiki.php?title=$1">$1</a>', $text);
 
