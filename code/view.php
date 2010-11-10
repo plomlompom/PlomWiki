@@ -9,9 +9,9 @@ if (is_file($page_path)) $text = file_get_contents($page_path);
 else $text = 'Page does not exist.';
 
 # Replace symbols that might be confused for HTML markup with HTML entities.
-$text = str_replace('<', '&lt;', $text); 
-$text = str_replace('>', '&gt;', $text);
 $text = str_replace('&', '&amp;', $text);
+$text = str_replace('<', '&lt;',  $text); 
+$text = str_replace('>', '&gt;',  $text);
 
 # Line-break and paragraph markup.
 $text = str_replace("\r\n\r", "\n".'</p>'."\n".'<p>', $text);
