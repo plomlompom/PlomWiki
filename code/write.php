@@ -2,7 +2,7 @@
 $password_posted = $_POST['password'];
 $text = $_POST['text'];
 
-$redirect = FALSE;
+$html_start = '<title>Unsuccessful edit of "'.$title.'"</title>';
 
 # Check for passwords.
 $password_expected = substr(file_get_contents('password.txt'), 0, -1);
@@ -11,12 +11,15 @@ if ($password_posted !== $password_expected)
 
 # Ignore any emptying of pages.
 elseif (!$text)
-  $message = '<strong>Empty pages not allowed.</strong><br />
+  $message = 
+'<strong>Empty pages not allowed.</strong><br />
 Replace the page text with "delete" if you want to eradicate the page.';
 
 # Anything else is a successful edit and will trigger an automatical redirect.
 else
-{ $redirect = TRUE;
+{ $html_start = 
+'<meta http-equiv="refresh" content="0; URL=plomwiki.php?title='.$title.'" />
+<title>Successful edit of "'.$title.'"</title>';
 
   # "delete" deletes the page.
   if ($text == 'delete')
@@ -31,14 +34,12 @@ else
     file_put_contents($page_path, $text);
     $message = '<strong>Page "'.$title.'" updated.</strong>'; }
 
+  # Message for very speedy readers or very slow redirects.
   $message .= '<br />
 If you read this, then your browser failed to redirect you back.'; }
 
-if ($redirect) echo '<title>Successful edit of "'.$title.'"</title>
-<meta http-equiv="refresh" content="0; URL=plomwiki.php?title='.$title.'" />';
-else echo '<title>Unsuccessful edit of "'.$title.'"</title>';
-
-echo '
+# Final HTML.
+echo $html_start.'
 </head>
 <body>
 <p>
@@ -46,5 +47,4 @@ echo '
 </p>
 <p>
 Return to page "<a href="plomwiki.php?title='.$title.'">'.$title.'</a>".
-</p>
-</body>';
+</p>';

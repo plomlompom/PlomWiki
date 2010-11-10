@@ -20,4 +20,5 @@ elseif ($action == 'write') require($code_dir.'write.php');
 else                        require($code_dir.'view.php');
 
 echo '
+</body>
 </html>';
