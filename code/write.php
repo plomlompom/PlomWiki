@@ -14,6 +14,7 @@ elseif (!$text)
   $message = '<strong>Empty pages not allowed.</strong><br />
 Replace the page text with "delete" if you want to eradicate the page.';
 
+# Anything else is a successful edit and will trigger an automatical redirect.
 else
 { $redirect = TRUE;
 
@@ -26,8 +27,10 @@ else
   { # Undo damage that results from PHP's magical_quotes horrors.
     if (get_magic_quotes_gpc()) $text = stripslashes($text);
 
+    # Write changes to file.
     file_put_contents($page_path, $text);
     $message = '<strong>Page "'.$title.'" updated.</strong>'; }
+
   $message .= '<br />
 If you read this, then your browser failed to redirect you back.'; }
 
