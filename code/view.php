@@ -8,9 +8,10 @@ echo '<title>'.$title.'</title>
 if (is_file($page_path)) $text = file_get_contents($page_path); 
 else $text = 'Page does not exist.';
 
-# Change < and > to their HTML entities to avoid user-generated HTML tags.
+# Replace symbols that might be confused for HTML markup with HTML entities.
 $text = str_replace('<', '&lt;', $text); 
 $text = str_replace('>', '&gt;', $text);
+$text = str_replace('&', '&amp;', $text);
 
 # Line-break and paragraph markup.
 $text = str_replace("\r\n\r", "\n".'</p>'."\n".'<p>', $text);
