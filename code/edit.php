@@ -8,7 +8,8 @@ else $text = '';
 echo '<form method="post" action="plomwiki.php?title='.$title.'&action=write" >
 <textarea name="text" rows="10" cols="40">
 '.$text.'
-</textarea>
+</textarea><br />
+Password: <input type="text" name="password" /><br />
 <input type="submit" value="Update!" />
 </form>
 </body>';
