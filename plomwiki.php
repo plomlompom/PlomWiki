@@ -10,6 +10,7 @@ $page_path = $data_dir.$title;
 echo '<!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 ';
 
 $code_dir  = 'code/';
