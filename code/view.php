@@ -3,7 +3,8 @@ echo '<head>
 <title>'.$title.'</title>
 </head>
 <body>
-<p>'.$title.': <a href="plomwiki.php?title='.$title.'&action=edit">Edit</a></p>';
+<p>'.$title.': <a href="plomwiki.php?title='.$title.
+'&amp;action=edit">Edit</a></p>';
 
 if (is_file($page_path)) $text = file_get_contents($page_path); 
 else $text = 'Page does not exist.';

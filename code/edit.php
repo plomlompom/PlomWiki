@@ -8,7 +8,8 @@ echo '<head>
 if (is_file($page_path)) $text = file_get_contents($page_path); 
 else $text = '';
 
-echo '<form method="post" action="plomwiki.php?title='.$title.'&action=write" >
+echo '<form method="post" action="plomwiki.php?title='.$title.
+'&amp;action=write" >
 <textarea name="text" rows="10" cols="40">
 '.$text.'
 </textarea><br />
