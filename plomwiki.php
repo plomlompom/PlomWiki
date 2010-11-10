@@ -8,7 +8,8 @@ $data_dir  = 'pages/';
 $page_path = $data_dir.$title;
 
 echo '<!DOCTYPE html>
-<html>';
+<html>
+';
 
 $code_dir  = 'code/';
 $action = $_GET['action'];
@@ -16,4 +17,5 @@ if     ($action == 'edit')  require($code_dir.'edit.php');
 elseif ($action == 'write') require($code_dir.'write.php');
 else                        require($code_dir.'view.php');
 
-echo '</html>';
+echo '
+</html>';
