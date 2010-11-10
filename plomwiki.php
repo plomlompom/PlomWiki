@@ -9,6 +9,7 @@ $page_path = $data_dir.$title;
 
 echo '<!DOCTYPE html>
 <html>
+<head>
 ';
 
 $code_dir  = 'code/';

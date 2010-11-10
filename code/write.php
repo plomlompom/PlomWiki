@@ -34,12 +34,10 @@ else
   $message .= '<br />
 If you read this, then your browser failed to redirect you back.'; }
 
-echo '<head>
-';
-if ($redirect)
-  echo '<title>Successful edit of "'.$title.'"</title>
+if ($redirect) echo '<title>Successful edit of "'.$title.'"</title>
 <meta http-equiv="refresh" content="0; URL=plomwiki.php?title='.$title.'" />';
 else echo '<title>Unsuccessful edit of "'.$title.'"</title>';
+
 echo '
 </head>
 <body>

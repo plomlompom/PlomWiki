@@ -1,6 +1,5 @@
 <?php
-echo '<head>
-<title>'.$title.'</title>
+echo '<title>'.$title.'</title>
 </head>
 <body>
 <p>'.$title.': <a href="plomwiki.php?title='.$title.

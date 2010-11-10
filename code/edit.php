@@ -1,6 +1,5 @@
 <?php
-echo '<head>
-<title>Editing "'.$title.'"</title>
+echo '<title>Editing "'.$title.'"</title>
 </head>
 <body>
 <p>'.$title.': <a href="plomwiki.php?title='.$title.'">Back to View</a></p>';
