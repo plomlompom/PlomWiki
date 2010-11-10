@@ -1,4 +1,5 @@
 <?php
+
 # If no page file is found, start with an empty $text.
 if (is_file($page_path)) $text = file_get_contents($page_path); 
 else $text = '';
@@ -12,7 +13,9 @@ $text = str_replace('>', '&gt;',  $text);
 echo '<title>Editing "'.$title.'"</title>
 </head>
 <body>
-<p>'.$title.': <a href="plomwiki.php?title='.$title.'">Back to View</a></p>
+<p>
+'.$title.': <a href="plomwiki.php?title='.$title.'">Back to View</a>
+</p>
 <form method="post" action="plomwiki.php?title='.$title.'&amp;action=write">
 <textarea name="text" rows="10" cols="40">'.$text.'
 </textarea><br />
