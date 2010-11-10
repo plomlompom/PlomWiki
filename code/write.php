@@ -21,10 +21,10 @@ else
 '<meta http-equiv="refresh" content="0; URL=plomwiki.php?title='.$title.'" />
 <title>Successful edit of "'.$title.'"</title>';
 
-  # "delete" deletes the page.
+  # "delete" deletes a page.
   if ($text == 'delete')
-  { unlink($page_path);
-    $message = '<strong>Page "'.$title.'" deleted.</strong>'; }
+  { if (is_file($page_path)) unlink($page_path);
+    $message = '<strong>Page "'.$title.'" is now non-existant.</strong>'; }
 
   else
   { # Undo damage that results from PHP's magical_quotes horrors.
