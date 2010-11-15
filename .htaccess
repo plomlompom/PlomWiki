@@ -1,5 +1,9 @@
 DirectoryIndex plomwiki.php?title=Start
 
-<Files password.txt>
+<Files *>
 Deny from all
+</Files>
+
+<Files plomwiki.php>
+Allow from all
 </Files>
