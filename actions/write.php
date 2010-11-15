@@ -2,9 +2,10 @@
 $password_posted = $_POST['password'];
 $text = $_POST['text'];
 
+# Start by checking for edit failure conditions.
 $html_start = '<title>Unsuccessful edit of "'.$title.'"</title>';
 
-# Check for passwords.
+# Check for wrong password.
 $password_expected = substr(file_get_contents('password.txt'), 0, -1);
 if ($password_posted !== $password_expected)
   $message = '<strong>Wrong password.</strong>';
