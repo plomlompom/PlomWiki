@@ -91,6 +91,7 @@ function Action_write()
     else
     { if (get_magic_quotes_gpc())    # 
         $text = stripslashes($text); # Undo possible PHP magical_quotes horrors.
+      $text = NormalizeNewlines($text);
       $temp_path = NewTempFile($text);
       fwrite($p_todo, 'UpdatePage("'.$page_path.'", "'.$temp_path.'");'."\n");
       $message = '<strong>Page "'.$title.'" updated.</strong>'; }
@@ -126,6 +127,10 @@ function Markup($text)
   $text = MarkupLinesParagraphs($text);
   return  MarkupInternalLinks($text); }
 
+function NormalizeNewlines($text)
+# Newlines are to be \n only.
+{ return str_replace("\r", '', $text); }
+
 function EscapeHTML($text)
 # Replace symbols that might be confused for HTML markup with HTML entities.
 { $text = str_replace('&', '&amp;', $text);
@@ -136,8 +141,9 @@ function EscapeHTML($text)
 
 function MarkupLinesParagraphs($text)
 # Line-break and paragraph markup.
-{ $text = str_replace("\r\n\r", "\n".'</p>'."\n".'<p>', $text);
-  return  str_replace("\r", '<br />', $text); }
+{ $text = str_replace("\n",             '<br />',                      $text); 
+  $text = str_replace('<br /><br />',   "\n".'</p>'."\n".'<p>'."\n",   $text); 
+  return  str_replace('<br />',         '<br />'."\n",                 $text); }
 
 function MarkupInternalLinks($text)
 # Wiki-internal linking markup [[LikeThis]].
