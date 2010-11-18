@@ -42,13 +42,7 @@ function Action_view()
   # Get $text from its page file.
   if (is_file($page_path)) 
   { $text = file_get_contents($page_path); 
-
-    # Replace symbols that might be confused for HTML markup with HTML entities.
-    $text = str_replace('&', '&amp;', $text);
-    $text = str_replace('<', '&lt;',  $text); 
-    $text = str_replace('>', '&gt;',  $text); 
-    $text = str_replace('\'', '&apos;',  $text); 
-    $text = str_replace('"', '&quot;',  $text); 
+    $text = EscapeHTML($text);
     
     # Line-break and paragraph markup.
     $text = str_replace("\r\n\r", "\n".'</p>'."\n".'<p>', $text);
@@ -78,15 +72,10 @@ function Action_edit()
 { global $page_path, $title;
   
   # If no page file is found, start with an empty $text.
-  if (is_file($page_path)) $text = file_get_contents($page_path); 
+  if (is_file($page_path)) 
+  { $text = file_get_contents($page_path); 
+    $text = EscapeHTML($text); }
   else $text = '';
-  
-  # Replace symbols that might be confused for HTML markup with HTML entities.
-  $text = str_replace('&', '&amp;', $text);
-  $text = str_replace('<', '&lt;',  $text); 
-  $text = str_replace('>', '&gt;',  $text);
-  $text = str_replace('\'', '&apos;',  $text); 
-  $text = str_replace('"', '&quot;',  $text); 
   
   # Final HTML.
   echo '<title>Editing "'.$title.'"</title>
@@ -180,6 +169,19 @@ Doing some processing work ...
   echo '<p>
 Finished!
 </p>'; }
+
+####################
+# Markup functions #
+####################
+
+function EscapeHTML($text)
+# Replace symbols that might be confused for HTML markup with HTML entities.
+{ $text = str_replace('&', '&amp;', $text);
+  $text = str_replace('<', '&lt;',  $text); 
+  $text = str_replace('>', '&gt;',  $text);
+  $text = str_replace('\'', '&apos;',  $text); 
+  $text = str_replace('"', '&quot;',  $text); 
+  return $text; }
 
 ###################################
 # Database manipulation functions #
