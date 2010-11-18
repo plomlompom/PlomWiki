@@ -70,7 +70,7 @@ function Action_write()
   $text = $_POST['text']; $password_posted = $_POST['password'];
   $html_start = '<title>Trying to edit "'.$title.'"</title>';
   
-  # Check for failure conditions: wrong password, empty $text.
+  # Check for failure conditions: wrong $password, empty $text.
   $password_expected = substr(file_get_contents('password.txt'), 0, -1);
   if ($password_posted !== $password_expected) 
     $message = '<strong>Wrong password.</strong>';
