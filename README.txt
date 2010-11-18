@@ -17,3 +17,10 @@ Right now, the PlomWiki doesn't do much:
   to "delete". 
 * Editing a page is password-protected. The password can be changed in the file
   "password.txt" in the root directory.
+* To avoid unfinished DB manipulations / DB corruptions, all such tasks are
+  handed over to todo lists in work/. Those can be worked through and finished 
+  independently from the user process that triggered them (and which might be 
+  interrupted, for example, by a "server execution time exceeded"). Urgent tasks
+  are handed over to work/todo_urgent which has to be finished before any other 
+  action on the wiki (like viewing a page) can be performed. Tasks could also be
+  handed over to work/todo which only gets worked on if ?action=work is called.
