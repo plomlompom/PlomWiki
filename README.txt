@@ -1,11 +1,13 @@
 PlomWiki: @plomlompom tries to build his own wiki, optimized for his own needs.
-As he is rather inexperienced, he starts with some very simple and probably not
-very good PHP.
+
+CAVEAT: As @plomlompom is rather inexperienced, he starts with some very simple
+and probably not very good PHP.
 
 Right now, the PlomWiki doesn't do much:
 * Pages can be seen and edited; new pages can be created by appending an unused
   page name to "plomwiki.php?title=" in the URL field of your browser and
-  editing the empty page that results.
+  editing the empty page that results. 
+* Start at "plomwiki.php?title=Start".
 * Only ASCII-alphanumeric page names are possible.
 * Apart from very sparse wiki markup, only raw text -- no HTML -- can be written
   by the user:
