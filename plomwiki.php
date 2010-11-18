@@ -65,7 +65,7 @@ function Action_edit()
               .'<br /><input type="submit" value="Update!" />'."\n".'</form>'; }
 
 function Action_write()
-# Password-protected writing of page update to work/.
+# Password-protected writing of page update to work/, calling todo that results.
 { global $page_path, $title, $todo_urgent;
   $text = $_POST['text']; $password_posted = $_POST['password'];
   $html_start = '<title>Trying to edit "'.$title.'"</title>';
