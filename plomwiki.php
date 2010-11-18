@@ -85,7 +85,7 @@ function Action_write()
     
     if ($text == 'delete')           # "delete" triggers page deletion.
     { if (is_file($page_path)) 
-        fwrite($p_todo, 'DeletePage("'.$title.'");'."\n");
+        fwrite($p_todo, 'DeletePage("'.$page_path.'", "'.$title.'");'."\n");
       $message = '<strong>Page "'.$page_path.'" is now non-existant.</strong>';}
   
     else
@@ -196,9 +196,13 @@ function LockOff($dir)
 # Unlock $dir.
 { unlink($dir.'lock'); }
 
-function DeletePage($page_path) 
-# What to do when a page is to be deleted. Might grow more elaborate later.
-{ unlink($pages_path); }
+function DeletePage($page_path, $title) 
+# Deletion just renames and timestamps a page, moves it to the delete directory.
+{ global $pages_dir;
+  $pages_del_dir = $pages_dir.'deleted/';
+  $timestamp = time();
+  $deleted_path = $pages_del_dir.$title.',del-'.$timestamp;
+  rename($page_path, $deleted_path); }
 
 function UpdatePage($page_path, $temp_path)
 # Avoid data corruption: Exit if no temp file. Rename, don't overwrite directly.
