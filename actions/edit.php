@@ -8,6 +8,8 @@ else $text = '';
 $text = str_replace('&', '&amp;', $text);
 $text = str_replace('<', '&lt;',  $text); 
 $text = str_replace('>', '&gt;',  $text);
+$text = str_replace('\'', '&apos;',  $text); 
+$text = str_replace('"', '&quot;',  $text); 
 
 # Final HTML.
 echo '<title>Editing "'.$title.'"</title>

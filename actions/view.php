@@ -8,6 +8,8 @@ if (is_file($page_path))
   $text = str_replace('&', '&amp;', $text);
   $text = str_replace('<', '&lt;',  $text); 
   $text = str_replace('>', '&gt;',  $text); 
+  $text = str_replace('\'', '&apos;',  $text); 
+  $text = str_replace('"', '&quot;',  $text); 
   
   # Line-break and paragraph markup.
   $text = str_replace("\r\n\r", "\n".'</p>'."\n".'<p>', $text);
