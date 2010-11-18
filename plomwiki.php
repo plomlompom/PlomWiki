@@ -21,15 +21,10 @@ $todo_urgent = $work_dir.'todo_urgent';
 WorkToDo($todo_urgent);
 
 # Final HTML.
-echo '<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-';
+echo '<!DOCTYPE html>'."\n".'<html>'."\n".'<head>'."\n".
+                                                  '<meta charset="UTF-8">'."\n";
 eval($action_function.'();');
-echo '
-</body>
-</html>';
+echo "\n".'</body>'."\n".'</html>';
 
 ################
 # Page actions #
@@ -39,25 +34,17 @@ function Action_view()
 # Formatted display of a page.
 { global $page_path, $title;
   
-  # Get $text from its page file.
+  # Get text from file. If none, show invitation to create one. Else, markup it.
   if (is_file($page_path)) 
   { $text = file_get_contents($page_path); 
     $text = Markup($text); }
-  
-  # If no page file is found, show invitation to create one.
   else $text = 'Page does not exist. <a href="plomwiki.php?title='.$title.
                                                 '&amp;action=edit">Create?</a>';
   
   # Final HTML.
-  echo '<title>'.$title.'</title>
-</head>
-<body>
-<p>
-'.$title.': <a href="plomwiki.php?title='.$title.'&amp;action=edit">Edit</a>
-</p>
-<p>
-'.$text.'
-</p>'; }
+  echo '<title>'.$title.'</title>'."\n".'</head>'."\n".'<body>'."\n".'<p>'."\n".
+    $title.': <a href="plomwiki.php?title='.$title.'&amp;action=edit">Edit</a>'.
+                                "\n".'</p>'."\n".'<p>'."\n".$text."\n".'</p>'; }
 
 function Action_edit()
 # Edit form on a page source text. Send results to ?action=write.
@@ -70,80 +57,53 @@ function Action_edit()
   else $text = '';
   
   # Final HTML.
-  echo '<title>Editing "'.$title.'"</title>
-</head>
-<body>
-<p>
-'.$title.': <a href="plomwiki.php?title='.$title.'">Back to View</a>
-</p>
-<form method="post" action="plomwiki.php?title='.$title.'&amp;action=write">
-<textarea name="text" rows="10" cols="40">'.$text.'
-</textarea><br />
-Password: <input type="password" name="password" /><br />
-<input type="submit" value="Update!" />
-</form>'; }
+  echo '<title>Editing "'.$title.'"</title>'."\n".'</head>'."\n".'<body>'."\n".
+  '<p>'."\n".$title.': <a href="plomwiki.php?title='.$title.'">Back to View</a>'
+     ."\n".'</p>'."\n".'<form method="post" action="plomwiki.php?title='.$title.
+  '&amp;action=write">'."\n".'<textarea name="text" rows="10" cols="40">'.$text.
+  '</textarea><br />'."\n".'Password: <input type="password" name="password" />'
+              .'<br /><input type="submit" value="Update!" />'."\n".'</form>'; }
 
 function Action_write()
 # Password-protected writing of page update to work/.
 { global $page_path, $title, $todo_urgent;
-  
-  # The edited page text submitted by edit.php.
-  $text = $_POST['text'];
-  
-  # Start by checking for edit failure conditions.
+  $text = $_POST['text']; $password_posted = $_POST['password'];
   $html_start = '<title>Trying to edit "'.$title.'"</title>';
   
-  # Check for failure condition: wrong password.
-  $password_posted = $_POST['password'];
+  # Check for failure conditions: wrong password, empty $text.
   $password_expected = substr(file_get_contents('password.txt'), 0, -1);
-  if ($password_posted !== $password_expected)
+  if ($password_posted !== $password_expected) 
     $message = '<strong>Wrong password.</strong>';
-  
-  # Check for failure condition: empty $text.
-  elseif (!$text)
-    $message = 
-'<strong>Empty pages not allowed.</strong><br />
-Replace the page text with "delete" if you want to eradicate the page.';
+  elseif (!$text) $message = '<strong>Empty pages not allowed.</strong><br />'.
+      "\n".'Replace page text with "delete" if you want to eradicate the page.';
   
   # Successful edit writes to todo_urgent, triggers work on it and a redirect.
   else
-  { $html_start = 
-                '<meta http-equiv="refresh" content="0; URL=plomwiki.php?title='
-                                                     .$title.'" />'.$html_start;
+  { $html_start = '<meta http-equiv="refresh" content="0; URL=plomwiki.php?'.
+                                             'title='.$title.'" />'.$html_start;
     $p_todo = fopen($todo_urgent, 'a+');
     
-    # "delete" triggers page deletion.
-    if ($text == 'delete')
+    if ($text == 'delete')           # "delete" triggers page deletion.
     { if (is_file($page_path)) 
         fwrite($p_todo, 'DeletePage("'.$title.'");'."\n");
       $message = '<strong>Page "'.$page_path.'" is now non-existant.</strong>';}
   
     else
-    { # Undo damage that results from PHP's magical_quotes horrors.
-      if (get_magic_quotes_gpc()) $text = stripslashes($text);
-      
-      # Write $text into a temp file to be given to UpdatePage().
+    { if (get_magic_quotes_gpc())    # 
+        $text = stripslashes($text); # Undo possible PHP magical_quotes horrors.
       $temp_path = NewTempFile($text);
       fwrite($p_todo, 'UpdatePage("'.$page_path.'", "'.$temp_path.'");'."\n");
       $message = '<strong>Page "'.$title.'" updated.</strong>'; }
     
     fclose($p_todo);
-    WorkToDo($todo_urgent);
-    
-    # Message for very speedy readers or very slow redirects.
-    $message .= '<br />
-If you read this, then your browser failed to redirect you back.'; }
+    WorkToDo($todo_urgent);          # Try to do urgent work at once, right now.
+    $message .= '<br />'."\n".
+           'If you read this, then your browser failed to redirect you back.'; }
   
   # Final HTML.
-  echo $html_start.'
-</head>
-<body>
-<p>
-'.$message.'
-</p>
-<p>
-Return to page "<a href="plomwiki.php?title='.$title.'">'.$title.'</a>".
-</p>'; }
+  echo $html_start."\n".'</head>'."\n".'<body>'."\n".'<p>'."\n".$message."\n".
+   '</p>'."\n".'<p>'."\n".'Return to page "<a href="plomwiki.php?title='.$title.
+                                             '">'.$title.'</a>".'."\n".'</p>'; }
 
 function Action_work()
 # Work through todo list.
@@ -151,16 +111,10 @@ function Action_work()
 
   $path_todo = $work_dir.'todo';
   
-  echo '<title>Doing some processing work ...</title>
-</head>
-<body>
-<p>
-Doing some processing work ...
-</p>';
+  echo '<title>Doing some processing work ...</title>'."\n".'</head>'."\n".
+          '<body>'."\n".'<p>'."\n".'Doing some processing work ...'."\n".'</p>';
   WorkToDo($path_todo);
-  echo '<p>
-Finished!
-</p>'; }
+  echo '<p>'."\n".'Finished!'."\n".'</p>'; }
 
 ####################
 # Markup functions #
