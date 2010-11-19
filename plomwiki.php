@@ -86,7 +86,7 @@ function Action_write()
     if ($text == 'delete')           # "delete" triggers page deletion.
     { if (is_file($page_path)) 
         fwrite($p_todo, 'DeletePage("'.$page_path.'", "'.$title.'");'."\n");
-      $message = '<strong>Page "'.$page_path.'" is now non-existant.</strong>';}
+      $message = '<strong>Page "'.$title.'" is now non-existant.</strong>';}
   
     else
     { if (get_magic_quotes_gpc())    # 
