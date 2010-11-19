@@ -22,6 +22,12 @@ $work_temp_dir = $work_dir.'temp/';
 $todo_urgent = $work_dir.'todo_urgent';
 WorkToDo($todo_urgent);
 
+# Insert this at the head of each page action.
+$page_header = '<p>'."\n".$title.': <a href="plomwiki.php?title='.$title.'">'.
+   'View</a> <a href="plomwiki.php?title='.$title.'&amp;action=edit">Edit</a> '.
+       '<a href="plomwiki.php?title='.$title.'&amp;action=history">History</a> '
+                                                              ."\n".'</p>'."\n";
+
 # Final HTML.
 echo '<!DOCTYPE html>'."\n".'<html>'."\n".'<head>'."\n".
                                                   '<meta charset="UTF-8">'."\n";
@@ -34,7 +40,7 @@ echo "\n".'</body>'."\n".'</html>';
 
 function Action_view()
 # Formatted display of a page.
-{ global $page_path, $title;
+{ global $page_path, $page_header, $title;
   
   # Get text from file. If none, show invitation to create one. Else, markup it.
   if (is_file($page_path)) 
@@ -44,14 +50,12 @@ function Action_view()
                                                 '&amp;action=edit">Create?</a>';
   
   # Final HTML.
-  echo '<title>'.$title.'</title>'."\n".'</head>'."\n".'<body>'."\n".'<p>'."\n".
-   $title.': <a href="plomwiki.php?title='.$title.'&amp;action=edit">Edit</a> '.
-  '<a href="plomwiki.php?title='.$title.'&amp;action=history">History</a> '."\n"
-                                    .'</p>'."\n".'<p>'."\n".$text."\n".'</p>'; }
+  echo '<title>'.$title.'</title>'."\n".'</head>'."\n".'<body>'."\n".
+                                     $page_header.'<p>'."\n".$text."\n".'</p>'; }
 
 function Action_history()
 # Show version history of page. (So far just a raw display of the diff file.)
-{ global $diff_path, $title;
+{ global $diff_path, $page_header, $title;
 
   $text = file_get_contents($diff_path);
   $text = EscapeHTML($text);
@@ -59,13 +63,11 @@ function Action_history()
 
   # Final HTML.
   echo '<title> Version history of page "'.$title.'"</title>'."\n".'</head>'.
-  "\n".'<body>'."\n".'<p>'."\n".$title.': <a href="plomwiki.php?title='.$title.
-  '">View</a> <a href="plomwiki.php?title='.$title.'&amp;action=edit">Edit</a>'.
-                                "\n".'</p>'."\n".'<p>'."\n".$text."\n".'</p>'; }
+                 "\n".'<body>'."\n".$page_header.'<p>'."\n".$text."\n".'</p>'; }
 
 function Action_edit()
 # Edit form on a page source text. Send results to ?action=write.
-{ global $page_path, $title;
+{ global $page_header, $page_path, $title;
   
   # If no page file is found, start with an empty $text.
   if (is_file($page_path)) 
@@ -75,9 +77,7 @@ function Action_edit()
   
   # Final HTML.
   echo '<title>Editing "'.$title.'"</title>'."\n".'</head>'."\n".'<body>'."\n".
-        '<p>'."\n".$title.': <a href="plomwiki.php?title='.$title.'">View</a> '.
-  '<a href="plomwiki.php?title='.$title.'&amp;action=history">History</a> '."\n"
-          .'</p>'."\n".'<form method="post" action="plomwiki.php?title='.$title.
+          $page_header.'<form method="post" action="plomwiki.php?title='.$title.
   '&amp;action=write">'."\n".'<textarea name="text" rows="10" cols="40">'.$text.
   '</textarea><br />'."\n".'Password: <input type="password" name="password" />'
               .'<br /><input type="submit" value="Update!" />'."\n".'</form>'; }
