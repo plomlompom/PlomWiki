@@ -52,7 +52,7 @@ function Action_view()
   
   # Final HTML.
   echo '<title>'.$title.'</title>'."\n".'</head>'."\n".'<body>'."\n".
-                                     $page_header.'<p>'."\n".$text."\n".'</p>'; }
+                                    $page_header.'<p>'."\n".$text."\n".'</p>'; }
 
 function Action_history()
 # Show version history of page, offer reverting.
@@ -133,8 +133,8 @@ function Action_revert()
   # Final HTML.
   echo '<title>Reverting "'.$title.'"</title>'."\n".'</head>'."\n".'<body>'."\n"
      .$page_header.'<p>'."\n".'Reverting page to before '.$time_string.'?'."\n".
-     '</p>'.'<form method="post" action="plomwiki.php?title='.$title.'&amp;'.'
-     action=write">'."\n".'<input type="hidden" name="text" value="'.$text.'">'.
+        '</p>'.'<form method="post" action="plomwiki.php?title='.$title.'&amp;'.
+    'action=write">'."\n".'<input type="hidden" name="text" value="'.$text.'">'.
             '<br />'."\n".'Password: <input type="password" name="password" />'.
                      '<input type="submit" value="Revert!" />'."\n".'</form>'; }
 
@@ -160,7 +160,7 @@ function Action_write()
     if ($text == 'delete')           # "delete" triggers page deletion.
     { if (is_file($page_path)) 
         fwrite($p_todo, 'DeletePage("'.$page_path.'", "'.$title.'");'."\n");
-      $message = '<strong>Page "'.$title.'" is now non-existant.</strong>';}
+      $message = '<strong>Page "'.$title.'" is now non-existant.</strong>'; }
   
     else
     { if (get_magic_quotes_gpc())    # 
