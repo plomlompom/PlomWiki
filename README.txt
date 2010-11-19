@@ -26,5 +26,6 @@ Right now, the PlomWiki doesn't do much:
   are handed over to work/todo_urgent which has to be finished before any other 
   action on the wiki (like viewing a page) can be performed. Tasks could also be
   handed over to work/todo which only gets worked on if ?action=work is called.
-* .gitignore files in work/, work/temp/ and pages/deleted/ can safely be
-  deleted. They merely ensure said directories are committed to git if empty.
+* .gitignore files in work/, work/temp/, pages/deleted/ and pages/diffs/ can be
+  safely deleted. They merely ensure said dirs are committed to git if empty.
+* "&action=history" reveals a primitive (raw diff) version history of a page.

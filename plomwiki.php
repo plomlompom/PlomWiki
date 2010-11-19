@@ -7,6 +7,8 @@ if (!preg_match('/^[a-zA-Z0-9]+$/', $title)) { echo 'Bad page title'; exit(); }
 # Where page data is located.
 $pages_dir  = 'pages/';
 $page_path = $pages_dir.$title;
+$diff_dir = $pages_dir.'diffs/';
+$diff_path = $diff_dir.$title;
 
 # Find appropriate code for user's '?action='. Assume "view" if not found.
 $fallback = 'Action_view';
@@ -43,7 +45,22 @@ function Action_view()
   
   # Final HTML.
   echo '<title>'.$title.'</title>'."\n".'</head>'."\n".'<body>'."\n".'<p>'."\n".
-    $title.': <a href="plomwiki.php?title='.$title.'&amp;action=edit">Edit</a>'.
+   $title.': <a href="plomwiki.php?title='.$title.'&amp;action=edit">Edit</a> '.
+  '<a href="plomwiki.php?title='.$title.'&amp;action=history">History</a> '."\n"
+                                    .'</p>'."\n".'<p>'."\n".$text."\n".'</p>'; }
+
+function Action_history()
+# Show version history of page. (So far just a raw display of the diff file.)
+{ global $diff_path, $title;
+
+  $text = file_get_contents($diff_path);
+  $text = EscapeHTML($text);
+  $text = MarkupLinesParagraphs($text);
+
+  # Final HTML.
+  echo '<title> Version history of page "'.$title.'"</title>'."\n".'</head>'.
+  "\n".'<body>'."\n".'<p>'."\n".$title.': <a href="plomwiki.php?title='.$title.
+  '">View</a> <a href="plomwiki.php?title='.$title.'&amp;action=edit">Edit</a>'.
                                 "\n".'</p>'."\n".'<p>'."\n".$text."\n".'</p>'; }
 
 function Action_edit()
@@ -58,15 +75,16 @@ function Action_edit()
   
   # Final HTML.
   echo '<title>Editing "'.$title.'"</title>'."\n".'</head>'."\n".'<body>'."\n".
-  '<p>'."\n".$title.': <a href="plomwiki.php?title='.$title.'">Back to View</a>'
-     ."\n".'</p>'."\n".'<form method="post" action="plomwiki.php?title='.$title.
+        '<p>'."\n".$title.': <a href="plomwiki.php?title='.$title.'">View</a> '.
+  '<a href="plomwiki.php?title='.$title.'&amp;action=history">History</a> '."\n"
+          .'</p>'."\n".'<form method="post" action="plomwiki.php?title='.$title.
   '&amp;action=write">'."\n".'<textarea name="text" rows="10" cols="40">'.$text.
   '</textarea><br />'."\n".'Password: <input type="password" name="password" />'
               .'<br /><input type="submit" value="Update!" />'."\n".'</form>'; }
 
 function Action_write()
 # Password-protected writing of page update to work/, calling todo that results.
-{ global $page_path, $title, $todo_urgent;
+{ global $page_path, $title, $todo_urgent, $diff_path;
   $text = $_POST['text']; $password_posted = $_POST['password'];
   $html_start = '<title>Trying to edit "'.$title.'"</title>';
   
@@ -92,8 +110,10 @@ function Action_write()
     { if (get_magic_quotes_gpc())    # 
         $text = stripslashes($text); # Undo possible PHP magical_quotes horrors.
       $text = NormalizeNewlines($text);
-      $temp_path = NewTempFile($text);
-      fwrite($p_todo, 'SafeWrite("'.$page_path.'", "'.$temp_path.'");'."\n");
+      $diff_temp = NewDiffTemp($page_path, $text, $diff_path);
+      fwrite($p_todo, 'SafeWrite("'.$diff_path.'", "'.$diff_temp.'");'."\n");
+      $page_temp = NewTempFile($text);
+      fwrite($p_todo, 'SafeWrite("'.$page_path.'", "'.$page_temp.'");'."\n");
       $message = '<strong>Page "'.$title.'" updated.</strong>'; }
     
     fclose($p_todo);
@@ -203,15 +223,127 @@ function LockOff($dir)
 { unlink($dir.'lock'); }
 
 function DeletePage($page_path, $title) 
-# Deletion just renames and timestamps a page, moves it to the delete directory.
-{ global $pages_dir;
+# Deletion renames and timestamps a page and its diff and moves it to deleted/.
+{ global $pages_dir, $diff_dir;
   $pages_del_dir = $pages_dir.'deleted/';
   $timestamp = time();
-  $deleted_path = $pages_del_dir.$title.',del-'.$timestamp;
-  rename($page_path, $deleted_path); }
+  $deleted_page_path = $pages_del_dir.$title.',del-page-'.$timestamp;
+  $diff_path = $diff_dir.$title;
+  $deleted_diff_path = $pages_del_dir.$title.',del-diff-'.$timestamp;
+  if (is_file($diff_path)) rename($diff_path, $deleted_diff_path);
+  if (is_file($page_path)) rename($page_path, $deleted_page_path); }
 
 function SafeWrite($path_original, $path_temp)
 # Avoid data corruption: Exit if no temp file. Rename, don't overwrite directly.
 { if (!is_file($path_temp)) return;
   if (is_file($path_original)) unlink($path_original);
   rename($path_temp, $path_original); }
+
+########
+# Diff #
+########
+
+function NewDiffTemp($page_path, $text_new, $diff_path)
+# Temp of $diff_path diff updated with diff $page_path's content to $text_new.
+{ if (is_file($page_path)) $text_old = file_get_contents($page_path);
+  else $text_old = '';
+  $diff_add = PlomDiff($text_old, $text_new);
+  $timestamp = time();
+  if (is_file($diff_path)) $diff_old = file_get_contents($diff_path);
+  else $diff_old = '';
+  $diff_new = $timestamp."\n".$diff_add.'%%'."\n".$diff_old;
+  return NewTempFile($diff_new); }
+
+function PlomDiff($text_A, $text_B)
+# Output diff $text_A -> $text_B.
+{ 
+  $lines_A_temp = explode("\n", $text_A); 
+  $lines_B_temp = explode("\n", $text_B);
+
+  # Make A and B the same length, one element larger than the largest of them.
+  $ur_length_A = count($lines_A_temp); # Remember for later.
+  $new_length = max($ur_length_A, count($lines_B_temp)) + 1;
+  $lines_A_temp = array_pad($lines_A_temp, $new_length, '');
+  $lines_B_temp = array_pad($lines_B_temp, $new_length, '');
+
+  # Our line numbers don't start at 0 but at one.
+  foreach ($lines_A_temp as $key => $line) $lines_A[$key + 1] = $line;
+  foreach ($lines_B_temp as $key => $line) $lines_B[$key + 1] = $line;
+
+  # Collect additions and deletions from line mismatches between A and B.
+  $diff = array(); $offset = 0;
+  foreach ($lines_A as $key_A => $line_A)
+  { 
+    # $offset in B grows/shrinks for each line added/deleted.
+    $key_B = $key_A + $offset;
+    $line_B = $lines_B[$key_B];
+   
+    if ($line_A !== $line_B)
+    { # Find matching line in later parts of B.
+      # If successful, mark the area in-between as lines added.
+      $lines_B_sub = array_slice($lines_B, $key_B, NULL, TRUE);
+      $change = 0;
+      foreach ($lines_B_sub as $key_B_sub => $line_B_sub)
+      { if ($line_A == $line_B_sub)
+        { $diff[$key_A - 1]['a'] = array($key_B, $key_B + $change);
+          $offset += $change + 1; break; }
+        $change++; }
+      
+      # If mismatch is not due to new lines added, mark line as deleted.
+      if (!$diff[$key_A - 1]['a'] 
+          and $key_A <= $ur_length_A)   # Ignore lines beyond A's real size.
+      { $diff[$key_A]['d'] = array($key_B - 1, $key_A);
+        $offset--; } } }
+  
+  # Combine subsequent single line deletions to line deletion blocks.
+  $old_del = array(NULL, NULL, -1);
+  foreach ($diff as $line_n => $info)
+  { foreach ($info as $char => $limits) if ($char == 'd')
+    { $new_end = $limits[1];
+      $old_end = $old_del[2];
+      if ($line_n - 1 == $old_end)
+      { $old_line_number = $old_del[0];
+        $old_start = $old_del[1];
+        $diff[$old_line_number]['d'] = array($old_start, $new_end);
+        unset($diff[$line_n]['d']);
+        $old_del = array($old_line_number, $old_start, $new_end); }
+      else 
+      { $new_start = $limits[0]; 
+        $old_del = array($line_n, $new_start, $new_end); } } }
+  
+  # Combine 'a' and 'd' to 'c' in cases where they meet.
+  foreach ($diff as $line_n => $info)
+  { if ($diff[$line_n]['d'])
+    { $end_d = $diff[$line_n]['d'][1];
+      if ($diff[$end_d]['a'])
+      { $start_a = $diff[$end_d]['a'][0];
+        $end_a   = $diff[$end_d]['a'][1];
+        $diff[$line_n]['c'] = array($end_d, $start_a, $end_a);
+        unset($diff[$line_n]['d']);
+        unset($diff[$end_d]['a']); } } }
+
+  # Output diff info.
+  $string = '';
+  foreach ($diff as $line_n => $info)
+  { foreach ($info as $char => $limits)
+    { if ($char == 'a') 
+      { if ($limits[0] == $limits[1]) $string .= $line_n.$char.$limits[0]."\n";
+        else $string .= $line_n.$char.$limits[0].','.$limits[1]."\n";
+        for ($i = $limits[0]; $i <= $limits[1]; $i++) 
+          $string .= '>'.$lines_B[$i]."\n"; }
+      elseif ($char == 'd')
+      { if ($line_n == $limits[1]) $string .= $line_n.$char.$limits[0]."\n";
+        else $string .= $line_n.','.$limits[1].$char.$limits[0]."\n";
+        for ($i = $line_n; $i <= $limits[1]; $i++)
+          $string .= '<'.$lines_A[$i]."\n"; }
+      elseif ($char == 'c')
+      { if ($line_n == $limits[0]) $string .= $line_n.$char;
+        else $string .= $line_n.','.$limits[0].$char;
+        if ($limits[1] == $limits[2]) $string .= $limits[1]."\n";
+        else $string .= $limits[1].','.$limits[2]."\n";
+        for ($i = $line_n; $i <= $limits[0]; $i++)
+          $string .= '<'.$lines_A[$i]."\n";
+        for ($i = $limits[1]; $i <= $limits[2]; $i++)
+          $string .= '>'.$lines_B[$i]."\n"; } } }
+
+  return $string; }
