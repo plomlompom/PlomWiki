@@ -24,7 +24,7 @@ $todo_urgent = $work_dir.'todo_urgent';
 WorkToDo($todo_urgent);
 
 # Insert this at the head of each page action.
-$page_header = '<p>'."\n".$title.': <a href="plomwiki.php?title='.$title.'">'.
+$page_header = '<h1>'.$title.'</h1><p><a href="plomwiki.php?title='.$title.'">'.
    'View</a> <a href="plomwiki.php?title='.$title.'&amp;action=edit">Edit</a> '.
        '<a href="plomwiki.php?title='.$title.'&amp;action=history">History</a> '
                                                               ."\n".'</p>'."\n";
