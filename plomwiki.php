@@ -57,9 +57,11 @@ function Action_history()
 # Show version history of page. (So far just a raw display of the diff file.)
 { global $diff_path, $page_header, $title;
 
-  $text = file_get_contents($diff_path);
-  $text = EscapeHTML($text);
-  $text = MarkupLinesParagraphs($text);
+  if (is_file($diff_path))
+  { $text = file_get_contents($diff_path);
+    $text = EscapeHTML($text);
+    $text = MarkupLinesParagraphs($text); }
+  else $text = 'Page "'.$title.'" has no history.';
 
   # Final HTML.
   echo '<title> Version history of page "'.$title.'"</title>'."\n".'</head>'.
