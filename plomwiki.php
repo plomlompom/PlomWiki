@@ -2,7 +2,8 @@
 
 # Only allow simple alphanumeric titles to avoid security risks.
 $title = $_GET['title']; 
-if (!preg_match('/^[a-zA-Z0-9]+$/', $title)) { echo 'Bad page title'; exit(); }
+if (!preg_match('/^[a-zA-Z0-9]+$/', $title)) 
+  { echo 'Illegal page title. Only alphanumeric characters allowed.'; exit(); }
 
 # Where page data is located.
 $pages_dir  = 'pages/';
