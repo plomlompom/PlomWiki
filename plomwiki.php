@@ -54,25 +54,29 @@ function Action_view()
                                      $page_header.'<p>'."\n".$text."\n".'</p>'; }
 
 function Action_history()
-# Show version history of page.
+# Show version history of page, offer reverting.
 { global $diff_path, $page_header, $title;
 
   if (is_file($diff_path))
   { $diff = file_get_contents($diff_path);
 
-    # Do some minimal formatting on the diff output. Nothing fancy yet.
+    # Do some formatting on the diff output and create revert hooks.
     $diffs = explode('%%'."\n", $diff);
     foreach ($diffs as $diff_n => $diff)
     { $diff = explode("\n", $diff);
       foreach ($diff as $line_n => $line) 
       { if ($line_n == 0 and $line !== '') 
-           $diff[$line_n] = date('Y-m-d H:i:s', (int) $line);
+        { $time = $line;
+          $diff[$line_n] = date('Y-m-d H:i:s', (int) $time); }
         elseif ($line[0] == '>') $diff[$line_n][0] = '+';
-        elseif ($line[0] == '<') $diff[$line_n][0] = '-'; }
-      $diffs[$diff_n] = implode("\n", $diff); }
+        elseif ($line[0] == '<') $diff[$line_n][0] = '-';
+        $diff[$line_n] = EscapeHTML($diff[$line_n]); }
+      if ($diff[0] !== '') $revert = '<a href="plomwiki.php?title='.$title.
+                              '&action=revert&time='.$time.'">Revert</a><br />';
+      else $revert = '';
+      $diffs[$diff_n] = $revert.implode("\n", $diff); }
     $text = implode("\n", $diffs);
 
-    $text = EscapeHTML($text);
     $text = MarkupLinesParagraphs($text); }
 
   else $text = 'Page "'.$title.'" has no history.';
@@ -84,7 +88,7 @@ function Action_history()
 function Action_edit()
 # Edit form on a page source text. Send results to ?action=write.
 { global $page_header, $page_path, $title;
-  
+
   # If no page file is found, start with an empty $text.
   if (is_file($page_path)) 
   { $text = file_get_contents($page_path); 
@@ -97,6 +101,43 @@ function Action_edit()
   '&amp;action=write">'."\n".'<textarea name="text" rows="10" cols="40">'.$text.
   '</textarea><br />'."\n".'Password: <input type="password" name="password" />'
               .'<br /><input type="submit" value="Update!" />'."\n".'</form>'; }
+
+function Action_revert()
+# Prepare version reversion and ask user for confirmation.
+{ global $diff_path, $title, $page_header, $page_path;
+
+  $time = $_GET['time']; 
+  $time_string = date('Y-m-d H:i:s', (int) $time);
+
+  # Build $diff_array from $diff_path to be cycled through, keyed by timestamps.
+  $diff_array = array();
+  $diffs_text = explode('%%'."\n", file_get_contents($diff_path));
+  foreach ($diffs_text as $diff_n => $diff)
+  { $diff = explode("\n", $diff);
+    $diff_text = '';
+    foreach ($diff as $line_n => $line) 
+    { if ($line_n == 0 and $line !== '') $id = $line;
+      else $diff_text .= $line."\n"; }
+    $diff_array[$id] = $diff_text; }
+  $diff_to_reverse = $diff_array[$time];
+  $reversed_diff = ReverseDiff($diff_to_reverse);
+
+  # Revert $text back through $diff_array until $time hits $id.
+  $text = file_get_contents($page_path);
+  $finished = FALSE;
+  foreach ($diff_array as $id => $diff)
+  { if ($finished) break;
+    $reversed_diff = ReverseDiff($diff);
+    $text = PlomPatch($text, $reversed_diff);
+    if ($time == $id) $finished = TRUE; }
+
+  # Final HTML.
+  echo '<title>Reverting "'.$title.'"</title>'."\n".'</head>'."\n".'<body>'."\n"
+     .$page_header.'<p>'."\n".'Reverting page to before '.$time_string.'?'."\n".
+     '</p>'.'<form method="post" action="plomwiki.php?title='.$title.'&amp;'.'
+     action=write">'."\n".'<input type="hidden" name="text" value="'.$text.'">'.
+            '<br />'."\n".'Password: <input type="password" name="password" />'.
+                     '<input type="submit" value="Revert!" />'."\n".'</form>'; }
 
 function Action_write()
 # Password-protected writing of page update to work/, calling todo that results.
@@ -363,3 +404,76 @@ function PlomDiff($text_A, $text_B)
           $string .= '>'.$lines_B[$i]."\n"; } } }
 
   return $string; }
+
+function PlomPatch($text_A, $diff)
+# Patch $text_A to $text_B via $diff.
+{ 
+  # Divide $diff's lines into chunks belonging to single actions.
+  $patch_lines = explode("\n", $diff);
+  $patch_temp = array(); $action_temp = '';
+  foreach ($patch_lines as $line)
+  { if ($line[0] !== '<' and $line[0] !== '>') $action_temp = $line;
+    else $patch_temp[$action_temp][] = $line; }
+
+  # Collect patch-relevant info array $patch.
+  $patch = array();
+  foreach ($patch_temp as $action_temp => $lines)
+  { if (strpos($action_temp, 'd'))
+    { list($left, $x) = explode('d', $action_temp);
+      if (!strpos($left, ',')) $left = $left.','.$left;
+      list($start, $end) = explode(',', $left);
+      $action = 'd'.$start;
+      $patch[$action] = $end; }
+    elseif (strpos($action_temp, 'a'))
+    { list($start, $x) = explode('a', $action_temp);
+      $action = 'a'.$start;
+      $patch[$action] = $lines; }
+    elseif (strpos($action_temp, 'c'))
+    { list($left, $right) = explode('c', $action_temp);
+      if (!strpos($left, ',')) $left = $left.','.$left;
+      list($start, $end) = explode(',', $left);
+      $action = 'd'.$start;
+      $patch[$action] = $end;
+      $action = 'a'.$start;
+      $add_lines = array();
+      foreach ($lines as $line) if ($line[0] == '>') $add_lines[] = $line;
+      $patch[$action] = $add_lines;}}
+
+  # Apply additions and deletions.
+  $lines_A = explode("\n", $text_A);
+  foreach ($lines_A as $key => $line) $lines_A[$key + 1] = $line."\n";
+  $lines_A[0] = '';
+  $lines_B = $lines_A;
+  foreach ($patch as $action => $value)
+  { if ($action[0] == 'a')
+    { $put_after_line = substr($action, 1);
+      foreach ($value as $line_diff)
+        $lines_B[$put_after_line] .= substr($line_diff, 1)."\n"; }
+    elseif ($action[0] == 'd')
+    { $delete_from_line = substr($action, 1);
+      $end = $value;
+      for ($i = $delete_from_line; $i <= $end; $i++) 
+      { $ur_ln = strlen($lines_A[$i]);
+        $lines_B[$i] = substr($lines_B[$i], $ur_ln); } } }
+  $text_B = implode($lines_B);
+
+  return $text_B; }
+
+function ReverseDiff($old_diff)
+# Reverse a diff.
+{ $new_diff = '';
+  $old_diff = explode("\n", $old_diff);
+  foreach ($old_diff as $line_n => $line)
+  { if     ($line[0] == '<') $line[0] = '>';
+    elseif ($line[0] == '>') $line[0] = '<';
+    elseif (strpos($line, 'c'))
+    { list($left, $right) = explode('c', $line);
+      $line = $right.'c'.$left; }
+    elseif (strpos($line, 'a'))
+    { list($left, $right) = explode('a', $line);
+      $line = $right.'d'.$left; }
+    elseif (strpos($line, 'd'))
+    { list($left, $right) = explode('d', $line);
+      $line = $right.'a'.$left; }
+    $new_diff .= $line."\n"; }
+  return $new_diff; }

@@ -9,6 +9,9 @@ Right now, the PlomWiki doesn't do much:
   editing the empty page that results. 
 * Start at "plomwiki.php?title=Start".
 * Only ASCII-alphanumeric page names are possible.
+* "&action=history" reveals a primitive diff version history of a page. Diff
+  reversion is possible by clicking on "Revert" over any change displayed. This
+  will change the page text to the page text as it was before that change.
 * Apart from very sparse wiki markup, only raw text -- no HTML -- can be written
   by the user:
   * Line breaks and paragraphs get detected and converted to HTML.
@@ -28,4 +31,4 @@ Right now, the PlomWiki doesn't do much:
   handed over to work/todo which only gets worked on if ?action=work is called.
 * .gitignore files in work/, work/temp/, pages/deleted/ and pages/diffs/ can be
   safely deleted. They merely ensure said dirs are committed to git if empty.
-* "&action=history" reveals a primitive diff version history of a page.
+
