@@ -54,13 +54,27 @@ function Action_view()
                                      $page_header.'<p>'."\n".$text."\n".'</p>'; }
 
 function Action_history()
-# Show version history of page. (So far just a raw display of the diff file.)
+# Show version history of page.
 { global $diff_path, $page_header, $title;
 
   if (is_file($diff_path))
-  { $text = file_get_contents($diff_path);
+  { $diff = file_get_contents($diff_path);
+
+    # Do some minimal formatting on the diff output. Nothing fancy yet.
+    $diffs = explode('%%'."\n", $diff);
+    foreach ($diffs as $diff_n => $diff)
+    { $diff = explode("\n", $diff);
+      foreach ($diff as $line_n => $line) 
+      { if ($line_n == 0 and $line !== '') 
+           $diff[$line_n] = date('Y-m-d H:i:s', (int) $line);
+        elseif ($line[0] == '>') $diff[$line_n][0] = '+';
+        elseif ($line[0] == '<') $diff[$line_n][0] = '-'; }
+      $diffs[$diff_n] = implode("\n", $diff); }
+    $text = implode("\n", $diffs);
+
     $text = EscapeHTML($text);
     $text = MarkupLinesParagraphs($text); }
+
   else $text = 'Page "'.$title.'" has no history.';
 
   # Final HTML.
