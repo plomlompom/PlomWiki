@@ -209,11 +209,11 @@ function NormalizeNewlines($text)
 
 function EscapeHTML($text)
 # Replace symbols that might be confused for HTML markup with HTML entities.
-{ $text = str_replace('&', '&amp;', $text);
-  $text = str_replace('<', '&lt;',  $text); 
-  $text = str_replace('>', '&gt;',  $text);
+{ $text = str_replace('&',  '&amp;',   $text);
+  $text = str_replace('<',  '&lt;',    $text); 
+  $text = str_replace('>',  '&gt;',    $text);
   $text = str_replace('\'', '&apos;',  $text); 
-  return  str_replace('"', '&quot;',  $text); }
+  return  str_replace('"',  '&quot;',  $text); }
 
 function MarkupLinesParagraphs($text)
 # Line-break and paragraph markup.
