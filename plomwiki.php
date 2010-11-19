@@ -119,8 +119,6 @@ function Action_revert()
     { if ($line_n == 0 and $line !== '') $id = $line;
       else $diff_text .= $line."\n"; }
     $diff_array[$id] = $diff_text; }
-  $diff_to_reverse = $diff_array[$time];
-  $reversed_diff = ReverseDiff($diff_to_reverse);
 
   # Revert $text back through $diff_array until $time hits $id.
   $text = file_get_contents($page_path);
