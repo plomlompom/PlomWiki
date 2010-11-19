@@ -93,7 +93,7 @@ function Action_write()
         $text = stripslashes($text); # Undo possible PHP magical_quotes horrors.
       $text = NormalizeNewlines($text);
       $temp_path = NewTempFile($text);
-      fwrite($p_todo, 'UpdatePage("'.$page_path.'", "'.$temp_path.'");'."\n");
+      fwrite($p_todo, 'SafeWrite("'.$page_path.'", "'.$temp_path.'");'."\n");
       $message = '<strong>Page "'.$title.'" updated.</strong>'; }
     
     fclose($p_todo);
@@ -210,8 +210,8 @@ function DeletePage($page_path, $title)
   $deleted_path = $pages_del_dir.$title.',del-'.$timestamp;
   rename($page_path, $deleted_path); }
 
-function UpdatePage($page_path, $temp_path)
+function SafeWrite($path_original, $path_temp)
 # Avoid data corruption: Exit if no temp file. Rename, don't overwrite directly.
-{ if (!is_file($temp_path)) return;
-  if (is_file($page_path)) unlink($page_path);
-  rename($temp_path, $page_path); }
+{ if (!is_file($path_temp)) return;
+  if (is_file($path_original)) unlink($path_original);
+  rename($path_temp, $path_original); }
