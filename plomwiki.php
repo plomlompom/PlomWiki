@@ -200,7 +200,7 @@ function Action_work()
 
 function Markup($text)
 # Applying markup functions in a certain order to $text.
-{ $text = EscapeHTML($text);
+{ $text = EscapeHTML($text);  # Put any Markup that generates HTML *after* this.
   $text = MarkupLinesParagraphs($text);
   return  MarkupInternalLinks($text); }
 
