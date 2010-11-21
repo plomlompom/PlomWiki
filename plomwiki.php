@@ -52,7 +52,8 @@ function Action_view()
   
   # Get text from file. If none, show invitation to create one. Else, markup it.
   if (is_file($page_path)) 
-  { $text = file_get_contents($page_path); 
+  { $text = file_get_contents($page_path);
+    $text = EscapeHTML($text);
     $text = Markup($text); }
   else $text = 'Page does not exist. <a href="plomwiki.php?title='.$title.
                                                 '&amp;action=edit">Create?</a>';
@@ -190,15 +191,18 @@ function Action_write()
    '</p>'."\n".'<p>'."\n".'Return to page "<a href="plomwiki.php?title='.$title.
                                              '">'.$title.'</a>".'."\n".'</p>'; }
 
-####################
-# Markup functions #
-####################
+####################################
+# Page text manipulation functions #
+####################################
 
 function Markup($text)
-# Applying markup functions in a certain order to $text.
-{ $text = EscapeHTML($text);  # Put any Markup that generates HTML *after* this.
-  $text = MarkupLinesParagraphs($text);
-  return  MarkupInternalLinks($text); }
+# Applying markup functions in the order described by markups.txt to $text.
+{  $markup_list = 'markups.txt';
+  $markup_list = explode("\n", file_get_contents($markup_list));
+  foreach ($markup_list as $line) if ($line[0] !== '#') 
+  { $line = rtrim($line);
+    if ($line) eval('$text = '.$line.'($text);'); }
+  return $text; }
 
 function NormalizeNewlines($text)
 # Newlines are to be \n only.
@@ -211,17 +215,6 @@ function EscapeHTML($text)
   $text = str_replace('>',  '&gt;',    $text);
   $text = str_replace('\'', '&apos;',  $text); 
   return  str_replace('"',  '&quot;',  $text); }
-
-function MarkupLinesParagraphs($text)
-# Line-break and paragraph markup.
-{ $text = str_replace("\n",             '<br />',                      $text); 
-  $text = str_replace('<br /><br />',   "\n".'</p>'."\n".'<p>'."\n",   $text); 
-  return  str_replace('<br />',         '<br />'."\n",                 $text); }
-
-function MarkupInternalLinks($text)
-# Wiki-internal linking markup [[LikeThis]].
-{ return preg_replace('/\[\[([A-Za-z0-9]+)\]\]/', 
-                             '<a href="plomwiki.php?title=$1">$1</a>', $text); }
 
 ###################################
 # Database manipulation functions #

@@ -1,2 +1,3 @@
 # Insert relative paths to plugin files here. Comment out with #.
 # plugins/Action_work.php
+plugins/standard_markup.php

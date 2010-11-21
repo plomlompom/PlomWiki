@@ -17,10 +17,11 @@ In your browser, click on "View" to view a page, on "Edit" to edit a page and on
 "History" to examine a diff history of the pages edits. Here you can also revert
 changes to the page text by clicking on the "Revert" link over a diff.
 
-Only little markup is possible on pages. HTML code gets ignored. Single newlines
-get translated into linebreaks, double newlines into paragraphs. Internal links
-to other pages of the wiki are possible by putting the referenced pagename into
-double square brackets [[LikeThis]]. 
+Per default, only little markup is possible on pages, though more could be added
+as plugins (see Technical Details section): HTML code gets ignored. Single 
+newlines get translated into linebreaks, double newlines into paragraphs. 
+Internal links to other pages of the wiki are possible by putting the referenced
+pagename into double square brackets [[LikeThis]]. 
 
 To create a new page, either in the address bar replace the "Start" in the URL
 part "plomwiki.php?title=Start" with the name for the new page, or create a link
@@ -53,6 +54,12 @@ To add code to plomwiki.php for purposes such as this, just put a file of your
 new PHP code into the PlomWiki/plugins/ directory and refer to its relative
 location on a line in the file PlomWiki/plugins.txt. All those files referenced
 will be required by plomwiki.php every time it is run.
+
+The markup for internal links and for linebreaks/paragraphs is inserted as the
+plugin PlomWiki/plugins/standard_markup.php. Any text manipulation function can
+be added as a markup plugin by activating its code in plugins.txt and by calling
+said function in PlomWiki/markups.txt which contains the list of markups called
+by Markup() on a text in the order in which they are to be applied.
 
 To avoid unfinished DB manipulations / DB corruptions, any task writing to
 PlomWiki/pages/ and the directories below it is not done directly but first
