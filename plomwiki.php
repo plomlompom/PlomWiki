@@ -464,16 +464,13 @@ function ReverseDiff($old_diff)
 { $new_diff = '';
   $old_diff = explode("\n", $old_diff);
   foreach ($old_diff as $line_n => $line)
-  { if     ($line[0] == '<') $line[0] = '>';
+  { if ($line[0] == '<') $line[0] = '>'; 
     elseif ($line[0] == '>') $line[0] = '<';
-    elseif (strpos($line, 'c'))
-    { list($left, $right) = explode('c', $line);
-      $line = $right.'c'.$left; }
-    elseif (strpos($line, 'a'))
-    { list($left, $right) = explode('a', $line);
-      $line = $right.'d'.$left; }
-    elseif (strpos($line, 'd'))
-    { list($left, $right) = explode('d', $line);
-      $line = $right.'a'.$left; }
+    else 
+    { foreach (array('c' => 'c', 'a' => 'd', 'd' => 'a') as $char => $reverse) 
+      { if (strpos($line, $char))
+        { list($left, $right) = explode($char, $line); 
+          $line = $right.$reverse.$left; 
+          break; } } }
     $new_diff .= $line."\n"; }
   return $new_diff; }
