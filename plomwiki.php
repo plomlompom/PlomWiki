@@ -464,7 +464,7 @@ function ReverseDiff($old_diff)
 { $new_diff = '';
   $old_diff = explode("\n", $old_diff);
   foreach ($old_diff as $line_n => $line)
-  { if ($line[0] == '<') $line[0] = '>'; 
+  { if     ($line[0] == '<') $line[0] = '>'; 
     elseif ($line[0] == '>') $line[0] = '<';
     else 
     { foreach (array('c' => 'c', 'a' => 'd', 'd' => 'a') as $char => $reverse) 
