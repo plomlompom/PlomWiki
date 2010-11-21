@@ -11,6 +11,19 @@ $page_path = $pages_dir.$title;
 $diff_dir = $pages_dir.'diffs/';
 $diff_path = $diff_dir.$title;
 
+# Insert this at the head of pages.
+$page_header = '<h1>'.$title.'</h1><p><a href="plomwiki.php?title='.$title.'">'.
+   'View</a> <a href="plomwiki.php?title='.$title.'&amp;action=edit">Edit</a> '.
+       '<a href="plomwiki.php?title='.$title.'&amp;action=history">History</a> '
+                                                              ."\n".'</p>'."\n";
+
+# Insert plugins' code.
+$plugin_list = 'plugins.txt';
+$plugin_list = explode("\n", file_get_contents($plugin_list));
+foreach ($plugin_list as $line) if ($line[0] !== '#') 
+{ $line = rtrim($line);
+  if ($line) require($line); }
+
 # Find appropriate code for user's '?action='. Assume "view" if not found.
 $fallback = 'Action_view';
 $action = $_GET['action'];
@@ -22,12 +35,6 @@ $work_dir = 'work/';
 $work_temp_dir = $work_dir.'temp/';
 $todo_urgent = $work_dir.'todo_urgent';
 WorkToDo($todo_urgent);
-
-# Insert this at the head of each page action.
-$page_header = '<h1>'.$title.'</h1><p><a href="plomwiki.php?title='.$title.'">'.
-   'View</a> <a href="plomwiki.php?title='.$title.'&amp;action=edit">Edit</a> '.
-       '<a href="plomwiki.php?title='.$title.'&amp;action=history">History</a> '
-                                                              ."\n".'</p>'."\n";
 
 # Final HTML.
 echo '<!DOCTYPE html>'."\n".'<html>'."\n".'<head>'."\n".
@@ -182,17 +189,6 @@ function Action_write()
   echo $html_start."\n".'</head>'."\n".'<body>'."\n".'<p>'."\n".$message."\n".
    '</p>'."\n".'<p>'."\n".'Return to page "<a href="plomwiki.php?title='.$title.
                                              '">'.$title.'</a>".'."\n".'</p>'; }
-
-function Action_work()
-# Work through todo list.
-{ global $work_dir;
-  $path_todo = $work_dir.'todo';
-  
-  # Final HTML
-  echo '<title>Doing some processing work ...</title>'."\n".'</head>'."\n".
-          '<body>'."\n".'<p>'."\n".'Doing some processing work ...'."\n".'</p>';
-  WorkToDo($path_todo);
-  echo '<p>'."\n".'Finished!'."\n".'</p>'; }
 
 ####################
 # Markup functions #
