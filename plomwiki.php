@@ -116,10 +116,11 @@ function Action_revert()
   foreach ($diffs_text as $diff_n => $diff)
   { $diff = explode("\n", $diff);
     $diff_text = '';
+    $id = 0;
     foreach ($diff as $line_n => $line) 
     { if ($line_n == 0 and $line !== '') $id = $line;
       else $diff_text .= $line."\n"; }
-    $diff_array[$id] = $diff_text; }
+    if ($id > 0) $diff_array[$id] = $diff_text; }
 
   # Revert $text back through $diff_array until $time hits $id.
   $text = file_get_contents($page_path);
