@@ -1,3 +1,5 @@
 # Insert markups in the order they're to be called on pages. Comment out with #.
 MarkupLinesParagraphs
 MarkupInternalLinks
+MarkupStrong
+MarkupEmphasis
