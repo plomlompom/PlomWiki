@@ -7,3 +7,7 @@ Deny from all
 <Files plomwiki.php>
 Allow from all
 </Files>
+
+<FilesMatch "^$">    # Empower DirectoryIndex by allowing access to merely root.
+Allow from all
+</FilesMatch>
