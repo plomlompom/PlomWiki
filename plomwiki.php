@@ -139,13 +139,17 @@ function Action_revert()
     $text = PlomPatch($text, $reversed_diff);
     if ($time == $id) $finished = TRUE; }
 
+  if ($finished)
+  { $content = 'Reverting page to before '.$time_string.'?'."\n".'</p><form '.
+  'method="post" action="plomwiki.php?title='.$title.'&amp; action=write">'."\n"
+  .'<input type="hidden" name="text" value="'.$text.'"><br />'."\n".'Password:'.
+               '<input type="password" name="password" /><input type="submit" '.
+                                                         'value="Revert!" />'; }
+  else { $content = 'Error. No valid reversion date given.'; }
+
   # Final HTML.
   echo '<title>Reverting "'.$title.'"</title>'."\n".'</head>'."\n".'<body>'."\n"
-     .$page_header.'<p>'."\n".'Reverting page to before '.$time_string.'?'."\n".
-        '</p>'.'<form method="post" action="plomwiki.php?title='.$title.'&amp;'.
-    'action=write">'."\n".'<input type="hidden" name="text" value="'.$text.'">'.
-            '<br />'."\n".'Password: <input type="password" name="password" />'.
-                     '<input type="submit" value="Revert!" />'."\n".'</form>'; }
+                             .$page_header.'<p>'."\n".$content."\n".'</form>'; }
 
 function Action_write()
 # Password-protected writing of page update to work/, calling todo that results.
