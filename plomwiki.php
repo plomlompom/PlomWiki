@@ -18,11 +18,9 @@ $page_header = '<h1>'.$title.'</h1><p><a href="plomwiki.php?title='.$title.'">'.
                                                               ."\n".'</p>'."\n";
 
 # Insert plugins' code.
-$plugin_list = 'plugins.txt';
-$plugin_list = explode("\n", file_get_contents($plugin_list));
-foreach ($plugin_list as $line) if ($line[0] !== '#') 
-{ $line = rtrim($line);
-  if ($line) require($line); }
+$plugin_list_path = 'plugins.txt';
+$lines = ReadAndTrimLines($plugin_list_path);
+foreach ($lines as $line) require($line);
 
 # Find appropriate code for user's '?action='. Assume "view" if not found.
 $fallback = 'Action_view';
@@ -201,11 +199,9 @@ function Action_write()
 
 function Markup($text)
 # Applying markup functions in the order described by markups.txt to $text.
-{ $markup_list = 'markups.txt';
-  $markup_list = explode("\n", file_get_contents($markup_list));
-  foreach ($markup_list as $line) if ($line[0] !== '#') 
-  { $line = rtrim($line);
-    if ($line) eval('$text = '.$line.'($text);'); }
+{ $markup_list_path = 'markups.txt';
+  $lines = ReadAndTrimLines($markup_list_path);
+  foreach ($lines as $line) eval('$text = '.$line.'($text);');
   return $text; }
 
 function NormalizeNewlines($text)
@@ -467,3 +463,18 @@ function ReverseDiff($old_diff)
           break; } } }
     $new_diff .= $line."\n"; }
   return $new_diff; }
+
+##########################
+# Minor helper functions #
+##########################
+
+function ReadAndTrimLines($path)
+# Read file $path into a list of all lines sans comments and ending whitespaces.
+{ $list = array();
+  $lines = explode("\n", file_get_contents($path));
+  foreach ($lines as $line)
+  { $hash_pos = strpos($line, '#');
+    if ($hash_pos !== FALSE) $line = substr($line, 0, $hash_pos);
+    $line = rtrim($line);
+    if ($line) $list[] = $line; } 
+  return $list; }
