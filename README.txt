@@ -23,6 +23,7 @@ as plugins (see Technical Details section). The standard markup includes:
 * Single newlines become linebreaks, double newlines become paragraphs.
 * Enclose wiki-internal links to other pagenames [[InDoubleSquareBrackets]].
 * [*This*] becomes <strong>This</strong> and [/this/] becomes <em>this</em>.
+* Unordered bullet point lists. Use *]. Indent in multiples of two whitespaces.
 
 To create a new page, either in the address bar replace the "Start" in the URL
 part "plomwiki.php?title=Start" with the name for the new page, or create a link
