@@ -201,7 +201,7 @@ function Action_write()
 
 function Markup($text)
 # Applying markup functions in the order described by markups.txt to $text.
-{  $markup_list = 'markups.txt';
+{ $markup_list = 'markups.txt';
   $markup_list = explode("\n", file_get_contents($markup_list));
   foreach ($markup_list as $line) if ($line[0] !== '#') 
   { $line = rtrim($line);

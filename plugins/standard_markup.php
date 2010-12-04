@@ -5,8 +5,7 @@ function MarkupLinesParagraphs($text)
 { $text = str_replace("\n",             '<br />',                      $text); 
   $text = str_replace('<br /><br />',   "\n".'</p>'."\n".'<p>'."\n",   $text); 
   $text = str_replace('<br />',         '<br />'."\n",                 $text); 
-  return $text;
-}
+  return $text; }
 
 function MarkupInternalLinks($text)
 # Wiki-internal linking markup [[LikeThis]].
