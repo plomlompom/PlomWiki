@@ -1,9 +1,17 @@
 <?php
+# PlomWiki StandardMarkup
+#
+# This file contains the code for the default PlomWiki core markup.
+# 
+# This markup aims for tidy and readable HTML code. Functions are responsible
+# not only for producing HTML, but for formatting it in a readable way, too, via
+# via newlines and indentations. 
+# To use, for these purposes, "\n" -- which, by itself, is marked up to "<br />"
+# -- without producing HTML, escape it via preceding "\r", such as this: "\r\n".
 
 function MarkupLinesParagraphs($text)
 # Line-break and paragraph markup.
-{ 
-  # Newlines not to be translated into HTML are escaped by a preceding "\r".
+{ # Identify escaped newlines, temporarily replace them with "\r".
   $text = str_replace("\r\n",               "\r",                        $text);
 
   # Unescaped newlines get transformed into "<br \>" and "<p />".
@@ -19,7 +27,7 @@ function MarkupLinesParagraphs($text)
   $text = str_replace('<br />'."\n".'<ul>', '</p>'."\n".'<ul>',          $text);
   $text = str_replace('</ul>'."\r",         '</ul>'."\n".'<p>',          $text);
 
-  # At the end, "\r"-escaped newlines become ordinary newlines.
+  # After all work is done on the latter, it's safe to replace "\r" with "\n".
   $text = str_replace("\r",                 "\n",                        $text);
   return $text; }
 
@@ -39,8 +47,7 @@ function MarkupEmphasis($text)
 
 function MarkupLists($text)
 # Lines starting with '*] ' preceded by multiples of double whitespace -> lists.
-{ 
-  # Add temporary buffer line to $text for final line-by-line comparision.
+{ # Add temporary buffer line to $text for final line-by-line comparision.
   $text = $text."\n".'DEL'; $lines = explode("\n", $text);
 
   # Find lines marked as list elements. Search up to $failed_tries_limit depth.
