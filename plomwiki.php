@@ -136,10 +136,10 @@ function Action_revert()
     if ($time == $id) $finished = TRUE; }
 
   if ($finished)
-  { $content = 'Reverting page to before '.$time_string.'?'."\n".'</p><form '.
-  'method="post" action="plomwiki.php?title='.$title.'&amp; action=write">'."\n"
-  .'<input type="hidden" name="text" value="'.$text.'"><br />'."\n".'Password:'.
-               '<input type="password" name="password" /><input type="submit" '.
+  { $content = 'Reverting page to before '.$time_string.'?'."\n".'</p>'."\n".
+  '<form method="post" action="plomwiki.php?title='.$title.'&amp;action=write">'
+         ."\n".'<input type="hidden" name="text" value="'.$text.'"><br />'."\n".
+     'Password: <input type="password" name="password" /><input type="submit" '.
                                                          'value="Revert!" />'; }
   else { $content = 'Error. No valid reversion date given.'; }
 
