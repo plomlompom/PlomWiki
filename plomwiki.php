@@ -58,7 +58,7 @@ function Action_view()
   
   # Final HTML.
   echo '<title>'.$title.'</title>'."\n".'</head>'."\n".'<body>'."\n".
-                                    $page_header.'<p>'."\n".$text."\n".'</p>'; }
+                                                 $page_header."\n".$text."\n"; }
 
 function Action_history()
 # Show version history of page, offer reverting.
@@ -205,7 +205,7 @@ function Markup($text)
   return $text; }
 
 function NormalizeNewlines($text)
-# Newlines are to be \n only.
+# Allow "\n" newline only. "\r" stripped from user input is free for other uses.
 { return str_replace("\r", '', $text); }
 
 function EscapeHTML($text)
