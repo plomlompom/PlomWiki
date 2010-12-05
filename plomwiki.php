@@ -77,20 +77,18 @@ function Action_history()
           $diff[$line_n] = date('Y-m-d H:i:s', (int) $time); }
         elseif ($line[0] == '>') $diff[$line_n][0] = '+';
         elseif ($line[0] == '<') $diff[$line_n][0] = '-';
-        $diff[$line_n] = EscapeHTML($diff[$line_n]); }
+        $diff[$line_n] = EscapeHTML($diff[$line_n]).'<br />'; }
       if ($diff[0] !== '') $revert = '<a href="plomwiki.php?title='.$title.
-                              '&action=revert&time='.$time.'">Revert</a><br />';
+                      '&amp;action=revert&amp;time='.$time.'">Revert</a><br />';
       else $revert = '';
-      $diffs[$diff_n] = $revert.implode("\n", $diff); }
-    $text = implode("\n", $diffs);
-
-    $text = MarkupLinesParagraphs($text); }
+      $diffs[$diff_n] = '<p>'.$revert.implode("\n", $diff).'</p>'; }
+    $text = implode("\n", $diffs); }
 
   else $text = 'Page "'.$title.'" has no history.';
 
   # Final HTML.
   echo '<title> Version history of page "'.$title.'"</title>'."\n".'</head>'.
-                 "\n".'<body>'."\n".$page_header.'<p>'."\n".$text."\n".'</p>'; }
+                        "\n".'<body>'."\n".$page_header."\n".$text."\n"; }
 
 function Action_edit()
 # Edit form on a page source text. Send results to ?action=write.
