@@ -2,8 +2,7 @@ PlomWiki: @plomlompom tries to build his own wiki, optimized for his own needs.
 
 CAVEAT
 
-As @plomlompom is rather inexperienced, he starts with some very simple and
-probably not very good PHP.
+As @plomlompom is rather inexperienced, he starts with some not-too-good PHP.
 
 INSTALLATION
 
@@ -13,9 +12,9 @@ editing password is "Password", change it in PlomWiki/password.txt.
 
 USE
 
-In your browser, click on "View" to view a page, on "Edit" to edit a page and on
-"History" to examine a diff history of the pages edits. Here you can also revert
-changes to the page text by clicking on the "Revert" link over a diff.
+In your browser window, click on "View" to view a page, on "Edit" to edit a page
+and on "History" to examine a diff history of the pages edits. Here you can also
+revert changes to the page text by clicking on the "Revert" link over a diff.
 
 Per default, only little markup is possible on pages, though more could be added
 as plugins (see Technical Details section). The standard markup includes:
@@ -39,9 +38,9 @@ To delete a page, reduce page text to "delete". Empty page text won't be posted.
 TECHNICAL DETAILS
 
 Wiki pages are stored as text files of their current version in PlomWiki/pages/
-with the pagename as the filename. In PlomWiki/pages/diffs diffs to previous
+with the pagename as the filename. In PlomWiki/pages/diffs/ diffs to previous
 versions are stored. Page deletion does not actually remove the files but just
-renames, timestamps and moves them into PlomWiki/pages/deleted.
+renames, timestamps and moves them into PlomWiki/pages/deleted/.
 
 The "action=" GET parameter in a page URL determines the action on the page. 
 Values like "view" and "edit" correspond to functions like Action_view() and 
@@ -77,4 +76,4 @@ works through a non-urgent todo file PlomWiki/work/todo.
 
 You may find files called ".gitignore" files in several directories of PlomWiki.
 Those can be safely deleted. They are included in the git repository version of
-PlomWiki merely to ensure said directories are commited even if they're empty.
+PlomWiki merely to ensure said directories are committed even if they're empty.
