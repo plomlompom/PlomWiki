@@ -12,10 +12,10 @@ $diff_dir = $pages_dir.'diffs/';
 $diff_path = $diff_dir.$title;
 
 # Insert this at the head of pages.
-$page_header = '<h1>'.$title.'</h1><p><a href="plomwiki.php?title='.$title.'">'.
-   'View</a> <a href="plomwiki.php?title='.$title.'&amp;action=edit">Edit</a> '.
-       '<a href="plomwiki.php?title='.$title.'&amp;action=history">History</a> '
-                                                              ."\n".'</p>'."\n";
+$page_header = '<h1>'.$title.'</h1>'."\n".'<p>'."\n".'<a href="plomwiki.php?'.
+'title='.$title.'">View</a> <a href="plomwiki.php?title='.$title.'&amp;action='.
+   'edit">Edit</a> <a href="plomwiki.php?title='.$title.'&amp;action=history">'.
+                                                'History</a> '."\n".'</p>'."\n";
 
 # Insert plugins' code.
 $plugin_list_path = 'plugins.txt';
