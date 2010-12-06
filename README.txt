@@ -8,7 +8,7 @@ INSTALLATION
 
 Copy PlomWiki/ and everything below it onto your server. You can now access your
 wiki via http://[YourDomain/YourPath]/plomwiki.php?title=Start. The default page
-editing password is "Password", change it in PlomWiki/password.txt.
+editing password is "Password", change it in PlomWiki/config/password.txt.
 
 USE
 
@@ -51,14 +51,14 @@ functions like Action_xyz().
 
 To add code to plomwiki.php for purposes such as this, just put a file of your
 new PHP code into the PlomWiki/plugins/ directory and refer to its relative
-location on a line in the file PlomWiki/plugins.txt. All those files referenced
-will be required by plomwiki.php every time it is run.
+location on a line in the file PlomWiki/config/plugins.txt. All those files
+referenced will be required by plomwiki.php every time it is run.
 
 Standard markup is inserted as the plugin PlomWiki/plugins/standard_markup.php.
 Any text manipulation function can be added as a markup plugin by activating its
-code in plugins.txt and by calling said function in PlomWiki/markups.txt which 
-contains the list of markups called by Markup() on a text in the order in which
-they are to be applied.
+code in plugins.txt and by calling said function in PlomWiki/config/markups.txt
+which contains the list of markups called by Markup() on a text in the order in
+which they are to be applied.
 
 To avoid unfinished DB manipulations / DB corruptions, any task writing to
 PlomWiki/pages/ and the directories below it is not done directly but first

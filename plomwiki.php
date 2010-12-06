@@ -2,9 +2,12 @@
 # PlomWiki: @plomlompom's wiki.      This file contains the core execution code.
 
 # Filesystem information.
-$pages_dir  = 'pages/';                      $work_dir = 'work/';
-$diff_dir = $pages_dir.'diffs/';             $work_temp_dir = $work_dir.'temp/';
-$del_dir = $pages_dir.'deleted/';
+$config_dir = 'config/';         $markup_list_path = $config_dir.'markups.txt';
+                                 $password_path    = $config_dir.'password.txt';
+                                 $plugin_list_path = $config_dir.'plugins.txt';
+$pages_dir  = 'pages/';                  $work_dir = 'work/';
+$diff_dir = $pages_dir.'diffs/';         $work_temp_dir = $work_dir.'temp/';
+$del_dir = $pages_dir.'deleted/';        $todo_urgent = $work_dir.'todo_urgent'; 
 
 # HTML start and end.
 $html_start = '<!DOCTYPE html>
@@ -38,7 +41,6 @@ $page_header = '
 ';
 
 # Insert plugins' code.
-$plugin_list_path = 'plugins.txt';
 $lines = ReadAndTrimLines($plugin_list_path); 
 foreach ($lines as $line) require($line);
 
@@ -48,7 +50,7 @@ $action = $_GET['action'];                 $action_function = 'Action_'.$action;
 if (!function_exists($action_function))    $action_function = $fallback;
 
 # Do urgent work if urgent todo file is found.
-$todo_urgent = $work_dir.'todo_urgent'; WorkToDo($todo_urgent);
+WorkToDo($todo_urgent);
 
 # Final HTML.
 echo $html_start;
@@ -186,11 +188,11 @@ function Action_revert()
 
 function Action_write()
 # Password-protected writing of page update to work/, calling todo that results.
-{ global $page_path, $title, $todo_urgent, $diff_path;
+{ global $page_path, $password_path, $title, $todo_urgent, $diff_path;
   $text = $_POST['text']; $password_posted = $_POST['password']; $redirect = '';
   
   # Check for failure conditions: wrong $password, empty $text.
-  $password_expected = substr(file_get_contents('password.txt'), 0, -1);
+  $password_expected = substr(file_get_contents($password_path), 0, -1);
   if ($password_posted !== $password_expected) $msg ='Wrong password.</strong>';
   elseif (!$text) 
     $msg = 'Empty pages not allowed.</strong><br />'."\n".
@@ -242,7 +244,7 @@ function Action_write()
 
 function Markup($text)
 # Applying markup functions in the order described by markups.txt to $text.
-{ $markup_list_path = 'markups.txt'; 
+{ global $markup_list_path; 
   $lines = ReadAndTrimLines($markup_list_path);
   foreach ($lines as $line) eval('$text = '.$line.'($text);');
   return $text; }
