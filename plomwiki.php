@@ -1,44 +1,51 @@
 <?php
+# PlomWiki: @plomlompom's wiki.      This file contains the core execution code.
 
 # Only allow simple alphanumeric titles to avoid security risks.
 $title = $_GET['title']; 
 if (!preg_match('/^[a-zA-Z0-9]+$/', $title)) 
-  { echo 'Illegal page title. Only alphanumeric characters allowed.'; exit(); }
+{ echo 'Illegal page title. Only alphanumeric characters allowed.'; exit(); }
 
 # Where page data is located.
-$pages_dir  = 'pages/';
-$page_path = $pages_dir.$title;
-$diff_dir = $pages_dir.'diffs/';
-$diff_path = $diff_dir.$title;
+$pages_dir  = 'pages/';                          $page_path = $pages_dir.$title;
+$diff_dir = $pages_dir.'diffs/';                 $diff_path = $diff_dir. $title;
 
-# Insert this at the head of pages.
-$page_header = '<h1>'.$title.'</h1>'."\n".'<p>'."\n".'<a href="plomwiki.php?'.
-'title='.$title.'">View</a> <a href="plomwiki.php?title='.$title.'&amp;action='.
-   'edit">Edit</a> <a href="plomwiki.php?title='.$title.'&amp;action=history">'.
-                                                'History</a> '."\n".'</p>'."\n";
+# The action bar. You may insert this at the head of pages.
+$page_header = '
+<h1>'.$title.'</h1>
+<p>
+<a href="plomwiki.php?title='.$title.'">View</a> 
+<a href="plomwiki.php?title='.$title.'&amp;action=edit">Edit</a> 
+<a href="plomwiki.php?title='.$title.'&amp;action=history">History</a> 
+</p>
+';
 
 # Insert plugins' code.
 $plugin_list_path = 'plugins.txt';
-$lines = ReadAndTrimLines($plugin_list_path);
+$lines = ReadAndTrimLines($plugin_list_path); 
 foreach ($lines as $line) require($line);
 
 # Find appropriate code for user's '?action='. Assume "view" if not found.
-$fallback = 'Action_view';
-$action = $_GET['action'];
-$action_function = 'Action_'.$action;
-if (!function_exists($action_function)) $action_function = $fallback;
+$fallback = 'Action_view'; 
+$action = $_GET['action'];                 $action_function = 'Action_'.$action;
+if (!function_exists($action_function))    $action_function = $fallback;
 
 # Database manipulation files/dirs. Do urgent work if urgent todo file is found.
-$work_dir = 'work/';
-$work_temp_dir = $work_dir.'temp/';
-$todo_urgent = $work_dir.'todo_urgent';
-WorkToDo($todo_urgent);
+$work_dir = 'work/';                         $work_temp_dir = $work_dir.'temp/'; 
+$todo_urgent = $work_dir.'todo_urgent';      WorkToDo($todo_urgent);
 
 # Final HTML.
-echo '<!DOCTYPE html>'."\n".'<html>'."\n".'<head>'."\n".
-                                                  '<meta charset="UTF-8">'."\n";
+echo 
+'<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+'; 
 eval($action_function.'();');
-echo "\n".'</body>'."\n".'</html>';
+echo '
+
+</body>
+</html>';
 
 ################
 # Page actions #
@@ -57,8 +64,12 @@ function Action_view()
                                                 '&amp;action=edit">Create?</a>';
   
   # Final HTML.
-  echo '<title>'.$title.'</title>'."\n".'</head>'."\n".'<body>'."\n".
-                                                 $page_header."\n".$text."\n"; }
+  echo 
+'<title>'.$title.'</title>
+</head>
+<body>
+'.$page_header.'
+'.$text; }
 
 function Action_history()
 # Show version history of page, offer reverting.
@@ -87,8 +98,12 @@ function Action_history()
   else $text = 'Page "'.$title.'" has no history.';
 
   # Final HTML.
-  echo '<title> Version history of page "'.$title.'"</title>'."\n".'</head>'.
-                        "\n".'<body>'."\n".$page_header."\n".$text."\n"; }
+  echo
+'<title> Version history of page "'.$title.'"</title>
+</head>
+<body>
+'.$page_header.'
+'.$text; }
 
 function Action_edit()
 # Edit form on a page source text. Send results to ?action=write.
@@ -101,75 +116,82 @@ function Action_edit()
   else $text = '';
   
   # Final HTML.
-  echo '<title>Editing "'.$title.'"</title>'."\n".'</head>'."\n".'<body>'."\n".
-          $page_header.'<form method="post" action="plomwiki.php?title='.$title.
-  '&amp;action=write">'."\n".'<textarea name="text" rows="10" cols="40">'.$text.
-  '</textarea><br />'."\n".'Password: <input type="password" name="password" />'
-              .'<br /><input type="submit" value="Update!" />'."\n".'</form>'; }
+  echo 
+'<title>Editing "'.$title.'"</title>
+</head>
+<body>
+'.$page_header.'
+<form method="post" action="plomwiki.php?title='.$title.'&amp;action=write">
+<textarea name="text" rows="10" cols="40">
+'.$text.'
+</textarea><br />
+Password: <input type="password" name="password" /><br />
+<input type="submit" value="Update!" />
+</form>'; }
 
 function Action_revert()
 # Prepare version reversion and ask user for confirmation.
 { global $diff_path, $title, $page_header, $page_path;
-
-  $time = $_GET['time']; 
-  $time_string = date('Y-m-d H:i:s', (int) $time);
+  $time = $_GET['time'];        $time_string = date('Y-m-d H:i:s', (int) $time);
 
   # Build $diff_array from $diff_path to be cycled through, keyed by timestamps.
   $diff_array = array();
   $diffs_text = explode('%%'."\n", file_get_contents($diff_path));
   foreach ($diffs_text as $diff_n => $diff)
-  { $diff = explode("\n", $diff);
-    $diff_text = '';
-    $id = 0;
+  { $diff = explode("\n", $diff);                      $diff_text = ''; $id = 0;
     foreach ($diff as $line_n => $line) 
     { if ($line_n == 0 and $line !== '') $id = $line;
-      else $diff_text .= $line."\n"; }
+      else                               $diff_text .= $line."\n"; }
     if ($id > 0) $diff_array[$id] = $diff_text; }
 
   # Revert $text back through $diff_array until $time hits $id.
-  $text = file_get_contents($page_path);
-  $finished = FALSE;
+  $text = file_get_contents($page_path);                      $finished = FALSE;
   foreach ($diff_array as $id => $diff)
   { if ($finished) break;
-    $reversed_diff = ReverseDiff($diff);
-    $text = PlomPatch($text, $reversed_diff);
+    $reversed_diff = ReverseDiff($diff); 
+    $text = PlomPatch($text, $reversed_diff);  
     if ($time == $id) $finished = TRUE; }
 
   if ($finished)
-  { $content = 'Reverting page to before '.$time_string.'?'."\n".'</p>'."\n".
-  '<form method="post" action="plomwiki.php?title='.$title.'&amp;action=write">'
-         ."\n".'<input type="hidden" name="text" value="'.$text.'"><br />'."\n".
-     'Password: <input type="password" name="password" /><input type="submit" '.
-                                                         'value="Revert!" />'; }
-  else { $content = 'Error. No valid reversion date given.'; }
+  { $content = 
+'Reverting page to before '.$time_string.'?</p>
+<form method="post" action="plomwiki.php?title='.$title.'&amp;action=write">
+<input type="hidden" name="text" value="'.$text.'">
+Password: <input type="password" name="password" />
+<input type="submit" value="Revert!" />
+</form>'; }
+  else { $content = 'Error. No valid reversion date given.</p>'; }
 
   # Final HTML.
-  echo '<title>Reverting "'.$title.'"</title>'."\n".'</head>'."\n".'<body>'."\n"
-                             .$page_header.'<p>'."\n".$content."\n".'</form>'; }
+  echo 
+'<title>Reverting "'.$title.'"</title>
+</head>
+<body>
+'.$page_header.'
+<p>'.$content; }
 
 function Action_write()
 # Password-protected writing of page update to work/, calling todo that results.
 { global $page_path, $title, $todo_urgent, $diff_path;
-  $text = $_POST['text']; $password_posted = $_POST['password'];
-  $html_start = '<title>Trying to edit "'.$title.'"</title>';
+  $text = $_POST['text']; $password_posted = $_POST['password']; $redirect = '';
   
   # Check for failure conditions: wrong $password, empty $text.
   $password_expected = substr(file_get_contents('password.txt'), 0, -1);
-  if ($password_posted !== $password_expected) 
-    $message = '<strong>Wrong password.</strong>';
-  elseif (!$text) $message = '<strong>Empty pages not allowed.</strong><br />'.
-      "\n".'Replace page text with "delete" if you want to eradicate the page.';
+  if ($password_posted !== $password_expected) $msg ='Wrong password.</strong>';
+  elseif (!$text)                              $msg = 
+'Empty pages not allowed.</strong><br />
+Replace page text with "delete" if you want to eradicate the page.';
   
   # Successful edit writes to todo_urgent, triggers work on it and a redirect.
   else
-  { $html_start = '<meta http-equiv="refresh" content="0; URL=plomwiki.php?'.
-                                             'title='.$title.'" />'.$html_start;
+  { $redirect = '
+<meta http-equiv="refresh" content="0; URL=plomwiki.php?title='.$title.'" />';
     $p_todo = fopen($todo_urgent, 'a+');
     
     if ($text == 'delete')           # "delete" triggers page deletion.
     { if (is_file($page_path)) 
         fwrite($p_todo, 'DeletePage("'.$page_path.'", "'.$title.'");'."\n");
-      $message = '<strong>Page "'.$title.'" is now non-existant.</strong>'; }
+      $msg = 'Page "'.$title.'" is deleted (if it ever existed).</strong>'; }
   
     else
     { if (get_magic_quotes_gpc())    # 
@@ -179,17 +201,24 @@ function Action_write()
       fwrite($p_todo, 'SafeWrite("'.$diff_path.'", "'.$diff_temp.'");'."\n");
       $page_temp = NewTempFile($text);
       fwrite($p_todo, 'SafeWrite("'.$page_path.'", "'.$page_temp.'");'."\n");
-      $message = '<strong>Page "'.$title.'" updated.</strong>'; }
+      $msg = 'Page "'.$title.'" updated.</strong>'; }
     
-    fclose($p_todo);
-    WorkToDo($todo_urgent);          # Try to do urgent work at once, right now.
-    $message .= '<br />'."\n".
-           'If you read this, then your browser failed to redirect you back.'; }
+    fclose($p_todo);  WorkToDo($todo_urgent); # Try doing urgent work right now.
+    $msg .= 
+'<br />
+If you read this, then your browser failed to redirect you back.'; }
   
   # Final HTML.
-  echo $html_start."\n".'</head>'."\n".'<body>'."\n".'<p>'."\n".$message."\n".
-   '</p>'."\n".'<p>'."\n".'Return to page "<a href="plomwiki.php?title='.$title.
-                                             '">'.$title.'</a>".'."\n".'</p>'; }
+  echo 
+'<title>Trying to edit "'.$title.'"</title>'
+.$redirect.'
+</head>
+<body>
+
+<p>
+<strong>'.$msg.'
+</p>
+<p>Back to page "<a href="plomwiki.php?title='.$title.'">'.$title.'</a>".</p>';}
 
 ####################################
 # Page text manipulation functions #
@@ -197,7 +226,7 @@ function Action_write()
 
 function Markup($text)
 # Applying markup functions in the order described by markups.txt to $text.
-{ $markup_list_path = 'markups.txt';
+{ $markup_list_path = 'markups.txt'; 
   $lines = ReadAndTrimLines($markup_list_path);
   foreach ($lines as $line) eval('$text = '.$line.'($text);');
   return $text; }
@@ -222,40 +251,28 @@ function WorkToDo($path_todo)
 # Work through todo file. Comment-out finished lines. Delete file when finished.
 { global $work_dir; 
   if (file_exists($path_todo))
-  { LockOn($work_dir);
-    $p_todo = fopen($path_todo, 'r+');
+  { LockOn($work_dir);                        $p_todo = fopen($path_todo, 'r+');
     while (!feof($p_todo))
-    { $position = ftell($p_todo);
-      $line = fgets($p_todo);
+    { $position = ftell($p_todo);             $line = fgets($p_todo);
       if ($line[0] !== '#')
-      { $call = substr($line, 0, -1);
-        eval($call);
-        fseek($p_todo, $position);
-        fwrite($p_todo, '#');
-        fgets($p_todo); } }
-    fclose($p_todo);
-    unlink($path_todo); 
-    LockOff($work_dir); } }
+      { $call = substr($line, 0, -1); eval($call);
+        fseek($p_todo, $position);   fwrite($p_todo, '#');   fgets($p_todo); } }
+    fclose($p_todo);         unlink($path_todo);         LockOff($work_dir); } }
 
 function NewTempFile($string)
 # Put $string into new $work_temp_dir temp file.
 { global $work_temp_dir;
-  LockOn($work_temp_dir);
-  $temps = array(0);
-  $p_dir = opendir($work_temp_dir); 
+  LockOn($work_temp_dir);  $temps = array(0);  $p_dir = opendir($work_temp_dir); 
   while (FALSE !== ($fn = readdir($p_dir))) if ($fn[0] != '.') $temps[] = $fn;
   closedir($p_dir);
-  $int = max($temps) + 1; 
-  $temp_path = $work_temp_dir.$int;
+  $int = max($temps) + 1;  $temp_path = $work_temp_dir.$int;
   file_put_contents($temp_path, $string);
-  LockOff($work_temp_dir); 
-  return $temp_path; }
+  LockOff($work_temp_dir); return $temp_path; }
 
 function LockOn($dir)
 # Check for and create lockfile for $dir. Lockfiling runs out after $max_time.
 { $lock_duration = 60;   # Lockfile duration. Should be > server execution time.
-  $now = time();
-  $lock = $dir.'lock';
+  $now = time(); $lock = $dir.'lock';
   if (is_file($lock))
   { $time = file_get_contents($lock);
     if ($time + $lock_duration > $now)
@@ -269,8 +286,7 @@ function LockOff($dir)
 function DeletePage($page_path, $title) 
 # Deletion renames and timestamps a page and its diff and moves it to deleted/.
 { global $pages_dir, $diff_dir;
-  $pages_del_dir = $pages_dir.'deleted/';
-  $timestamp = time();
+  $pages_del_dir = $pages_dir.'deleted/';                   $timestamp = time();
   $deleted_page_path = $pages_del_dir.$title.',del-page-'.$timestamp;
   $diff_path = $diff_dir.$title;
   $deleted_diff_path = $pages_del_dir.$title.',del-diff-'.$timestamp;
@@ -280,7 +296,7 @@ function DeletePage($page_path, $title)
 function SafeWrite($path_original, $path_temp)
 # Avoid data corruption: Exit if no temp file. Rename, don't overwrite directly.
 { if (!is_file($path_temp)) return;
-  if (is_file($path_original)) unlink($path_original);
+  if (is_file($path_original)) unlink($path_original); 
   rename($path_temp, $path_original); }
 
 ########
@@ -290,11 +306,10 @@ function SafeWrite($path_original, $path_temp)
 function NewDiffTemp($page_path, $text_new, $diff_path)
 # Temp of $diff_path diff updated with diff $page_path's content to $text_new.
 { if (is_file($page_path)) $text_old = file_get_contents($page_path);
-  else $text_old = '';
-  $diff_add = PlomDiff($text_old, $text_new);
-  $timestamp = time();
+  else                     $text_old = '';
+  $diff_add = PlomDiff($text_old, $text_new);               $timestamp = time();
   if (is_file($diff_path)) $diff_old = file_get_contents($diff_path);
-  else $diff_old = '';
+  else                     $diff_old = '';
   $diff_new = $timestamp."\n".$diff_add.'%%'."\n".$diff_old;
   return NewTempFile($diff_new); }
 
@@ -448,8 +463,7 @@ function PlomPatch($text_A, $diff)
 
 function ReverseDiff($old_diff)
 # Reverse a diff.
-{ $new_diff = '';
-  $old_diff = explode("\n", $old_diff);
+{ $new_diff = ''; $old_diff = explode("\n", $old_diff);
   foreach ($old_diff as $line_n => $line)
   { if     ($line[0] == '<') $line[0] = '>'; 
     elseif ($line[0] == '>') $line[0] = '<';
