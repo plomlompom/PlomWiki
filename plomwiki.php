@@ -14,7 +14,7 @@ $html_start = '<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-'; 
+<title>'; 
 $html_end = '
 
 </body>
@@ -30,15 +30,18 @@ if (!preg_match('/^[a-zA-Z0-9]+$/', $title))
 { echo 'Illegal page title. Only alphanumeric characters allowed.'; exit(); }
 $page_path = $pages_dir.$title; $diff_path = $diff_dir. $title;
 
-# The action bar. You may insert this at the head of pages.
-$page_header = '
+# Normal view start.
+$normal_view_start = '</title>
+</head>
+<body>
+
 <h1>'.$title.'</h1>
 <p>
 <a href="plomwiki.php?title='.$title.'">View</a> 
 <a href="plomwiki.php?title='.$title.'&amp;action=edit">Edit</a> 
 <a href="plomwiki.php?title='.$title.'&amp;action=history">History</a> 
 </p>
-';
+'."\n";
 
 # Insert plugins' code.
 $lines = ReadAndTrimLines($plugin_list_path); 
@@ -53,9 +56,7 @@ if (!function_exists($action_function))    $action_function = $fallback;
 WorkToDo($todo_urgent);
 
 # Final HTML.
-echo $html_start;
-eval($action_function.'();');
-echo $html_end;
+echo $html_start; eval($action_function.'();'); echo $html_end;
 
 ################
 # Page actions #
@@ -63,7 +64,7 @@ echo $html_end;
 
 function Action_view()
 # Formatted display of a page.
-{ global $page_path, $page_header, $title;
+{ global $normal_view_start, $page_path, $title;
   
   # Get text from file. If none, show invitation to create one. Else, markup it.
   if (is_file($page_path)) 
@@ -74,15 +75,11 @@ function Action_view()
                                                 '&amp;action=edit">Create?</a>';
   
   # Final HTML.
-  echo '<title>'.$title.'</title>'."\n".
-  '</head>'."\n".
-  '<body>'."\n".
-  $page_header."\n".
-  $text; }
+  echo $title.$normal_view_start.$text; }
 
 function Action_history()
 # Show version history of page (based on its diff file), offer reverting.
-{ global $diff_path, $page_header, $title;
+{ global $diff_path, $normal_view_start, $title;
 
   # Check for non-empty diff file on page. Remove superfluous "%%" and "\n".
   $text = 'Page "'.$title.'" has no history.';                   $diff_all = '';
@@ -118,15 +115,11 @@ function Action_history()
     $text = implode("\n", $diffs); }
 
   # Final HTML.
-  echo '<title> Version history of page "'.$title.'"</title>'."\n".
-  '</head>'."\n".
-  '<body>'."\n".
-  $page_header."\n".
-  $text; }
+  echo 'Version history of page "'.$title.'"'.$normal_view_start.$text; }
 
 function Action_edit()
 # Edit form on a page source text. Send results to ?action=write.
-{ global $page_header, $page_path, $title;
+{ global $normal_view_start, $page_path, $title;
 
   # If no page file is found, start with an empty $text.
   if (is_file($page_path)) 
@@ -135,10 +128,7 @@ function Action_edit()
   else $text = '';
   
   # Final HTML.
-  echo '<title>Editing "'.$title.'"</title>'."\n".
-  '</head>'."\n".
-  '<body>'."\n".
-  $page_header."\n".
+  echo 'Editing "'.$title.$normal_view_start.
   '<form method="post" action="plomwiki.php?title='.$title.'&amp;action=write">'
                                                                           ."\n".
   '<textarea name="text" rows="10" cols="40">'.$text.'</textarea><br />'."\n".
@@ -148,7 +138,7 @@ function Action_edit()
 
 function Action_revert()
 # Prepare version reversion and ask user for confirmation.
-{ global $diff_path, $title, $page_header, $page_path;
+{ global $normal_view_start, $diff_path, $title, $page_path;
   $time = $_GET['time'];        $time_string = date('Y-m-d H:i:s', (int) $time);
 
   # Build $diff_array from $diff_path to be cycled through, keyed by timestamps.
@@ -180,11 +170,7 @@ function Action_revert()
   else { $content = 'Error. No valid reversion date given.</p>'; }
 
   # Final HTML.
-  echo '<title>Reverting "'.$title.'"</title>'."\n".
-  '</head>'."\n".
-  '<body>'."\n".
-  $page_header."\n".
-  '<p>'.$content; }
+  echo 'Reverting "'.$title.$normal_view_start.'<p>'.$content; }
 
 function Action_write()
 # Password-protected writing of page update to work/, calling todo that results.
@@ -227,14 +213,12 @@ function Action_write()
     'If you read this, then your browser failed to redirect you back.'; }
   
   # Final HTML.
-  echo '<title>Trying to edit "'.$title.'"</title>'
+  echo 'Trying to edit "'.$title.'"</title>'
   .$redirect."\n".
   '</head>'."\n".
   '<body>'."\n".
   "\n".
-  '<p>'."\n".
-  '<strong>'.$msg."\n".
-  '</p>'."\n".
+  '<p><strong>'.$msg.'</p>'."\n".
   '<p>Return to page "<a href="plomwiki.php?title='.$title.'">'.$title.'</a>".'.
                                                                         '</p>';}
 

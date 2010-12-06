@@ -13,7 +13,7 @@ if ($fail)   $msg = 'PlomWiki Setup failed. Something is wrong!';
 else       { $msg = 'PlomWiki Setup successful. Reload!'; unlink($setup_file); }
 
 # Final HTML.
-echo $html_start.'<title>PlomWiki Setup</title>
+echo $html_start.'PlomWiki Setup</title>
 </head>
 <body>
 
