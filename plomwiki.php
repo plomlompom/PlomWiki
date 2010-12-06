@@ -75,8 +75,7 @@ function Action_history()
 { global $diff_path, $page_header, $title;
 
   # Check for non-empty diff file on page. Remove superfluous "%%" and "\n".
-  $text = 'Page "'.$title.'" has no history.';
-  $diff_all = '';
+  $text = 'Page "'.$title.'" has no history.';                   $diff_all = '';
   if (is_file($diff_path))
   { $diff_all = file_get_contents($diff_path);
     if (substr($diff_all,0,2) == '%%'     ) $diff_all = substr($diff_all,3);
@@ -104,8 +103,8 @@ function Action_history()
       $diffs[$diff_n] = '<p>'."\n".
       '<a href="plomwiki.php?title='.$title.'&amp;action=revert'.
                                    '&amp;time='.$time.'">Revert</a><br />'."\n".
-     $diff_output."\n".
-     '</p>'; }
+      $diff_output."\n".
+      '</p>'; }
     $text = implode("\n", $diffs); }
 
   # Final HTML.
