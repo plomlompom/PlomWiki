@@ -1,14 +1,31 @@
 <?php
 # PlomWiki: @plomlompom's wiki.      This file contains the core execution code.
 
+# Filesystem information.
+$pages_dir  = 'pages/';                      $work_dir = 'work/';
+$diff_dir = $pages_dir.'diffs/';             $work_temp_dir = $work_dir.'temp/';
+$del_dir = $pages_dir.'deleted/';
+
+# HTML start and end.
+$html_start = '<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+'; 
+$html_end = '
+
+</body>
+</html>';
+
+# Check for unfinished setup file, execute if found.
+$setup_file = 'setup.php';
+if (is_file($setup_file)) require($setup_file);
+
 # Only allow simple alphanumeric titles to avoid security risks.
 $title = $_GET['title']; 
 if (!preg_match('/^[a-zA-Z0-9]+$/', $title)) 
 { echo 'Illegal page title. Only alphanumeric characters allowed.'; exit(); }
-
-# Where page data is located.
-$pages_dir  = 'pages/';                          $page_path = $pages_dir.$title;
-$diff_dir = $pages_dir.'diffs/';                 $diff_path = $diff_dir. $title;
+$page_path = $pages_dir.$title; $diff_path = $diff_dir. $title;
 
 # The action bar. You may insert this at the head of pages.
 $page_header = '
@@ -30,22 +47,13 @@ $fallback = 'Action_view';
 $action = $_GET['action'];                 $action_function = 'Action_'.$action;
 if (!function_exists($action_function))    $action_function = $fallback;
 
-# Database manipulation files/dirs. Do urgent work if urgent todo file is found.
-$work_dir = 'work/';                         $work_temp_dir = $work_dir.'temp/'; 
-$todo_urgent = $work_dir.'todo_urgent';      WorkToDo($todo_urgent);
+# Do urgent work if urgent todo file is found.
+$todo_urgent = $work_dir.'todo_urgent'; WorkToDo($todo_urgent);
 
 # Final HTML.
-echo 
-'<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-'; 
+echo $html_start;
 eval($action_function.'();');
-echo '
-
-</body>
-</html>';
+echo $html_end;
 
 ################
 # Page actions #
@@ -294,12 +302,12 @@ function LockOff($dir)
 { unlink($dir.'lock'); }
 
 function DeletePage($page_path, $title) 
-# Deletion renames and timestamps a page and its diff and moves it to deleted/.
-{ global $pages_dir, $diff_dir;
-  $pages_del_dir = $pages_dir.'deleted/'; $timestamp = time();
-  $deleted_page_path = $pages_del_dir.$title.',del-page-'.$timestamp;
+# Deletion renames and timestamps a page and its diff and moves it to $del_dir.
+{ global $pages_dir, $diff_dir, $del_dir;
+  $timestamp = time();
+  $deleted_page_path = $del_dir.$title.',del-page-'.$timestamp;
   $diff_path = $diff_dir.$title;
-  $deleted_diff_path = $pages_del_dir.$title.',del-diff-'.$timestamp;
+  $deleted_diff_path = $del_dir.$title.',del-diff-'.$timestamp;
   if (is_file($diff_path)) rename($diff_path, $deleted_diff_path);
   if (is_file($page_path)) rename($page_path, $deleted_page_path); }
 

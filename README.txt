@@ -73,7 +73,3 @@ Any other todo file only gets worked through if the function WorkToDo($path) is
 called on its path. Currently, a plugin PlomWiki/plugins/Action_work.php is
 included but commented out in plugins.txt that implements the action=work which
 works through a non-urgent todo file PlomWiki/work/todo.
-
-You may find files called ".gitignore" files in several directories of PlomWiki.
-Those can be safely deleted. They are included in the git repository version of
-PlomWiki merely to ensure said directories are committed even if they're empty.
