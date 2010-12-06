@@ -47,6 +47,10 @@ function MarkupEmphasis($text)
 # "[/This/]" becomes "<em>This</em>", if not broken by newlines.
 { return preg_replace('/\[\/([^'."\n".']*?)\/]/', '<em>$1</em>', $text); }
 
+function MarkupDeleted($text)
+# "[-This-]" becomes "<del>This</del>", if not broken by newlines.
+{ return preg_replace('/\[-([^'."\n".']*?)-]/', '<del>$1</del>', $text); }
+
 function MarkupLists($text)
 # Lines starting with '*] ' preceded by multiples of double whitespace -> lists.
 { global $esc, $esc_p_on, $esc_p_off;
