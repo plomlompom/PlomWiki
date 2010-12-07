@@ -134,7 +134,7 @@ function Action_edit()
   '<textarea name="text" rows="20" style="width:100%">'.$text.'</textarea><br />'."\n".
   'Password: <input type="password" name="password" /> <input type="submit" '.
                                                       'value="Update!" />'."\n".
-  '</form>'."\n".
+  '</form>'."\n\n".
   $markup_help; }
 
 function Action_revert()

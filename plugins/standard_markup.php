@@ -2,18 +2,14 @@
 # PlomWiki StandardMarkup
 
 # Provide help message to be shown in editing window.
-$markup_help = '<h2>PlomWiki StandardMarkup help</h2>
-<ul>
-<li>[[<a href="InternalLink">InternalLink</a>]]</li>
-<li>[*<strong>strong</strong>*]</li>
-<li>[/<em>emphasis</em>/]</li>
-<li>[-<del>deleted</del>-]</li>
-<li>"*] list element"
-  <ul><li>
-    <ul><li>"&nbsp;&nbsp;&nbsp;&nbsp;*] indented list element"</li>
-    </ul></li>
-  </ul></li>
-</ul>';
+$markup_help = '<h4>PlomWiki markup cheatsheet</h4>
+<p>In-line:</p>
+<pre>[[<a href="InternalLink">InternalLink</a>]] [*<strong>strong</strong>*] '.
+                             '[/<em>emphasis</em>/] [-<del>deleted</del>-]</pre>
+<p>Multi-line:</p>
+<pre>*] list element
+&nbsp;&nbsp;*] indented once
+&nbsp;&nbsp;&nbsp;&nbsp;*] indented twice</pre>';
 
 # Escape symbols / sequences. $esc."\n" newlines won't be replaced by "<br />.
 # Bracket lines to exclude from "<p>" paragraphing in $esc_p_on and $esc_p_off.
