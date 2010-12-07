@@ -205,7 +205,7 @@ function Action_write()
         fwrite($p_todo, 'DeletePage("'.$page_path.'", "'.$title.'");'."\n");
       $msg = 'Page "'.$title.'" is deleted (if it ever existed).</strong>'; }
   
-    # Clean $text. Write $text, $diff temp files. Add SafeWrite() tasks to todo.
+    # Write $text, $diff temp files. Add SafeWrite() tasks to todo.
     else
     { $diff_temp = NewDiffTemp($old_text, $text, $diff_path);
       fwrite($p_todo, 'SafeWrite("'.$diff_path.'", "'.$diff_temp.'");'."\n");
