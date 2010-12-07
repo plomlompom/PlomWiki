@@ -119,7 +119,7 @@ function Action_history()
 
 function Action_edit()
 # Edit form on a page source text. Send results to ?action=write.
-{ global $normal_view_start, $page_path, $title;
+{ global $markup_help, $normal_view_start, $page_path, $title;
 
   # If no page file is found, start with an empty $text.
   if (is_file($page_path)) 
@@ -134,7 +134,8 @@ function Action_edit()
   '<textarea name="text" rows="20" style="width:100%">'.$text.'</textarea><br />'."\n".
   'Password: <input type="password" name="password" /> <input type="submit" '.
                                                       'value="Update!" />'."\n".
-  '</form>'; }
+  '</form>'."\n".
+  $markup_help; }
 
 function Action_revert()
 # Prepare version reversion and ask user for confirmation.
