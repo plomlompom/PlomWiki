@@ -131,9 +131,9 @@ function Action_edit()
   echo 'Editing "'.$title.$normal_view_start.
   '<form method="post" action="plomwiki.php?title='.$title.'&amp;action=write">'
                                                                           ."\n".
-  '<textarea name="text" rows="10" cols="40">'.$text.'</textarea><br />'."\n".
-  'Password: <input type="password" name="password" /><br />'."\n".
-  '<input type="submit" value="Update!" />'."\n".
+  '<textarea name="text" rows="20" style="width:100%">'.$text.'</textarea><br />'."\n".
+  'Password: <input type="password" name="password" /> <input type="submit" '.
+                                                      'value="Update!" />'."\n".
   '</form>'; }
 
 function Action_revert()
