@@ -177,7 +177,8 @@ function Action_write()
 # Password-protected writing of page update to work/, calling todo that results.
 { global $page_path, $password_path, $title, $todo_urgent, $diff_path;
   $text = $_POST['text']; $password_posted = $_POST['password']; $redirect = '';
-  $old_text = file_get_contents($page_path);
+  $old_text = '';
+  if (is_file($page_path)) $old_text = file_get_contents($page_path);
 
   # Repair problems in submitted text. Undo possible PHP magical_quotes horrors.
   if (get_magic_quotes_gpc()) $text = stripslashes($text);
