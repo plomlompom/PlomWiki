@@ -177,14 +177,22 @@ function Action_write()
 # Password-protected writing of page update to work/, calling todo that results.
 { global $page_path, $password_path, $title, $todo_urgent, $diff_path;
   $text = $_POST['text']; $password_posted = $_POST['password']; $redirect = '';
+  $old_text = file_get_contents($page_path);
+
+  # Repair problems in submitted text. Undo possible PHP magical_quotes horrors.
+  if (get_magic_quotes_gpc()) $text = stripslashes($text);
+  $text = NormalizeNewlines($text);
   
-  # Check for failure conditions: wrong $password, empty $text.
+  # Check for failure conditions: wrong $password, empty $text, $text unchanged.
   $password_expected = substr(file_get_contents($password_path), 0, -1);
-  if ($password_posted !== $password_expected) $msg ='Wrong password.</strong>';
+  if ($password_posted !== $password_expected) 
+    $msg ='Wrong password.</strong>';
   elseif (!$text) 
     $msg = 'Empty pages not allowed.</strong><br />'."\n".
     'Replace page text with "delete" if you want to eradicate the page.';
-  
+  elseif (NormalizeNewlines(stripslashes($text)) == $old_text)
+    $msg = 'You changed nothing!</strong>';  
+
   # Successful edit writes to todo_urgent, triggers work on it and a redirect.
   else
   { $redirect = "\n".'<meta http-equiv="refresh" content="0; URL=plomwiki.php?'.
@@ -199,10 +207,7 @@ function Action_write()
   
     # Clean $text. Write $text, $diff temp files. Add SafeWrite() tasks to todo.
     else
-    { if (get_magic_quotes_gpc())    # Undo possible PHP magical_quotes horrors.
-        $text = stripslashes($text); #
-      $text      = NormalizeNewlines($text);
-      $diff_temp = NewDiffTemp($page_path, $text, $diff_path);
+    { $diff_temp = NewDiffTemp($old_text, $text, $diff_path);
       fwrite($p_todo, 'SafeWrite("'.$diff_path.'", "'.$diff_temp.'");'."\n");
       $page_temp = NewTempFile($text);
       fwrite($p_todo, 'SafeWrite("'.$page_path.'", "'.$page_temp.'");'."\n");
@@ -308,11 +313,9 @@ function SafeWrite($path_original, $path_temp)
 # Diff #
 ########
 
-function NewDiffTemp($page_path, $text_new, $diff_path)
+function NewDiffTemp($text_old, $text_new, $diff_path)
 # Build temp file of $diff_path updated to diff $page_path text -> $text_new.
-{ if (is_file($page_path)) $text_old = file_get_contents($page_path);
-  else                     $text_old = '';
-  $diff_add = PlomDiff($text_old, $text_new);
+{ $diff_add = PlomDiff($text_old, $text_new);
   if (is_file($diff_path)) $diff_old = file_get_contents($diff_path);
   else                     $diff_old = '';
   $timestamp = time();
