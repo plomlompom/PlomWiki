@@ -1,6 +1,7 @@
 <?php
 # PlomWiki StandardMarkup
 
+# Provide help message to be shown in editing window.
 $markup_help = '<h2>PlomWiki StandardMarkup help</h2>
 <ul>
 <li>[[<a href="InternalLink">InternalLink</a>]]</li>
@@ -20,31 +21,9 @@ $esc = "\r";
 $esc_p_on = $esc.'p_on';
 $esc_p_off = $esc.'p_off';
 
-function MarkupLinesParagraphs($text)
-# Line-break and paragraph markup.
-{ global $esc, $esc_p_on, $esc_p_off;
-
-  # Temporarily replace escaped newlines them with $esc.'n'.
-  $text = str_replace($esc."\n",                               $esc.'n', $text);
-
-  # Unescaped newlines get transformed into "<br \>" and "<p />".
-  $text = str_replace("\n",                                    '<br />', $text); 
-  $text = str_replace('<br /><br />',       "\n".'</p>'."\n".'<p>'."\n", $text); 
-  $text = str_replace('<br />',                           '<br />'."\n", $text); 
-
-  # Assume $text starts, ends as paragraph. If wrong, will be corrected later.
-  $text = '<p>'."\n".$text."\n".'</p>';
-
-  # All replacing of "\n" done, it's safe to replace $esc.'n' with it.
-  $text = str_replace($esc.'n',                                    "\n", $text);
-
-  # Move anything bracketed between $esc_p_on and $esc_p_off out of paragraphs.
-  $text = str_replace('<p>'."\n".$esc_p_on,                          '', $text);
-  $text = str_replace($esc_p_off."\n".'</p>',                        '', $text);
-  $text = str_replace('<br />'."\n".$esc_p_on,         "\n".'</p>'."\n", $text);
-  $text = str_replace($esc_p_off.'<br />',                   "\n".'<p>', $text);
-  
-  return $text; }
+##################
+# In-line markup #
+##################
 
 function MarkupInternalLinks($text)
 # Wiki-internal linking markup [[LikeThis]].
@@ -63,6 +42,10 @@ function MarkupEmphasis($text)
 function MarkupDeleted($text)
 # "[-This-]" becomes "<del>This</del>", if not broken by newlines.
 { return preg_replace('/\[-([^'."\n".']*?)-]/', '<del>$1</del>', $text); }
+
+#########################
+# Multiple-lines markup #
+#########################
 
 function MarkupLists($text)
 # Lines starting with '*] ' preceded by multiples of double whitespace -> lists.
@@ -132,3 +115,29 @@ function MarkupLists($text)
 
   # Implode lines back to $text. Remove temporary final line added earlier.
   $text = implode("\n", $lines); $text = substr($text, 0, -1); return $text; }
+
+function MarkupLinesParagraphs($text)
+# Line-break and paragraph markup.
+{ global $esc, $esc_p_on, $esc_p_off;
+
+  # Temporarily replace escaped newlines them with $esc.'n'.
+  $text = str_replace($esc."\n",                               $esc.'n', $text);
+
+  # Unescaped newlines get transformed into "<br \>" and "<p />".
+  $text = str_replace("\n",                                    '<br />', $text); 
+  $text = str_replace('<br /><br />',       "\n".'</p>'."\n".'<p>'."\n", $text); 
+  $text = str_replace('<br />',                           '<br />'."\n", $text); 
+
+  # Assume $text starts, ends as paragraph. If wrong, will be corrected later.
+  $text = '<p>'."\n".$text."\n".'</p>';
+
+  # All replacing of "\n" done, it's safe to replace $esc.'n' with it.
+  $text = str_replace($esc.'n',                                    "\n", $text);
+
+  # Move anything bracketed between $esc_p_on and $esc_p_off out of paragraphs.
+  $text = str_replace('<p>'."\n".$esc_p_on,                          '', $text);
+  $text = str_replace($esc_p_off."\n".'</p>',                        '', $text);
+  $text = str_replace('<br />'."\n".$esc_p_on,         "\n".'</p>'."\n", $text);
+  $text = str_replace($esc_p_off.'<br />',                   "\n".'<p>', $text);
+  
+  return $text; }
