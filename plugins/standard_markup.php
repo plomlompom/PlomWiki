@@ -4,8 +4,10 @@
 # Provide help message to be shown in editing window.
 $markup_help = '<h4>PlomWiki markup cheatsheet</h4>
 <p>In-line:</p>
-<pre>[[<a href="InternalLink">InternalLink</a>]] [*<strong>strong</strong>*] '.
-                             '[/<em>emphasis</em>/] [-<del>deleted</del>-]</pre>
+<pre>[*<strong>strong</strong>*] [/<em>emphasis</em>/] [-<del>deleted</del>-] '.
+          '[[<a href="plomwiki.php?title=PagenameOrURL">PagenameOrURL</a>]] [['.
+    'PagenameOrURL][<a href="plomwiki.php?title=PagenameOrURL">Text displayed '.
+                                                            'instead</a>]]</pre>
 <p>Multi-line:</p>
 <pre>*] list element
 &nbsp;&nbsp;*] indented once
@@ -22,9 +24,15 @@ $esc_p_off = $esc.'p_off';
 ##################
 
 function MarkupInternalLinks($text)
-# Wiki-internal linking markup [[LikeThis]].
-{ return preg_replace('/\[\[([A-Za-z0-9]+)]]/',
-                             '<a href="plomwiki.php?title=$1">$1</a>', $text); } 
+# [[LinkedPagename]], [[Linked][Text displayed]], [[http://linked-url.com]].
+{ $text = preg_replace('/\[\[([A-Za-z0-9]+)]]/',
+                       '<a href="plomwiki.php?title=$1">$1</a>', $text);
+  $text = preg_replace('/\[\[([A-Za-z0-9]+)]\[([^'."\n".']+)]]/',
+                       '<a href="plomwiki.php?title=$1">$2</a>', $text);
+  $text = preg_replace('/\[\[(http\:\/\/[^ '."\n".']+)]\[([^'."\n".']+)]]/',
+                       '<a href="$1">$2</a>', $text);
+  return  preg_replace('/\[\[(http\:\/\/[^ '."\n".']+)]]/',
+                       '<a href="$1">$1</a>', $text); }
 
 function MarkupStrong($text)
 # "[*This*]" becomes "<strong>This</strong>", if not broken by newlines.
