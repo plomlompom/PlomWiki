@@ -23,7 +23,7 @@ $esc_p_off = $esc.'p_off';
 # In-line markup #
 ##################
 
-function MarkupInternalLinks($text)
+function MarkupLinks($text)
 # [[LinkedPagename]], [[Linked][Text displayed]], [[http://linked-url.com]].
 { $text = preg_replace('/\[\[([A-Za-z0-9]+)]]/',
                        '<a href="plomwiki.php?title=$1">$1</a>', $text);
