@@ -17,12 +17,8 @@ and on "History" to examine a diff history of the pages edits. Here you can also
 revert changes to the page text by clicking on the "Revert" link over a diff.
 
 Per default, only little markup is possible on pages, though more could be added
-as plugins (see Technical Details section). The standard markup includes:
-* HTML code gets ignored: &, <, >, ' and " get escaped into their HTML entities.
-* Single newlines become linebreaks, double newlines become paragraphs.
-* Enclose wiki-internal links to other pagenames [[InDoubleSquareBrackets]].
-* [*x*] => <strong>x</strong>, [/x/] => <em>x</em>, [-x-] => <del>x</del>.
-* Unordered bullet point lists. Use *]. Indent in multiples of two whitespaces.
+as plugins (see Technical Details section). For examples of usable markups, see
+the markup cheatcodes below the page text editing window.
 
 To create a new page, either in the address bar replace the "Start" in the URL
 part "plomwiki.php?title=Start" with the name for the new page, or create a link
