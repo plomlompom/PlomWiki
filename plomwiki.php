@@ -76,12 +76,11 @@ function Action_edit()
   echo 'Editing "'.$title.$normal_view_start.
   '<form method="post" action="plomwiki.php?title='.$title.'&amp;action=write">'
                                                                           ."\n".
-  '<textarea name="text" rows="20" style="width:100%">'.$text.
+                    '<textarea name="text" rows="20" style="width:100%">'.$text.
                                                        '</textarea><br />'."\n".
-  'Password: <input type="password" name="password" /> <input type="submit" '.
+    'Password: <input type="password" name="password" /> <input type="submit" '.
                                                       'value="Update!" />'."\n".
-  '</form>'."\n\n".
-  $markup_help; }
+                                                '</form>'."\n\n".$markup_help; }
 
 function Action_write()
 # Password-protected writing of page update to work/, calling todo that results.
@@ -101,7 +100,7 @@ function Action_write()
     $msg ='Wrong password.</strong>';
   elseif (!$text) 
     $msg = 'Empty pages not allowed.</strong><br />'."\n".
-    'Replace page text with "delete" if you want to eradicate the page.';
+           'Replace page text with "delete" if you want to eradicate the page.';
   elseif (NormalizeNewlines(stripslashes($text)) == $old_text)
     $msg = 'You changed nothing!</strong>';  
 
@@ -205,11 +204,11 @@ function Action_revert()
 
   if ($finished)
   { $content = 'Reverting page to before '.$time_string.'?</p>'."\n".
-    '<form method="post" action="plomwiki.php?title='.$title.'&amp;'.
-                                                          'action=write">'."\n".
-    '<input type="hidden" name="text" value="'.$text.'">'."\n".
-    'Password: <input type="password" name="password" />'."\n".
-    '<input type="submit" value="Revert!" />'."\n".'</form>'; }
+    '<form method="post" action="plomwiki.php?title='.$title.'&amp;action='.
+                                                                 'write">'."\n".
+                     '<input type="hidden" name="text" value="'.$text.'">'."\n".
+                     'Password: <input type="password" name="password" />'."\n".
+                     '<input type="submit" value="Revert!" />'."\n".'</form>'; }
   else { $content = 'Error. No valid reversion date given.</p>'; }
 
   # Final HTML.
