@@ -41,7 +41,7 @@ if (!function_exists($action_function))    $action_function = $fallback;
 
 # Before executing user's action, do urgent work if urgent todo file is found.
 WorkToDo($todo_urgent); 
-eval($action_function.'();'); 
+$action_function();
 
 ################
 # Page actions #
@@ -218,7 +218,7 @@ function Markup($text)
 # Applying markup functions in the order described by markups.txt to $text.
 { global $markup_list_path; 
   $lines = ReadAndTrimLines($markup_list_path);
-  foreach ($lines as $line) eval('$text = '.$line.'($text);');
+  foreach ($lines as $line) $text = $line($text);
   return $text; }
 
 function NormalizeNewlines($text)
