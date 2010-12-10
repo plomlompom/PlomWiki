@@ -2,16 +2,14 @@
 # PlomWiki StandardMarkup
 
 # Provide help message to be shown in editing window.
-$markup_help = '<h4>PlomWiki markup cheatsheet</h4>
-<p>In-line:</p>
-<pre>[*<strong>strong</strong>*] [/<em>emphasis</em>/] [-<del>deleted</del>-] '.
-          '[[<a href="plomwiki.php?title=PagenameOrURL">PagenameOrURL</a>]] [['.
-     'PagenameOrURL|<a href="plomwiki.php?title=PagenameOrURL">Text displayed '.
-                                                            'instead</a>]]</pre>
-<p>Multi-line:</p>
-<pre>*] list element
-&nbsp;&nbsp;*] indented once
-&nbsp;&nbsp;&nbsp;&nbsp;*] indented twice</pre>';
+$markup_help = '<h4>PlomWiki markup cheatsheet</h4>'."\n".'<p>In-line:</p>'."\n"
+.'<pre>[*<strong>strong</strong>*] [/<em>emphasis</em>/] [-<del>deleted</del>-]'
+.' [[<a href="plomwiki.php?title=PagenameOrURL">PagenameOrURL</a>]] [[Pagename'.
+'OrURL|<a href="plomwiki.php?title=PagenameOrURL">Text displayed instead</a>]]'.
+                                                                  '</pre>'."\n".
+'<p>Multi-line:</p>'."\n".'<pre>*] list element'."\n".
+                                            '&nbsp;&nbsp;*] indented once'."\n".
+                              '&nbsp;&nbsp;&nbsp;&nbsp;*] indented twice</pre>';
 
 # Escape symbols / sequences. $esc."\n" newlines won't be replaced by "<br />.
 # Bracket lines to exclude from "<p>" paragraphing in $esc_p_on and $esc_p_off.

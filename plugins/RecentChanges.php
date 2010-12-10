@@ -32,6 +32,5 @@ function Action_RecentChanges()
   else $output = '<p>No RecentChanges file found.</p>';
   
   # Final HTML.
-  echo 'Recent Changes</title>'."\n".
-  '<h1>Recent Changes</h1>'."\n\n".
-  $output; }
+  echo 'Recent Changes</title>'."\n".'</head>'."\n".'<body>'."\n\n".
+                                     '<h1>Recent Changes</h1>'."\n\n".$output; }

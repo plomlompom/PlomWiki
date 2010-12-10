@@ -1,5 +1,8 @@
-<?php
-# PlomWiki: @plomlompom's wiki.      This file contains the core execution code.
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title><?php
 
 # Filesystem information.
 $config_dir = 'config/';         $markup_list_path = $config_dir.'markups.txt';
@@ -9,20 +12,8 @@ $pages_dir  = 'pages/';                  $work_dir = 'work/';
 $diff_dir = $pages_dir.'diffs/';         $work_temp_dir = $work_dir.'temp/';
 $del_dir = $pages_dir.'deleted/';        $todo_urgent = $work_dir.'todo_urgent'; 
 
-# HTML start and end.
-$html_start = '<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>'; 
-$html_end = '
-
-</body>
-</html>';
-
 # Check for unfinished setup file, execute if found.
-$setup_file = 'setup.php';
-if (is_file($setup_file)) require($setup_file);
+$setup_file = 'setup.php'; if (is_file($setup_file)) require($setup_file);
 
 # Insert plugins' code.
 $anchor_Action_write = $anchor_action_links = '';
@@ -40,26 +31,17 @@ $action_links = '<a href="plomwiki.php?title='.$title.'">View</a>
 <a href="plomwiki.php?title='.$title.'&amp;action=edit">Edit</a> 
 <a href="plomwiki.php?title='.$title.'&amp;action=history">History</a>';
 eval($anchor_action_links);
-$normal_view_start = '</title>
-</head>
-<body>
-
-<h1>'.$title.'</h1>
-<p>
-'.$action_links.'
-</p>
-'."\n";
+$normal_view_start = '</title>'."\n".'</head>'."\n".'<body>'."\n\n".'<h1>'.
+                $title.'</h1>'."\n".'<p>'."\n".$action_links."\n".'</p>'."\n\n";
 
 # Find appropriate code for user's '?action='. Assume "view" if not found.
 $fallback = 'Action_view'; 
 $action = $_GET['action'];                 $action_function = 'Action_'.$action;
 if (!function_exists($action_function))    $action_function = $fallback;
 
-# Do urgent work if urgent todo file is found.
-WorkToDo($todo_urgent);
-
-# Final HTML.
-echo $html_start; eval($action_function.'();'); echo $html_end;
+# Before executing user's action, do urgent work if urgent todo file is found.
+WorkToDo($todo_urgent); 
+eval($action_function.'();'); 
 
 ################
 # Page actions #
@@ -79,6 +61,85 @@ function Action_view()
   
   # Final HTML.
   echo $title.$normal_view_start.$text; }
+
+function Action_edit()
+# Edit form on a page source text. Send results to ?action=write.
+{ global $markup_help, $normal_view_start, $page_path, $title;
+
+  # If no page file is found, start with an empty $text.
+  if (is_file($page_path)) 
+  { $text = file_get_contents($page_path); 
+    $text = EscapeHTML($text); }
+  else $text = '';
+  
+  # Final HTML.
+  echo 'Editing "'.$title.$normal_view_start.
+  '<form method="post" action="plomwiki.php?title='.$title.'&amp;action=write">'
+                                                                          ."\n".
+  '<textarea name="text" rows="20" style="width:100%">'.$text.
+                                                       '</textarea><br />'."\n".
+  'Password: <input type="password" name="password" /> <input type="submit" '.
+                                                      'value="Update!" />'."\n".
+  '</form>'."\n\n".
+  $markup_help; }
+
+function Action_write()
+# Password-protected writing of page update to work/, calling todo that results.
+{ global $anchor_Action_write, $diff_path, $page_path, $password_path, $title, 
+                                                                   $todo_urgent;
+  $text = $_POST['text']; $password_posted = $_POST['password']; $redirect = '';
+  $old_text = '';
+  if (is_file($page_path)) $old_text = file_get_contents($page_path);
+
+  # Repair problems in submitted text. Undo possible PHP magical_quotes horrors.
+  if (get_magic_quotes_gpc()) $text = stripslashes($text);
+  $text = NormalizeNewlines($text);
+  
+  # Check for failure conditions: wrong $password, empty $text, $text unchanged.
+  $password_expected = substr(file_get_contents($password_path), 0, -1);
+  if ($password_posted !== $password_expected) 
+    $msg ='Wrong password.</strong>';
+  elseif (!$text) 
+    $msg = 'Empty pages not allowed.</strong><br />'."\n".
+    'Replace page text with "delete" if you want to eradicate the page.';
+  elseif (NormalizeNewlines(stripslashes($text)) == $old_text)
+    $msg = 'You changed nothing!</strong>';  
+
+  # Successful edit writes to todo_urgent, triggers work on it and a redirect.
+  else
+  { $redirect = "\n".
+        '<meta http-equiv="refresh" content="0; URL=plomwiki.php?title='.$title.
+                                                                         '" />';
+    $p_todo = fopen($todo_urgent, 'a+');
+    $timestamp = time();
+
+    # In case of "delete", add DeletePage() task to todo file.
+    if ($text == 'delete')
+    { if (is_file($page_path)) 
+        fwrite($p_todo, 'DeletePage("'.$page_path.'", "'.$title.'");'."\n");
+      $msg = 'Page "'.$title.'" is deleted (if it ever existed).</strong>'; }
+  
+    # Write $text, $diff temp files. Add SafeWrite() tasks to todo.
+    else
+    { $diff_temp = NewDiffTemp($old_text, $text, $diff_path, $timestamp);
+      fwrite($p_todo, 'SafeWrite("'.$diff_path.'", "'.$diff_temp.'");'."\n");
+      $page_temp = NewTempFile($text);
+      fwrite($p_todo, 'SafeWrite("'.$page_path.'", "'.$page_temp.'");'."\n");
+      $msg = 'Page "'.$title.'" updated.</strong>'; }
+
+    # Plugin anchor.
+    eval($anchor_Action_write);
+   
+    # Try to finish newly added urgent work straight away before continuing.
+    fclose($p_todo);  WorkToDo($todo_urgent);
+    $msg .= '<br />'."\n".
+    'If you read this, then your browser failed to redirect you back.'; }
+  
+  # Final HTML.
+  echo 'Trying to edit "'.$title.'"</title>'.$redirect."\n".'</head>'."\n".
+                                 '<body>'."\n\n".'<p><strong>'.$msg.'</p>'."\n".
+  '<p>Return to page "<a href="plomwiki.php?title='.$title.'">'.$title.'</a>".'.
+                                                                        '</p>';}
 
 function Action_history()
 # Show version history of page (based on its diff file), offer reverting.
@@ -113,32 +174,11 @@ function Action_history()
       $diffs[$diff_n] = '<p>'."\n".
       '<a href="plomwiki.php?title='.$title.'&amp;action=revert'.
                                    '&amp;time='.$time.'">Revert</a><br />'."\n".
-      $diff_output."\n".
-      '</p>'; }
+      $diff_output."\n".'</p>'; }
     $text = implode("\n", $diffs); }
 
   # Final HTML.
   echo 'Version history of page "'.$title.'"'.$normal_view_start.$text; }
-
-function Action_edit()
-# Edit form on a page source text. Send results to ?action=write.
-{ global $markup_help, $normal_view_start, $page_path, $title;
-
-  # If no page file is found, start with an empty $text.
-  if (is_file($page_path)) 
-  { $text = file_get_contents($page_path); 
-    $text = EscapeHTML($text); }
-  else $text = '';
-  
-  # Final HTML.
-  echo 'Editing "'.$title.$normal_view_start.
-  '<form method="post" action="plomwiki.php?title='.$title.'&amp;action=write">'
-                                                                          ."\n".
-  '<textarea name="text" rows="20" style="width:100%">'.$text.'</textarea><br />'."\n".
-  'Password: <input type="password" name="password" /> <input type="submit" '.
-                                                      'value="Update!" />'."\n".
-  '</form>'."\n\n".
-  $markup_help; }
 
 function Action_revert()
 # Prepare version reversion and ask user for confirmation.
@@ -169,73 +209,11 @@ function Action_revert()
                                                           'action=write">'."\n".
     '<input type="hidden" name="text" value="'.$text.'">'."\n".
     'Password: <input type="password" name="password" />'."\n".
-    '<input type="submit" value="Revert!" />'."\n".
-    '</form>'; }
+    '<input type="submit" value="Revert!" />'."\n".'</form>'; }
   else { $content = 'Error. No valid reversion date given.</p>'; }
 
   # Final HTML.
   echo 'Reverting "'.$title.$normal_view_start.'<p>'.$content; }
-
-function Action_write()
-# Password-protected writing of page update to work/, calling todo that results.
-{ global $anchor_Action_write, $diff_path, $page_path, $password_path, $title, 
-                                                                   $todo_urgent;
-  $text = $_POST['text']; $password_posted = $_POST['password']; $redirect = '';
-  $old_text = '';
-  if (is_file($page_path)) $old_text = file_get_contents($page_path);
-
-  # Repair problems in submitted text. Undo possible PHP magical_quotes horrors.
-  if (get_magic_quotes_gpc()) $text = stripslashes($text);
-  $text = NormalizeNewlines($text);
-  
-  # Check for failure conditions: wrong $password, empty $text, $text unchanged.
-  $password_expected = substr(file_get_contents($password_path), 0, -1);
-  if ($password_posted !== $password_expected) 
-    $msg ='Wrong password.</strong>';
-  elseif (!$text) 
-    $msg = 'Empty pages not allowed.</strong><br />'."\n".
-    'Replace page text with "delete" if you want to eradicate the page.';
-  elseif (NormalizeNewlines(stripslashes($text)) == $old_text)
-    $msg = 'You changed nothing!</strong>';  
-
-  # Successful edit writes to todo_urgent, triggers work on it and a redirect.
-  else
-  { $redirect = "\n".'<meta http-equiv="refresh" content="0; URL=plomwiki.php?'.
-                                                         'title='.$title.'" />';
-    $p_todo = fopen($todo_urgent, 'a+');
-    $timestamp = time();
-
-    # In case of "delete", add DeletePage() task to todo file.
-    if ($text == 'delete')
-    { if (is_file($page_path)) 
-        fwrite($p_todo, 'DeletePage("'.$page_path.'", "'.$title.'");'."\n");
-      $msg = 'Page "'.$title.'" is deleted (if it ever existed).</strong>'; }
-  
-    # Write $text, $diff temp files. Add SafeWrite() tasks to todo.
-    else
-    { $diff_temp = NewDiffTemp($old_text, $text, $diff_path, $timestamp);
-      fwrite($p_todo, 'SafeWrite("'.$diff_path.'", "'.$diff_temp.'");'."\n");
-      $page_temp = NewTempFile($text);
-      fwrite($p_todo, 'SafeWrite("'.$page_path.'", "'.$page_temp.'");'."\n");
-      $msg = 'Page "'.$title.'" updated.</strong>'; }
-
-    # Plugin anchor.
-    eval($anchor_Action_write);
-   
-    # Try to finish newly added urgent work straight away before continuing.
-    fclose($p_todo);  WorkToDo($todo_urgent);
-    $msg .= '<br />'."\n".
-    'If you read this, then your browser failed to redirect you back.'; }
-  
-  # Final HTML.
-  echo 'Trying to edit "'.$title.'"</title>'
-  .$redirect."\n".
-  '</head>'."\n".
-  '<body>'."\n".
-  "\n".
-  '<p><strong>'.$msg.'</p>'."\n".
-  '<p>Return to page "<a href="plomwiki.php?title='.$title.'">'.$title.'</a>".'.
-                                                                        '</p>';}
 
 ####################################
 # Page text manipulation functions #
@@ -506,3 +484,9 @@ function ReadAndTrimLines($path)
     $line = rtrim($line);
     if ($line) $list[] = $line; } 
   return $list; }
+
+?>
+
+
+</body>
+</html>
