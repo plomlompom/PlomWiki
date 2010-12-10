@@ -23,12 +23,20 @@ function Action_RecentChanges()
   if (is_file($RC_Path)) 
   { $txt = file_get_contents($RC_Path);
     $lines = explode("\n", $txt, -1);
+    $date_str_old = '';
     foreach ($lines as $n => $line)
-    { list($time, $name) = explode(':', $line);
-      $date = date('Y-m-d H:i:s', (int) $time);
-      $lines[$n] = '<li>'.$date.' <a href="plomwiki.php?title='.$name.'">'.$name
-                                                                 .'</a></li>'; }
-    $output = '<ul>'."\n".implode("\n", $lines)."\n".'</ul>'; }
+    { list($datetime_int, $pagename) = explode(':', $line);
+      $datetime_str = date('Y-m-d H:i:s', (int) $datetime_int);
+      list($date_str, $time_str) = explode(' ', $datetime_str);
+      $lines[$n] = '  <li>'.$time_str.' <a href="plomwiki.php?title='.$pagename.
+                                                     '">'.$pagename.'</a></li>'; 
+      if ($date_str != $date_str_old) 
+        $lines[$n] = '  </ul>'."\n".'</li>'."\n".'<li>'.$date_str."\n".
+                                                       '  <ul>'."\n".$lines[$n];
+      $date_str_old = $date_str; }
+    $lines[0] = substr($lines[0], 14);
+    $output = '<ul>'."\n".implode("\n", $lines)."\n".'  </ul>'."\n".'</li>'."\n"
+                                                                     .'</ul>'; }
   else $output = '<p>No RecentChanges file found.</p>';
   
   # Final HTML.
