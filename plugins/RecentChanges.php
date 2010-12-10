@@ -16,7 +16,7 @@ function Add_to_RecentChanges($timestamp, $p_todo)
 
 function Action_RecentChanges()
 # Provide formatted output of RecentChanges file.
-{ global $normal_view_start, $RC_Path, $title_root;
+{ global $RC_Path, $title_root;
 
   # Format RecentChanges file content into HTML output.
   $output = '';
