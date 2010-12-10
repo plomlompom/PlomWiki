@@ -3,7 +3,7 @@
 
 # Filesystem information.
 $config_dir = 'config/';         $markup_list_path = $config_dir.'markups.txt';
-                                 $password_path    = $config_dir.'password.txt';
+$plugin_dir = 'plugins/';        $password_path    = $config_dir.'password.txt';
                                  $plugin_list_path = $config_dir.'plugins.txt';
 $pages_dir  = 'pages/';                  $work_dir = 'work/';
 $diff_dir = $pages_dir.'diffs/';         $work_temp_dir = $work_dir.'temp/';
@@ -24,6 +24,11 @@ $html_end = '
 $setup_file = 'setup.php';
 if (is_file($setup_file)) require($setup_file);
 
+# Insert plugins' code.
+$anchor_Action_write = $anchor_action_links = '';
+$lines = ReadAndTrimLines($plugin_list_path); 
+foreach ($lines as $line) require($line);
+
 # Only allow simple alphanumeric titles to avoid security risks.
 $title = $_GET['title']; 
 if (!preg_match('/^[a-zA-Z0-9]+$/', $title)) 
@@ -31,21 +36,19 @@ if (!preg_match('/^[a-zA-Z0-9]+$/', $title))
 $page_path = $pages_dir.$title; $diff_path = $diff_dir. $title;
 
 # Normal view start.
+$action_links = '<a href="plomwiki.php?title='.$title.'">View</a> 
+<a href="plomwiki.php?title='.$title.'&amp;action=edit">Edit</a> 
+<a href="plomwiki.php?title='.$title.'&amp;action=history">History</a>';
+eval($anchor_action_links);
 $normal_view_start = '</title>
 </head>
 <body>
 
 <h1>'.$title.'</h1>
 <p>
-<a href="plomwiki.php?title='.$title.'">View</a> 
-<a href="plomwiki.php?title='.$title.'&amp;action=edit">Edit</a> 
-<a href="plomwiki.php?title='.$title.'&amp;action=history">History</a> 
+'.$action_links.'
 </p>
 '."\n";
-
-# Insert plugins' code.
-$lines = ReadAndTrimLines($plugin_list_path); 
-foreach ($lines as $line) require($line);
 
 # Find appropriate code for user's '?action='. Assume "view" if not found.
 $fallback = 'Action_view'; 
@@ -175,7 +178,8 @@ function Action_revert()
 
 function Action_write()
 # Password-protected writing of page update to work/, calling todo that results.
-{ global $page_path, $password_path, $title, $todo_urgent, $diff_path;
+{ global $anchor_Action_write, $diff_path, $page_path, $password_path, $title, 
+                                                                   $todo_urgent;
   $text = $_POST['text']; $password_posted = $_POST['password']; $redirect = '';
   $old_text = '';
   if (is_file($page_path)) $old_text = file_get_contents($page_path);
@@ -199,7 +203,8 @@ function Action_write()
   { $redirect = "\n".'<meta http-equiv="refresh" content="0; URL=plomwiki.php?'.
                                                          'title='.$title.'" />';
     $p_todo = fopen($todo_urgent, 'a+');
-    
+    $timestamp = time();
+
     # In case of "delete", add DeletePage() task to todo file.
     if ($text == 'delete')
     { if (is_file($page_path)) 
@@ -208,12 +213,15 @@ function Action_write()
   
     # Write $text, $diff temp files. Add SafeWrite() tasks to todo.
     else
-    { $diff_temp = NewDiffTemp($old_text, $text, $diff_path);
+    { $diff_temp = NewDiffTemp($old_text, $text, $diff_path, $timestamp);
       fwrite($p_todo, 'SafeWrite("'.$diff_path.'", "'.$diff_temp.'");'."\n");
       $page_temp = NewTempFile($text);
       fwrite($p_todo, 'SafeWrite("'.$page_path.'", "'.$page_temp.'");'."\n");
       $msg = 'Page "'.$title.'" updated.</strong>'; }
-    
+
+    # Plugin anchor.
+    eval($anchor_Action_write);
+   
     # Try to finish newly added urgent work straight away before continuing.
     fclose($p_todo);  WorkToDo($todo_urgent);
     $msg .= '<br />'."\n".
@@ -273,7 +281,8 @@ function NewTempFile($string)
 # Put $string into new $work_temp_dir temp file.
 { global $work_temp_dir;
   LockOn($work_temp_dir); $p_dir = opendir($work_temp_dir);   $temps = array(0);
-  while (FALSE !== ($fn = readdir($p_dir))) if ($fn[0] != '.') $temps[] = $fn;
+  while (FALSE !== ($fn = readdir($p_dir))) 
+    if (preg_match('/^[0-9]*$/', $fn)) $temps[] = $fn;
   $int = max($temps) + 1; 
   $temp_path = $work_temp_dir.$int;
   file_put_contents($temp_path, $string);
@@ -314,12 +323,11 @@ function SafeWrite($path_original, $path_temp)
 # Diff #
 ########
 
-function NewDiffTemp($text_old, $text_new, $diff_path)
+function NewDiffTemp($text_old, $text_new, $diff_path, $timestamp)
 # Build temp file of $diff_path updated to diff $page_path text -> $text_new.
 { $diff_add = PlomDiff($text_old, $text_new);
   if (is_file($diff_path)) $diff_old = file_get_contents($diff_path);
   else                     $diff_old = '';
-  $timestamp = time();
   $diff_new = $timestamp."\n".$diff_add.'%%'."\n".$diff_old;
   return NewTempFile($diff_new); }
 
