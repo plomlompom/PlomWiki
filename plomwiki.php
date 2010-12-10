@@ -7,10 +7,10 @@
 # Filesystem information.
 $config_dir = 'config/';         $markup_list_path = $config_dir.'markups.txt';
 $plugin_dir = 'plugins/';        $password_path    = $config_dir.'password.txt';
-                                 $plugin_list_path = $config_dir.'plugins.txt';
-$pages_dir  = 'pages/';                  $work_dir = 'work/';
-$diff_dir = $pages_dir.'diffs/';         $work_temp_dir = $work_dir.'temp/';
-$del_dir = $pages_dir.'deleted/';        $todo_urgent = $work_dir.'todo_urgent'; 
+$pages_dir  = 'pages/';          $plugin_list_path = $config_dir.'plugins.txt';
+$diff_dir = $pages_dir.'diffs/';         $work_dir = 'work/';
+$del_dir = $pages_dir.'deleted/';        $work_temp_dir = $work_dir.'temp/';
+$title_root = 'plomwiki.php?title=';     $todo_urgent = $work_dir.'todo_urgent'; 
 
 # Check for unfinished setup file, execute if found.
 $setup_file = 'setup.php'; if (is_file($setup_file)) require($setup_file);
@@ -27,9 +27,9 @@ if (!preg_match('/^[a-zA-Z0-9]+$/', $title))
 $page_path = $pages_dir.$title; $diff_path = $diff_dir. $title;
 
 # Normal view start.
-$action_links = '<a href="plomwiki.php?title='.$title.'">View</a> 
-<a href="plomwiki.php?title='.$title.'&amp;action=edit">Edit</a> 
-<a href="plomwiki.php?title='.$title.'&amp;action=history">History</a>';
+$action_links = '<a href="'.$title_root.$title.'">View</a> 
+<a href="'.$title_root.$title.'&amp;action=edit">Edit</a> 
+<a href="'.$title_root.$title.'&amp;action=history">History</a>';
 eval($anchor_action_links);
 $normal_view_start = '</title>'."\n".'</head>'."\n".'<body>'."\n\n".'<h1>'.
                 $title.'</h1>'."\n".'<p>'."\n".$action_links."\n".'</p>'."\n\n";
@@ -49,22 +49,22 @@ eval($action_function.'();');
 
 function Action_view()
 # Formatted display of a page.
-{ global $normal_view_start, $page_path, $title;
+{ global $normal_view_start, $page_path, $title, $title_root;
   
   # Get text from file. If none, show invitation to create one. Else, markup it.
   if (is_file($page_path)) 
   { $text = file_get_contents($page_path);
     $text = EscapeHTML($text);
     $text = Markup($text); }
-  else $text = 'Page does not exist. <a href="plomwiki.php?title='.$title.
-                                                '&amp;action=edit">Create?</a>';
+  else $text = 'Page does not exist. <a href="'.$title_root.$title.'&amp;action'
+                                                          .'=edit">Create?</a>';
   
   # Final HTML.
   echo $title.$normal_view_start.$text; }
 
 function Action_edit()
 # Edit form on a page source text. Send results to ?action=write.
-{ global $markup_help, $normal_view_start, $page_path, $title;
+{ global $markup_help, $normal_view_start, $page_path, $title, $title_root;
 
   # If no page file is found, start with an empty $text.
   if (is_file($page_path)) 
@@ -73,9 +73,8 @@ function Action_edit()
   else $text = '';
   
   # Final HTML.
-  echo 'Editing "'.$title.$normal_view_start.
-  '<form method="post" action="plomwiki.php?title='.$title.'&amp;action=write">'
-                                                                          ."\n".
+  echo 'Editing "'.$title.$normal_view_start.'<form method="post" action="'.
+                                  $title_root.$title.'&amp;action=write">'."\n".
                     '<textarea name="text" rows="20" style="width:100%">'.$text.
                                                        '</textarea><br />'."\n".
     'Password: <input type="password" name="password" /> <input type="submit" '.
@@ -85,7 +84,7 @@ function Action_edit()
 function Action_write()
 # Password-protected writing of page update to work/, calling todo that results.
 { global $anchor_Action_write, $diff_path, $page_path, $password_path, $title, 
-                                                                   $todo_urgent;
+                                                      $title_root, $todo_urgent;
   $text = $_POST['text']; $password_posted = $_POST['password']; $redirect = '';
   $old_text = '';
   if (is_file($page_path)) $old_text = file_get_contents($page_path);
@@ -107,8 +106,7 @@ function Action_write()
   # Successful edit writes to todo_urgent, triggers work on it and a redirect.
   else
   { $redirect = "\n".
-        '<meta http-equiv="refresh" content="0; URL=plomwiki.php?title='.$title.
-                                                                         '" />';
+        '<meta http-equiv="refresh" content="0; URL='.$title_root.$title.'" />';
     $p_todo = fopen($todo_urgent, 'a+');
     $timestamp = time();
 
@@ -137,12 +135,11 @@ function Action_write()
   # Final HTML.
   echo 'Trying to edit "'.$title.'"</title>'.$redirect."\n".'</head>'."\n".
                                  '<body>'."\n\n".'<p><strong>'.$msg.'</p>'."\n".
-  '<p>Return to page "<a href="plomwiki.php?title='.$title.'">'.$title.'</a>".'.
-                                                                        '</p>';}
+  '<p>Return to page "<a href="'.$title_root.$title.'">'.$title.'</a>".</p>'; }
 
 function Action_history()
 # Show version history of page (based on its diff file), offer reverting.
-{ global $diff_path, $normal_view_start, $title;
+{ global $diff_path, $normal_view_start, $title, $title_root;
 
   # Check for non-empty diff file on page. Remove superfluous "%%" and "\n".
   $text = 'Page "'.$title.'" has no history.';                   $diff_all = '';
@@ -171,8 +168,8 @@ function Action_history()
       $diff_output = implode("\n", $diff);
       $diff_output = substr($diff_output, 0, -6); # Delete superfluous "<br />".
       $diffs[$diff_n] = '<p>'."\n".
-      '<a href="plomwiki.php?title='.$title.'&amp;action=revert'.
-                                   '&amp;time='.$time.'">Revert</a><br />'."\n".
+      '<a href="'.$title_root.$title.'&amp;action=revert&amp;time='.$time.'">'.
+                                                        'Revert</a><br />'."\n".
       $diff_output."\n".'</p>'; }
     $text = implode("\n", $diffs); }
 
@@ -181,7 +178,7 @@ function Action_history()
 
 function Action_revert()
 # Prepare version reversion and ask user for confirmation.
-{ global $normal_view_start, $diff_path, $title, $page_path;
+{ global $normal_view_start, $diff_path, $title, $title_root, $page_path;
   $time = $_GET['time'];        $time_string = date('Y-m-d H:i:s', (int) $time);
 
   # Build $diff_array from $diff_path to be cycled through, keyed by timestamps.
@@ -204,9 +201,8 @@ function Action_revert()
 
   if ($finished)
   { $content = 'Reverting page to before '.$time_string.'?</p>'."\n".
-    '<form method="post" action="plomwiki.php?title='.$title.'&amp;action='.
-                                                                 'write">'."\n".
-                     '<input type="hidden" name="text" value="'.$text.'">'."\n".
+    '<form method="post" action="'.$title_root.$title.'&amp;action=write">'."\n"
+                    .'<input type="hidden" name="text" value="'.$text.'">'."\n".
                      'Password: <input type="password" name="password" />'."\n".
                      '<input type="submit" value="Revert!" />'."\n".'</form>'; }
   else { $content = 'Error. No valid reversion date given.</p>'; }

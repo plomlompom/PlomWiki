@@ -4,9 +4,9 @@
 # Provide help message to be shown in editing window.
 $markup_help = '<h4>PlomWiki markup cheatsheet</h4>'."\n".'<p>In-line:</p>'."\n"
 .'<pre>[*<strong>strong</strong>*] [/<em>emphasis</em>/] [-<del>deleted</del>-]'
-.' [[<a href="plomwiki.php?title=PagenameOrURL">PagenameOrURL</a>]] [[Pagename'.
-'OrURL|<a href="plomwiki.php?title=PagenameOrURL">Text displayed instead</a>]]'.
-                                                                  '</pre>'."\n".
+.' [[<a href="'.$title_root.'PagenameOrURL">PagenameOrURL</a>]] [[PagenameOrURL'.
+'|<a href="'.$title_root.'PagenameOrURL">Text displayed instead</a>]]</pre>'.
+                                                                           "\n".
 '<p>Multi-line:</p>'."\n".'<pre>*] list element'."\n".
                                             '&nbsp;&nbsp;*] indented once'."\n".
                               '&nbsp;&nbsp;&nbsp;&nbsp;*] indented twice</pre>';
@@ -23,10 +23,11 @@ $esc_p_off = $esc.'p_off';
 
 function MarkupLinks($text)
 # [[LinkedPagename]], [[Linked|Text displayed]], [[http://linked-url.com]].
-{ $text = preg_replace('/\[\[([A-Za-z0-9]+)]]/',
-                       '<a href="plomwiki.php?title=$1">$1</a>', $text);
+{ global $title_root;
+  $text = preg_replace('/\[\[([A-Za-z0-9]+)]]/',
+                       '<a href="'.$title_root.'$1">$1</a>', $text);
   $text = preg_replace('/\[\[([A-Za-z0-9]+)\|([^'."\n".']+)]]/',
-                       '<a href="plomwiki.php?title=$1">$2</a>', $text);
+                       '<a href="'.$title_root.'$1">$2</a>', $text);
   $text = preg_replace('/\[\[(http:\/\/[^ '."\n".'|]+)\|([^'."\n".']+)]]/',
                        '<a href="$1">$2</a>', $text);
   return  preg_replace('/\[\[(http:\/\/[^ '."\n".']+)]]/',

@@ -2,8 +2,8 @@
 # RecentChanges plugin.
 
 $anchor_Action_write .= 'Add_to_RecentChanges($timestamp, $p_todo);';
-$anchor_action_links .= '$action_links .= \' <a href="plomwiki.php?title=\'.'.
-                     '$title.\'&amp;action=RecentChanges">RecentChanges</a>\';';
+$anchor_action_links .= '$action_links .= \' <a href="'.$title_root.'\'.$title.'
+                           .'\'&amp;action=RecentChanges">RecentChanges</a>\';';
 $RC_Path = $plugin_dir.'RecentChanges.txt';
 
 function Add_to_RecentChanges($timestamp, $p_todo)
@@ -16,7 +16,7 @@ function Add_to_RecentChanges($timestamp, $p_todo)
 
 function Action_RecentChanges()
 # Provide formatted output of RecentChanges file.
-{ global $normal_view_start, $RC_Path;
+{ global $normal_view_start, $RC_Path, $title_root;
 
   # Format RecentChanges file content into HTML output.
   $output = '';
@@ -28,8 +28,8 @@ function Action_RecentChanges()
     { list($datetime_int, $pagename) = explode(':', $line);
       $datetime_str = date('Y-m-d H:i:s', (int) $datetime_int);
       list($date_str, $time_str) = explode(' ', $datetime_str);
-      $lines[$n] = '  <li>'.$time_str.' <a href="plomwiki.php?title='.$pagename.
-                                                     '">'.$pagename.'</a></li>'; 
+      $lines[$n] = '  <li>'.$time_str.' <a href="'.$title_root.$pagename.'">'.
+                                                          $pagename.'</a></li>'; 
       if ($date_str != $date_str_old) 
         $lines[$n] = '  </ul>'."\n".'</li>'."\n".'<li>'.$date_str."\n".
                                                        '  <ul>'."\n".$lines[$n];
