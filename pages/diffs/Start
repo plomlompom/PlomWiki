@@ -1,0 +1,18 @@
+1292105977
+0a1,15
+>Welcome to PlomWiki!
+>
+>In your browser window, click on "View" to view a page, on "Edit" to edit a page and on "History" to examine a diff history of the page's edits. (Here you can also revert changes to the page text by clicking on the "Revert" link over a diff.) "Search" provides a form for searching through all of the pages' texts and titles, "RecentChanges" gives a chronology of all recent page edits.
+>
+>Per default, only little markup is possible on pages, though more could be added as plugins (see Technical Details section). For examples of usable markups, see the markup cheatcodes below the page text editing window.
+>
+>To create a new page, either in the address bar replace the "Start" in the URL part "plomwiki.php?title=Start" with the name for the new page, or create a link to it via the linking markup and click on that. This will open the new page of said pagename ready to be edited and filled with content.
+>
+>Two notes concerning pagenames: 
+>*] Only ASCII-alphanumeric pagenames are allowed.
+>*] Internal linking is case-sensitive: A link to "ThisPage" is not equal to a link to "thispage".
+>
+>To delete a page, reduce page text to "delete". Empty page text won't be posted.
+>
+>The default page editing password is "Password". Change it in PlomWiki/config/password.txt.
+%%
