@@ -12,8 +12,8 @@ if (!mkdir($cwd.'/'.$del_dir))       $fail = TRUE;
 if ($fail)   $msg = 'PlomWiki Setup failed. Something is wrong!';
 else       { $msg = 'PlomWiki Setup successful. Reload!'; unlink($setup_file); }
 
-# Final HTML.
-echo $html_start.'PlomWiki Setup</title>'."\n".'</head>'."\n".'<body>'."\n\n".
-  '<h1>PlomWiki Setup</h1>'."\n\n".'<p><strong>'.$msg.'</strong></p>'.$html_end;
+$title_h = 'PlomWiki Setup';
+$content = '<h1>PlomWiki Setup</h1>'."\n\n".'<p><strong>'.$msg.'</strong></p>';
+Output_HTML($title_h, $content);
 
 exit();

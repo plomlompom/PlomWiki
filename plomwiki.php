@@ -30,8 +30,7 @@ foreach ($lines as $line) require($line);
 # Wiki view HTML start.
 $meta_actions = "\n".'<a href="'.$title_root.'Start">Start</a>';
 eval($hook_meta_actions);
-$wiki_view_start = '</title>'."\n".'</head>'."\n".'<body>'."\n\n".
-                   '<p>PlomWiki: '.$meta_actions.'</p>'."\n\n";
+$wiki_view_start = '<p>PlomWiki: '.$meta_actions.'</p>'."\n\n";
 
 # Only allow alphanumeric titles. If title is needed, but empty, assume "Start".
 $title = $_GET['title']; $legal_title = '[a-zA-Z0-9]+';
@@ -48,8 +47,7 @@ $page_actions = '<a href="'.$title_root.$title.'">View</a>
 <a href="'.$title_root.$title.'&amp;action=edit">Edit</a> 
 <a href="'.$title_root.$title.'&amp;action=history">History</a>';
 eval($hook_page_actions);
-$page_view_start = $wiki_view_start.'<h1>'.$title.'</h1>'."\n".
-                                              '<p>'.$page_actions.'</p>'."\n\n";
+$page_view_start = '<h1>'.$title.'</h1>'."\n".'<p>'.$page_actions.'</p>'."\n\n";
 
 # Find appropriate code for user's '?action='. Assume "view" if not found.
 $fallback = 'Action_view'; 
@@ -65,7 +63,7 @@ WorkToDo($todo_urgent); $action_function();
 
 function Action_view()
 # Formatted display of a page.
-{ global $html_end, $page_view_start, $page_path, $title, $title_root;
+{ global $page_path, $title, $title_root;
   
   # Get text from file. If none, show invitation to create one. Else, markup it.
   if (is_file($page_path)) 
@@ -73,26 +71,25 @@ function Action_view()
     $text = EscapeHTML($text); $text = Markup($text); }
   else $text = 'Page does not exist. <a href="'.$title_root.$title.'&amp;action'
                                                           .'=edit">Create?</a>';
-  # Final HTML.
-  echo $title.$page_view_start.$text.$html_end; }
+  Output_HTML($title, $text ,TRUE); }
 
 function Action_edit()
 # Edit form on a page source text. Send results to ?action=write.
-{ global $html_end, $markup_help, $page_view_start, $page_path, $title, 
-                                                                    $title_root;
+{ global $markup_help, $page_path, $title, $title_root;
   # If no page file is found, start with an empty $text.
   if (is_file($page_path)) 
   { $text = file_get_contents($page_path); $text = EscapeHTML($text); }
   else $text = '';
-  
-  # Final HTML.
-  echo 'Editing "'.$title.$page_view_start.'<form method="post" action="'.
-                                  $title_root.$title.'&amp;action=write">'."\n".
-       '<textarea name="text" rows="20" style="width:100%">'.$text.'</textarea>'
-                                                                 .'<br />'."\n".
-       'Password: <input type="password" name="password" /> <input type='.
+
+  $title_h = 'Editing "'.$title;
+  $content = '<form method="post" action="'.$title_root.$title.
+                                                     '&amp;action=write">'."\n".
+             '<textarea name="text" rows="20" style="width:100%">'.$text.
+                                                    '</textarea>'.'<br />'."\n".
+             'Password: <input type="password" name="password" /> <input type='.
                                              '"submit" value="Update!" />'."\n".
-       '</form>'."\n\n".$markup_help.$html_end; }
+             '</form>'."\n\n".$markup_help;
+   Output_HTML($title_h, $content, TRUE); }
 
 function Action_write()
 # Password-protected writing of page update to work/, calling todo that results.
@@ -119,9 +116,8 @@ function Action_write()
   
   # Successful edit writes todo_urgent, triggers work on it and redirect.
   else   
-  { $redirect = "\n".
-        '<meta http-equiv="refresh" content="0; URL='.$title_root.$title.'" />';
-    $p_todo = fopen($todo_urgent, 'a+'); $timestamp = time();
+  { $redirect = $title_root.$title; $p_todo = fopen($todo_urgent, 'a+'); 
+    $timestamp = time();
     eval($hook_Action_write);                                   # Plugin anchor.
 
     # In case of page deletion question, add DeletePage() task to todo file.
@@ -142,15 +138,16 @@ function Action_write()
     fclose($p_todo);  WorkToDo($todo_urgent);
     $msg .= '<br />'."\n".
     'If you read this, then your browser failed to redirect you back.'; }
-  
-  # Final HTML.
-  echo 'Trying to edit "'.$title.$wiki_view_start.'<p><strong>'.$msg.'</p>'."\n"
-       .'<p>Return to page "<a href="'.$title_root.$title.'">'.$title.'</a>".'.
-                                                             '</p>'.$html_end; }
+
+  $title_h = 'Trying to edit: '.$title;  
+  $content = '<p><strong>'.$msg.'</p>'."\n".
+             '<p>Return to page "<a href="'.$title_root.$title.'">'.$title.
+                                                                   '</a>".</p>';
+  Output_HTML($title_h, $content, TRUE, $redirect); }
 
 function Action_history()
 # Show version history of page (based on its diff file), offer reverting.
-{ global $html_end, $diff_path, $page_view_start, $title, $title_root;
+{ global $diff_path, $title, $title_root;
 
   # Check for non-empty diff file on page. Remove superfluous "%%" and "\n".
   $text = '<p>Page "'.$title.'" has no history.</p>';            $diff_all = '';
@@ -184,12 +181,12 @@ function Action_history()
       $diff_output."\n".'</p>'; }
     $text = implode("\n", $diffs); }
 
-  # Final HTML.
-  echo 'Version history of page "'.$title.'"'.$page_view_start.$text.$html_end;}
+  $title_h = 'Version history of page: '.$title;
+  Output_HTML($title_h, $text, TRUE); }
 
 function Action_revert()
 # Prepare version reversion and ask user for confirmation.
-{ global $html_end, $page_view_start, $diff_path, $title,$title_root,$page_path;
+{ global $diff_path, $title, $title_root,$page_path;
   $time = $_GET['time'];        $time_string = date('Y-m-d H:i:s', (int) $time);
 
   # Build $diff_array from $diff_path to be cycled through, keyed by timestamps.
@@ -220,8 +217,8 @@ function Action_revert()
                '<input type="submit" value="Revert!" />'."\n".'</form>'; }
   else { $content = 'Error. No valid reversion date given.</p>'; }
 
-  # Final HTML.
-  echo 'Reverting "'.$title.$page_view_start.'<p>'.$content.$html_end; }
+  $title_h = 'Reverting: '.$title; 
+  Output_HTML($title_h, $content, TRUE); }
 
 ####################################
 # Page text manipulation functions #
@@ -492,3 +489,15 @@ function ReadAndTrimLines($path)
     $line = rtrim($line);
     if ($line) $list[] = $line; } 
   return $list; }
+
+function Output_HTML($title, $content, $page_view = FALSE, $redirect = '')
+# Combine all provided HTML snippets to the final HTML output.
+{ global $wiki_view_start, $page_view_start, $html_end;
+
+  if (!$page_view)
+    $page_view_start = '';
+  if ($redirect) 
+    $redirect = '<meta http-equiv="refresh" content="0; URL='.$redirect.'" />';
+
+  echo $title.'</title>'."\n".$redirect.'</head>'."\n".'<body>'."\n\n".
+       $wiki_view_start.$page_view_start.$content.$html_end; }
