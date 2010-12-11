@@ -9,7 +9,7 @@ function Action_search()
 
   # Produce search results HTML if $_GET['query'] is provided.
   $results = ''; $query = ''; 
-  $query = $_GET['query']; 
+  $query = EscapeHTML($_GET['query']);
   if ($query)
   { if (get_magic_quotes_gpc()) $query = stripslashes($query);
     $results = "\n\n".'<h2>Search results for: '.$query.'</h2>'."\n\n";
