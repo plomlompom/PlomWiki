@@ -12,7 +12,7 @@ function Action_search()
   $query = $_GET['query']; 
   if ($query)
   { if (get_magic_quotes_gpc()) $query = stripslashes($query);
-    $results = '<h2>Search results for: '.$query.'</h2>'."\n\n";
+    $results = "\n\n".'<h2>Search results for: '.$query.'</h2>'."\n\n";
     $titles = array();
     $p_dir = opendir($pages_dir);
     while (FALSE !== ($fn = readdir($p_dir)))
