@@ -1,7 +1,7 @@
 <?php
 
-$hook_action_links .= '$action_links .= \' <a href="'.$title_root.'\'.$title.'
-                                         .'\'&amp;action=search">Search</a>\';';
+$hook_action_links .= '$action_links .= "\n".\'<a href="'.$title_root.
+                                '\'.$title.\'&amp;action=search">Search</a>\';';
 
 function Action_search()
 # Case-insensitive search through all pages' texts and titles.
