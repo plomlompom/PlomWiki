@@ -23,14 +23,15 @@ $esc_p_off = $esc.'p_off';
 
 function MarkupLinks($text)
 # [[LinkedPagename]], [[Linked|Text displayed]], [[http://linked-url.com]].
-{ global $title_root;
-  $text = preg_replace('/\[\[([A-Za-z0-9]+)]]/',
+{ global $title_root, $legal_title;
+  $text = preg_replace('/\[\[('.$legal_title.')]]/',
                        '<a href="'.$title_root.'$1">$1</a>', $text);
-  $text = preg_replace('/\[\[([A-Za-z0-9]+)\|([^'."\n".']+)]]/',
+  $text = preg_replace('/\[\[('.$legal_title.')\|([^'."\n".']+)]]/',
                        '<a href="'.$title_root.'$1">$2</a>', $text);
-  $text = preg_replace('/\[\[(http:\/\/[^ '."\n".'|]+)\|([^'."\n".']+)]]/',
-                       '<a href="$1">$2</a>', $text);
-  return  preg_replace('/\[\[(http:\/\/[^ '."\n".']+)]]/',
+  $legal_url = '((http)|(https)|(ftp)):\/\/[^ '."\n".'|]+';
+  $text = preg_replace('/\[\[('.$legal_url.')\|([^'."\n".']+)]]/',
+                       '<a href="$1">$6</a>', $text);
+  return  preg_replace('/\[\[('.$legal_url.')]]/',
                        '<a href="$1">$1</a>', $text); }
 
 function MarkupStrong($text)

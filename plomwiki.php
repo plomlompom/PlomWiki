@@ -21,8 +21,9 @@ $lines = ReadAndTrimLines($plugin_list_path);
 foreach ($lines as $line) require($line);
 
 # Only allow simple alphanumeric titles to avoid security risks.
+$legal_title = '[a-zA-Z0-9]+';
 $title = $_GET['title']; 
-if (!preg_match('/^[a-zA-Z0-9]+$/', $title)) 
+if (!preg_match('/^'.$legal_title.'$/', $title)) 
 { echo 'Illegal page title. Only alphanumeric characters allowed.'; exit(); }
 $page_path = $pages_dir.$title; $diff_path = $diff_dir. $title;
 
