@@ -9,18 +9,20 @@
 ##################
 
 # Filesystem information.
-$config_dir = 'config/';          $markup_list_path = $config_dir.'markups.txt';
-$plugin_dir = 'plugins/';         $pw_path    = $config_dir.'password.txt';
-$pages_dir  = 'pages/';           $plugin_list_path = $config_dir.'plugins.txt';
-$diff_dir = $pages_dir.'diffs/';         $work_dir = 'work/';
-$del_dir = $pages_dir.'deleted/';        $work_temp_dir = $work_dir.'temp/';
-$title_root = 'plomwiki.php?title=';     $todo_urgent = $work_dir.'todo_urgent';
+$config_dir = 'config/';         $markup_list_path = $config_dir.'markups.txt';
+$plugin_dir = 'plugins/';        $pw_path          = $config_dir.'password.txt';
+$pages_dir  = 'pages/';          $plugin_list_path = $config_dir.'plugins.txt';
+$diff_dir   = $pages_dir.'diffs/';     $work_dir      = 'work/';
+$del_dir    = $pages_dir.'deleted/';   $work_temp_dir = $work_dir.'temp/';
+$title_root = 'plomwiki.php?title=';   $todo_urgent   = $work_dir.'todo_urgent';
 
 # Common HTML end.
 $html_end = "\n\n".'</body>'."\n".'</html>';
 
 # Check for unfinished setup file, execute if found.
-$setup_file = 'setup.php'; if (is_file($setup_file)) require($setup_file);
+$setup_file = 'setup.php'; 
+if (is_file($setup_file)) 
+  require($setup_file);
 
 # Insert plugins' code.
 $hook_Action_write = $hook_page_actions = $hook_meta_actions = '';
@@ -28,13 +30,15 @@ $lines = ReadAndTrimLines($plugin_list_path);
 foreach ($lines as $line) require($line);
 
 # Wiki view HTML start.
-$meta_actions = "\n".'<a href="'.$title_root.'Start">Start</a>';
+$meta_actions    = "\n".'<a href="'.$title_root.'Start">Start</a>';
 eval($hook_meta_actions);
 $wiki_view_start = '<p>PlomWiki: '.$meta_actions.'</p>'."\n\n";
 
 # Only allow alphanumeric titles. If title is needed, but empty, assume "Start".
-$title = $_GET['title']; $legal_title = '[a-zA-Z0-9]+';
-if (!$title) $title = 'Start';
+$title       = $_GET['title']; 
+$legal_title = '[a-zA-Z0-9]+';
+if (!$title) 
+  $title = 'Start';
 if (!preg_match('/^'.$legal_title.'$/', $title)) 
 { echo 'Error'.$wiki_view_start.'<h1>Error</h1>'."\n\n".
        '<p><strong>Illegal page title.</strong> Only alphanumeric characters '.
@@ -45,19 +49,22 @@ $diff_path = $diff_dir  .$title;
 $title_url = $title_root.$title;
 
 # Page view HTML start.
-$page_actions = '<a href="'.$title_url.'">View</a> 
-<a href="'.$title_url.'&amp;action=edit">Edit</a> 
-<a href="'.$title_url.'&amp;action=history">History</a>';
+$page_actions    = '<a href="'.$title_url.'">View</a>'."\n".
+                   '<a href="'.$title_url.'&amp;action=edit">Edit</a>'."\n".
+                   '<a href="'.$title_url.'&amp;action=history">History</a>';
 eval($hook_page_actions);
 $page_view_start = '<h1>'.$title.'</h1>'."\n".'<p>'.$page_actions.'</p>'."\n\n";
 
 # Find appropriate code for user's '?action='. Assume "view" if not found.
-$fallback = 'Action_view'; 
-$action = $_GET['action'];              $action_function = 'Action_'.$action;
-if (!function_exists($action_function)) $action_function = $fallback;
+$fallback        = 'Action_view';
+$action          = $_GET['action'];
+$action_function = 'Action_'.$action;
+if (!function_exists($action_function)) 
+  $action_function = $fallback;
 
 # Before executing user's action, do urgent work if urgent todo file is found.
-WorkToDo($todo_urgent); $action_function();
+WorkToDo($todo_urgent);
+$action_function();
 
 ################
 # Page actions #
@@ -70,19 +77,25 @@ function Action_view()
   # Get text from file. If none, show invitation to create one. Else, markup it.
   if (is_file($page_path)) 
   { $text = file_get_contents($page_path); 
-    $text = EscapeHTML($text); $text = Markup($text); }
+    $text = EscapeHTML($text); 
+    $text = Markup($text); }
   else $text = 'Page does not exist. <a href="'.$title_url.'&amp;action=edit">'.
                                                                   'Create?</a>';
+
+  # Final HTML.
   Output_HTML($title, $text ,TRUE); }
 
 function Action_edit()
 # Edit form on a page source text. Send results to ?action=write.
 { global $markup_help, $page_path, $title, $title_url;
+
   # If no page file is found, start with an empty $text.
   if (is_file($page_path)) 
-  { $text = file_get_contents($page_path); $text = EscapeHTML($text); }
+  { $text = file_get_contents($page_path); 
+    $text = EscapeHTML($text); }
   else $text = '';
 
+  # Final HTML.
   $title_h = 'Editing "'.$title;
   $content = '<form method="post" action="'.$title_url.'&amp;action=write">'.
                                                                            "\n".
@@ -96,16 +109,22 @@ function Action_edit()
 function Action_write()
 # Password-protected writing of page update to work/, calling todo that results.
 { global $html_end, $hook_Action_write, $diff_path, $page_path, $pw_path,
-                             $title, $title_url, $todo_urgent, $wiki_view_start;
-  $text=$_POST['text'];$pw_posted=$_POST['password']; $redirect='';$old_text='';
-  if (is_file($page_path)) $old_text = file_get_contents($page_path);
+         $title, $title_url, $todo_urgent, $wiki_view_start;
+  $text      = $_POST['text'];
+  $pw_posted = $_POST['password'];
+  $redirect  = '';
+  $old_text  = '';
+  if (is_file($page_path))
+    $old_text = file_get_contents($page_path);
 
   # Repair problems in submitted text. Undo possible PHP magical_quotes horrors.
-  if (get_magic_quotes_gpc()) $text = stripslashes($text); 
+  if (get_magic_quotes_gpc()) 
+    $text = stripslashes($text); 
   $text = NormalizeNewlines($text);
   
   # Check for failure conditions: wrong $pw, empty $text, $text unchanged.
-  $pw_expected = FALSE; $pw_expected = substr(file_get_contents($pw_path),0,-1);
+  $pw_expected = FALSE;
+  $pw_expected = substr(file_get_contents($pw_path), 0, -1);
   if (!$pw_expected)            
     $msg = 'No valid password file found.</strong>';
   elseif ($pw_posted !== $pw_expected)         
@@ -121,7 +140,9 @@ function Action_write()
   { $redirect = $title_url; 
     $p_todo = fopen($todo_urgent, 'a+');
     $timestamp = time();
-    eval($hook_Action_write);                                   # Plugin anchor.
+    
+    # Plugin hook.
+    eval($hook_Action_write);
 
     # In case of page deletion question, add DeletePage() task to todo file.
     if ($text == 'delete')
@@ -138,10 +159,12 @@ function Action_write()
       $msg = 'Page "'.$title.'" updated.</strong>'; }
 
     # Try to finish newly added urgent work straight away before continuing.
-    fclose($p_todo);  WorkToDo($todo_urgent);
+    fclose($p_todo);
+    WorkToDo($todo_urgent);
     $msg .= '<br />'."\n".
     'If you read this, then your browser failed to redirect you back.'; }
 
+  # Final HTML.
   $title_h = 'Trying to edit: '.$title;  
   $content = '<p><strong>'.$msg.'</p>'."\n".
              '<p>Return to page "<a href="'.$title_url.'">'.$title.'</a>".</p>';
@@ -152,7 +175,8 @@ function Action_history()
 { global $diff_path, $title, $title_url;
 
   # Check for non-empty diff file on page. Remove superfluous "%%" and "\n".
-  $text = '<p>Page "'.$title.'" has no history.</p>';            $diff_all = '';
+  $text = '<p>Page "'.$title.'" has no history.</p>';
+  $diff_all = '';
   if (is_file($diff_path))
   { $diff_all = file_get_contents($diff_path);
     if (substr($diff_all,0,2) == '%%'     ) $diff_all = substr($diff_all,3);
@@ -183,31 +207,40 @@ function Action_history()
                         $diff_output."\n".'</p>'; }
     $text = implode("\n", $diffs); }
 
+  # Final HTML.
   $title_h = 'Version history of page: '.$title;
   Output_HTML($title_h, $text, TRUE); }
 
 function Action_revert()
 # Prepare version reversion and ask user for confirmation.
 { global $diff_path, $title, $title_url, $page_path;
-  $time = $_GET['time'];        $time_string = date('Y-m-d H:i:s', (int) $time);
+  $time        = $_GET['time'];
+  $time_string = date('Y-m-d H:i:s', (int) $time);
 
   # Build $diff_array from $diff_path to be cycled through, keyed by timestamps.
   $diff_array = array();
   $diffs_text = explode('%%'."\n", file_get_contents($diff_path));
   foreach ($diffs_text as $diff_n => $diff_str)
-  { $diff = explode("\n", $diff_str);                  $diff_text = ''; $id = 0;
+  { $diff = explode("\n", $diff_str);
+    $diff_text = '';
+    $id = 0;
     foreach ($diff as $line_n => $line) 
-    { if ($line_n == 0 and $line !== '') $id = $line;
-      else                               $diff_text .= $line."\n"; }
-    if ($id > 0) $diff_array[$id] = $diff_text; }
+    { if ($line_n == 0 and $line !== '') 
+        $id = $line;
+      else                               
+        $diff_text .= $line."\n"; }
+    if ($id > 0) 
+      $diff_array[$id] = $diff_text; }
 
   # Revert $text back through $diff_array until $time hits $id.
-  $text = file_get_contents($page_path);                      $finished = FALSE;
+  $text     = file_get_contents($page_path);
+  $finished = FALSE;
   foreach ($diff_array as $id => $diff)
   { if ($finished) break;
     $reversed_diff = ReverseDiff($diff); 
-    $text = PlomPatch($text, $reversed_diff);  
-    if ($time == $id) $finished = TRUE; }
+    $text          = PlomPatch($text, $reversed_diff);  
+    if ($time == $id) 
+      $finished = TRUE; }
 
   # Ask for revert affirmation and password. If reversion date is valid.
   if ($finished)
@@ -217,8 +250,10 @@ function Action_revert()
                '<input type="hidden" name="text" value="'.$text.'">'."\n".
                'Password: <input type="password" name="password" />'."\n".
                '<input type="submit" value="Revert!" />'."\n".'</form>'; }
-  else { $content = 'Error. No valid reversion date given.</p>'; }
+  else 
+    $content = 'Error. No valid reversion date given.</p>';
 
+  # Final HTML.
   $title_h = 'Reverting: '.$title; 
   Output_HTML($title_h, $content, TRUE); }
 
@@ -229,8 +264,10 @@ function Action_revert()
 function Markup($text)
 # Applying markup functions in the order described by markups.txt to $text.
 { global $markup_list_path; 
+
   $lines = ReadAndTrimLines($markup_list_path);
-  foreach ($lines as $line) $text = $line($text);
+  foreach ($lines as $line)
+    $text = $line($text);
   return $text; }
 
 function NormalizeNewlines($text)
@@ -252,36 +289,49 @@ function EscapeHTML($text)
 function WorkToDo($path_todo)
 # Work through todo file. Comment-out finished lines. Delete file when finished.
 { global $work_dir; 
+
   if (file_exists($path_todo))
-  { LockOn($work_dir); $p_todo = fopen($path_todo, 'r+');
+  { LockOn($work_dir); 
+    $p_todo = fopen($path_todo, 'r+');
     while (!feof($p_todo))
     { $position = ftell($p_todo);             
-      $line = fgets($p_todo);
+      $line     = fgets($p_todo);
       if ($line[0] !== '#')
-      { $call = substr($line, 0, -1); eval($call);
-        fseek($p_todo, $position); fwrite($p_todo, '#'); fgets($p_todo); } }
-    fclose($p_todo); unlink($path_todo); LockOff($work_dir); } }
+      { $call = substr($line, 0, -1);
+        eval($call);
+        fseek($p_todo, $position);
+        fwrite($p_todo, '#');
+        fgets($p_todo); } }
+    fclose($p_todo);
+    unlink($path_todo);
+    LockOff($work_dir); } }
 
 function NewTempFile($string)
 # Put $string into new $work_temp_dir temp file.
 { global $work_temp_dir;
-  LockOn($work_temp_dir); $p_dir = opendir($work_temp_dir);   $temps = array(0);
+
+  LockOn($work_temp_dir);
+  $p_dir = opendir($work_temp_dir);
+  $temps = array(0);
   while (FALSE !== ($fn = readdir($p_dir))) 
     if (preg_match('/^[0-9]*$/', $fn)) $temps[] = $fn;
   $int = max($temps) + 1; 
   $temp_path = $work_temp_dir.$int;
   file_put_contents($temp_path, $string);
-  closedir($p_dir); LockOff($work_temp_dir); 
+  closedir($p_dir);
+  LockOff($work_temp_dir); 
   return $temp_path; }
 
 function LockOn($dir)
 # Check for and create lockfile for $dir. Lockfiling runs out after $max_time.
 { $lock_duration = 60;   # Lockfile duration. Should be > server execution time.
-  $now = time(); $lock = $dir.'lock';
+  $now = time();
+  $lock = $dir.'lock';
   if (is_file($lock))
   { $time = file_get_contents($lock);
     if ($time + $lock_duration > $now)
-    { echo 'Lockfile found, timestamp too recent. Try again later.'; exit(); } }
+    { echo 'Lockfile found, timestamp too recent. Try again later.'; 
+      exit(); } }
   file_put_contents($lock, $now); }
 
 function LockOff($dir)
@@ -291,6 +341,7 @@ function LockOff($dir)
 function DeletePage($page_path, $title) 
 # Deletion renames and timestamps a page and its diff and moves it to $del_dir.
 { global $pages_dir, $diff_dir, $del_dir;
+
   $timestamp = time();
   $deleted_page_path = $del_dir.$title.',del-page-'.$timestamp;
   $diff_path = $diff_dir.$title;
@@ -300,8 +351,10 @@ function DeletePage($page_path, $title)
 
 function SafeWrite($path_original, $path_temp)
 # Avoid data corruption: Exit if no temp file. Rename, don't overwrite directly.
-{ if (!is_file($path_temp)) return;
-  if (is_file($path_original)) unlink($path_original); 
+{ if (!is_file($path_temp)) 
+    return;
+  if (is_file($path_original)) 
+    unlink($path_original); 
   rename($path_temp, $path_original); }
 
 ########
@@ -333,7 +386,8 @@ function PlomDiff($text_A, $text_B)
   # Collect adds / dels from line mismatches between $lines_{A,B} into $diff.
   # add pattern: $diff[$before_in]['a'] = array($in_first, $in_last)
   # del pattern: $diff[$out_first]['d'] = array($before_out, $out_last)
-  $diff = array(); $offset = 0;
+  $diff = array(); 
+  $offset = 0;
   foreach ($lines_A as $key_A => $line_A)
   { 
     # $offset in $lines_B grows/shrinks for each line added/deleted.
@@ -365,7 +419,8 @@ function PlomDiff($text_A, $text_B)
     { $new_out_last = $limits [1]; 
       $old_out_last = $old_del[2];
       if ($line_n - 1 == $old_out_last)
-      { $old_out_first = $old_del[0]; $old_before_out = $old_del[1];
+      { $old_out_first  = $old_del[0]; 
+        $old_before_out = $old_del[1];
         $diff[$old_out_first]['d'] = array($old_before_out, $new_out_last);
         unset($diff[$line_n]['d']);
         $old_del = array($old_out_first, $old_before_out, $new_out_last); }
@@ -415,7 +470,8 @@ function PlomPatch($text_A, $diff)
 # Patch $text_A to $text_B via $diff.
 { 
   # Explode $diff into $patch_tmp = array($action_tmp => array($line, ...), ...)
-  $patch_lines = explode("\n", $diff);   $patch_tmp = array(); $action_tmp = '';
+  $patch_lines = explode("\n", $diff);
+  $patch_tmp = array(); $action_tmp = '';
   foreach ($patch_lines as $line)
   { if ($line[0] != '<' and $line[0] != '>') $action_tmp = $line;
     else                                     $patch_tmp[$action_tmp][] = $line;}
@@ -426,7 +482,8 @@ function PlomPatch($text_A, $diff)
   foreach ($patch_tmp as $action_tmp => $lines)
   { if     (strpos($action_tmp, 'd'))
            { list($left, $ignore) = explode('d', $action_tmp);
-             if (!strpos($left, ',')) $left = $left.','.$left;
+             if (!strpos($left, ',')) 
+               $left = $left.','.$left;
              list($start, $end) = explode(',', $left);
              $action = 'd'.$start; $patch[$action] = $end; }
     elseif (strpos($action_tmp, 'a'))
@@ -434,16 +491,19 @@ function PlomPatch($text_A, $diff)
              $action = 'a'.$start; $patch[$action] = $lines; }
     elseif (strpos($action_tmp, 'c'))
            { list($left, $right) = explode('c', $action_tmp);
-             if (!strpos($left, ',')) $left = $left.','.$left;
+             if (!strpos($left, ','))
+               $left = $left.','.$left;
              list($start, $end) = explode(',', $left);
-             $action = 'd'.$start; $patch[$action] = $end;
-             $action = 'a'.$start; 
+             $action         = 'd'.$start;
+             $patch[$action] = $end;
+             $action         = 'a'.$start; 
              foreach ($lines as $line) if ($line[0] == '>')
                $patch[$action][] = $line; } }
 
   # Create $lines_{A,B} arrays where key equals line number. Add temp 0-th line.
   $lines_A = explode("\n", $text_A); 
-  foreach ($lines_A as $key => $line) $lines_A[$key + 1] = $line."\n";
+  foreach ($lines_A as $key => $line)
+    $lines_A[$key + 1] = $line."\n";
   $lines_A[0] = ''; $lines_B = $lines_A;
 
   foreach ($patch as $action => $value)
@@ -454,19 +514,22 @@ function PlomPatch($text_A, $diff)
                $lines_B[$apply_after_line] .= substr($line_diff, 1)."\n"; }
     # Cut deleted lines' lengths from $lines_B[$apply_from_line:$until_line].
     elseif ($action[0] == 'd')
-           { $apply_from_line = substr($action, 1); $until_line = $value;
+           { $apply_from_line = substr($action, 1);
+             $until_line = $value;
              for ($i = $apply_from_line; $i <= $until_line; $i++) 
              { $end_of_original_line = strlen($lines_A[$i]);
                $lines_B[$i] = substr($lines_B[$i], $end_of_original_line); } } }
 
   # Before returning, remove potential superfluous "\n" at $text_B end.
   $text_B = implode($lines_B);
-  if (substr($text_B,-1) == "\n") $text_B = substr($text_B,0,-1);
+  if (substr($text_B,-1) == "\n")
+    $text_B = substr($text_B,0,-1);
   return $text_B; }
 
 function ReverseDiff($old_diff)
 # Reverse a diff.
-{ $old_diff = explode("\n", $old_diff);                          $new_diff = '';
+{ $old_diff = explode("\n", $old_diff);
+  $new_diff = '';
   foreach ($old_diff as $line_n => $line)
   { if     ($line[0] == '<') $line[0] = '>'; 
     elseif ($line[0] == '>') $line[0] = '<';
@@ -484,12 +547,15 @@ function ReverseDiff($old_diff)
 
 function ReadAndTrimLines($path)
 # Read file $path into a list of all lines sans comments and ending whitespaces.
-{ $lines = explode("\n", file_get_contents($path));             $list = array(); 
+{ $lines = explode("\n", file_get_contents($path));
+  $list = array(); 
   foreach ($lines as $line)
   { $hash_pos = strpos($line, '#');
-    if ($hash_pos !== FALSE) $line = substr($line, 0, $hash_pos);
+    if ($hash_pos !== FALSE)
+      $line = substr($line, 0, $hash_pos);
     $line = rtrim($line);
-    if ($line) $list[] = $line; } 
+    if ($line)
+      $list[] = $line; } 
   return $list; }
 
 function Output_HTML($title, $content, $page_view = FALSE, $redirect = '')
