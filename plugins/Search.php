@@ -1,11 +1,11 @@
 <?php
 
-$hook_action_links .= '$action_links .= "\n".\'<a href="plomwiki.php?action='
+$hook_meta_actions .= '$meta_actions .= "\n".\'<a href="plomwiki.php?action='
                                                        .'search">Search</a>\';';
 
 function Action_search()
 # Case-insensitive search through all pages' texts and titles.
-{ global $legal_title, $pages_dir, $title_root;
+{ global $legal_title, $pages_dir, $title_root, $wiki_view_start;
 
   # Produce search results HTML if $_GET['query'] is provided.
   $results = ''; $query = ''; 
@@ -30,7 +30,7 @@ function Action_search()
     else              $results .= '<p>None.</p>'; }
 
   # Final HTML. Start with the search query form.  
-  echo 'Search</title>'."\n".'</head>'."\n".'<body>'."\n\n".
+  echo 'Search'.$wiki_view_start.
       '<h1>Search</h1>'."\n\n".'<form method="get" action="plomwiki.php">'."\n".
                     '<input type="hidden" name="action" value="search" />'."\n".
                    '<input type="text" name="query" value="'.$query.'" />'."\n".

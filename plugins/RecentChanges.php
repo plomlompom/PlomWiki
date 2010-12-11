@@ -2,7 +2,7 @@
 # RecentChanges plugin.
 
 $hook_Action_write .= 'Add_to_RecentChanges($timestamp, $p_todo);';
-$hook_action_links .= '$action_links .= "\n".\'<a href="plomwiki.php?action='
+$hook_meta_actions .= '$meta_actions .= "\n".\'<a href="plomwiki.php?action='
                                          .'RecentChanges">RecentChanges</a>\';';
 $RC_Path = $plugin_dir.'RecentChanges.txt';
 
@@ -16,7 +16,7 @@ function Add_to_RecentChanges($timestamp, $p_todo)
 
 function Action_RecentChanges()
 # Provide formatted output of RecentChanges file.
-{ global $RC_Path, $title_root;
+{ global $RC_Path, $title_root, $wiki_view_start;
 
   # Format RecentChanges file content into HTML output.
   $output = '';
@@ -40,5 +40,5 @@ function Action_RecentChanges()
   else $output = '<p>No RecentChanges file found.</p>';
   
   # Final HTML.
-  echo 'Recent Changes</title>'."\n".'</head>'."\n".'<body>'."\n\n".
+  echo 'Recent Changes'.$wiki_view_start.
                                      '<h1>Recent Changes</h1>'."\n\n".$output; }

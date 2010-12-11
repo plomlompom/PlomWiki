@@ -16,7 +16,7 @@ $title_root = 'plomwiki.php?title=';     $todo_urgent = $work_dir.'todo_urgent';
 $setup_file = 'setup.php'; if (is_file($setup_file)) require($setup_file);
 
 # Insert plugins' code.
-$hook_Action_write = $hook_action_links = '';
+$hook_Action_write = $hook_page_actions = $hook_meta_actions = '';
 $lines = ReadAndTrimLines($plugin_list_path); 
 foreach ($lines as $line) require($line);
 
@@ -30,13 +30,19 @@ if (!preg_match('/^'.$legal_title.'$/', $title))
                               .'</p>'."\n\n".'</body>'."\n".'</html>'; exit(); }
 $page_path = $pages_dir.$title; $diff_path = $diff_dir. $title;
 
+# Wiki view start.
+$meta_actions = "\n".'<a href="'.$title_root.'Start">Start</a>';
+eval($hook_meta_actions);
+$wiki_view_start = '</title>'."\n".'</head>'."\n".'<body>'."\n\n".
+                                    '<p>PlomWiki: '.$meta_actions.'</p>'."\n\n";
+
 # Page view start.
-$action_links = '<a href="'.$title_root.$title.'">View</a> 
+$page_actions = '<a href="'.$title_root.$title.'">View</a> 
 <a href="'.$title_root.$title.'&amp;action=edit">Edit</a> 
 <a href="'.$title_root.$title.'&amp;action=history">History</a>';
-eval($hook_action_links);
-$page_view_start = '</title>'."\n".'</head>'."\n".'<body>'."\n\n".'<h1>'.
-                $title.'</h1>'."\n".'<p>'."\n".$action_links."\n".'</p>'."\n\n";
+eval($hook_page_actions);
+$page_view_start = $wiki_view_start.'<h1>'.$title.'</h1>'."\n".
+                                              '<p>'.$page_actions.'</p>'."\n\n";
 
 # Find appropriate code for user's '?action='. Assume "view" if not found.
 $fallback = 'Action_view'; 
