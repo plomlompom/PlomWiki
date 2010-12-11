@@ -160,14 +160,11 @@ function Action_write()
 
     # Try to finish newly added urgent work straight away before continuing.
     fclose($p_todo);
-    WorkToDo($todo_urgent);
-    $msg .= '<br />'."\n".
-    'If you read this, then your browser failed to redirect you back.'; }
+    WorkToDo($todo_urgent); }
 
   # Final HTML.
   $title_h = 'Trying to edit: '.$title;  
-  $content = '<p><strong>'.$msg.'</p>'."\n".
-             '<p>Return to page "<a href="'.$title_url.'">'.$title.'</a>".</p>';
+  $content = '<p><strong>'.$msg.'</p>';
   Output_HTML($title_h, $content, TRUE, $redirect); }
 
 function Action_history()
