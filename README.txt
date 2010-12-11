@@ -71,6 +71,4 @@ be worked through and have to be finished before any other page action (like
 viewing a page) can be performed. 
 
 Any other todo file only gets worked through if the function WorkToDo($path) is
-called on its path. Currently, a plugin PlomWiki/plugins/Action_work.php is
-included but commented out in plugins.txt that implements the action=work which
-works through a non-urgent todo file PlomWiki/work/todo.
+called on its path. Feel free to write a plugin like Action_work() for that.
