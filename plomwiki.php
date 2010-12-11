@@ -99,8 +99,8 @@ function Action_edit()
   $title_h = 'Editing "'.$title;
   $content = '<form method="post" action="'.$title_url.'&amp;action=write">'.
                                                                            "\n".
-             '<textarea name="text" rows="20" style="width:100%">'.$text.
-                                                    '</textarea>'.'<br />'."\n".
+             '<textarea name="text" rows="20" style="width:100%">'."\n".
+             $text.'</textarea>'.'<br />'."\n".
              'Password: <input type="password" name="password" /> <input type='.
                                              '"submit" value="Update!" />'."\n".
              '</form>'."\n\n".$markup_help;
@@ -362,22 +362,43 @@ function NewDiffTemp($text_old, $text_new, $diff_path, $timestamp)
 # Build temp file of $diff_path updated to diff $page_path $text_old->$text_new.
 { $diff_add = PlomDiff($text_old, $text_new);
 
-  # Make sure initial diff does not assume a text consisting of one empty line.
-  # This makes sense because PlomWiki treats texts = '' as non-texts.
-  $diff_lines = explode("\n", $diff_add);
+  # PlomDiff() sees '' as text of one single empty line. PlomWiki treats '' as a
+  # non-page. Therefore, transform any initial diff that assumes prior presence
+  # of at least one empty line into a diff starting at *zero* lines. (Not a very
+  # elegant solution, I should solve the problem somewhere else. Works for now.)
   if ($text_old == '')
-  { if (strstr($diff_lines[0], 'c'))       # Turn "1c[...]" diff into "1a[...]".
-    { $diff_lines[0] = str_replace('1c', '0a', $diff_lines[0]);
-      unset($diff_lines[1]); }
-    else            # If a newline is in the new text, diff assumes non-new-line
-    { $end = 0;     # text added around that. Un-explode such exploded 'a' diffs.
-      $remainder = array_slice($diff_lines, 2, NULL, TRUE);
-      foreach ($remainder as $n => $line)
-      { if ($line[0] != '>')
-        { list($ignore, $end) = explode('a', $line);
-          $diff_lines[$n] = '>'; 
-          $diff_lines[0] = '0a'.$end; break; } } } }
-  $diff_add = implode("\n", $diff_lines);
+  { $diff_lines = explode("\n", $diff_add);
+    $diff_lines[0][0] = '0';              # In any case, '0' will be first char.
+    if ($diff_lines[0][1] == 'c')         # CASE: no empty lines in $text_new
+    { $diff_lines[0][1] = 'a';            # Easy: "1c[...]" -> "0a[...]" and
+      unset($diff_lines[1]); }            # delete a '<' from the diff.
+    else
+    { if ($diff_lines[0][2] == '2')       # CASE: first line empty
+      { $diff_lines[0][2] = '1';          # "0a2[...]" -> "0a1,[...]"
+        if (!$diff_lines[0][3] == ',')
+          $diff_lines[0] .= ',2';
+        $diff_lines[0] .= "\n".'>'; } 
+      elseif ($diff_lines[0][2] == '1')   # CASE: later line empty
+      { $remainder = array_slice($diff_lines, 2, NULL, TRUE);
+        $found = FALSE;
+        foreach ($remainder as $n => $line)
+        { if ($line and $line[0] != '>')  # CASE: later empty line not last one
+          { list($ignore, $end) = explode('a', $line);  # Find second 'a' diff
+            if (strstr($end, ','))                      # and add it to first
+              list($ignore, $end) = explode(',', $end); # one. Also add empty
+            $diff_lines[$n] = '>';                      # line left out as '>'.
+            $diff_lines[0] = '0a1,'.$end;
+            $found = TRUE;
+            break; } }
+        if (!$found)                      # CASE: later empty line is last line
+        { list($ignore, $end) = explode('a', $diff_lines[0]);
+          echo '$end = '.$end;                          # Grow 'a' limit by one
+          if (strstr($end, ','))                        # and add empty line at
+            list($ignore, $end) = explode(',', $end);   # end as '>'.
+          $end++;
+          $diff_lines[0] = '0a1,'.$end;
+          $diff_lines[$end] = '>'; } } }
+    $diff_add = implode("\n", $diff_lines); }
 
   # Timestamp diff and concatenate it to $diff_old, if found.
   if (is_file($diff_path)) $diff_old = file_get_contents($diff_path);
