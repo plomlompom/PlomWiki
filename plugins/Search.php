@@ -31,7 +31,8 @@ function Action_search()
 
   # Final HTML. Start with the search query form.  
   echo 'Search'.$wiki_view_start.
-      '<h1>Search</h1>'."\n\n".'<form method="get" action="plomwiki.php">'."\n".
-                    '<input type="hidden" name="action" value="search" />'."\n".
-                   '<input type="text" name="query" value="'.$query.'" />'."\n".
-  '<input type="submit" value="Search!" />'."\n".'</form>'.$results.$html_end; }
+       '<h1>Search</h1>'."\n\n".'<form method="get" action="plomwiki.php">'."\n"
+       .'<input type="hidden" name="action" value="search" />'."\n".
+       '<input type="text" name="query" value="'.$query.'" />'."\n".
+       '<input type="submit" value="Search!" />'."\n".
+       '</form>'.$results.$html_end; }

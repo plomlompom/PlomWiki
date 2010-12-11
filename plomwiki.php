@@ -9,9 +9,9 @@
 ##################
 
 # Filesystem information.
-$config_dir = 'config/';         $markup_list_path = $config_dir.'markups.txt';
-$plugin_dir = 'plugins/';        $pw_path    = $config_dir.'password.txt';
-$pages_dir  = 'pages/';          $plugin_list_path = $config_dir.'plugins.txt';
+$config_dir = 'config/';          $markup_list_path = $config_dir.'markups.txt';
+$plugin_dir = 'plugins/';         $pw_path    = $config_dir.'password.txt';
+$pages_dir  = 'pages/';           $plugin_list_path = $config_dir.'plugins.txt';
 $diff_dir = $pages_dir.'diffs/';         $work_dir = 'work/';
 $del_dir = $pages_dir.'deleted/';        $work_temp_dir = $work_dir.'temp/';
 $title_root = 'plomwiki.php?title=';     $todo_urgent = $work_dir.'todo_urgent'; 
@@ -27,22 +27,21 @@ $hook_Action_write = $hook_page_actions = $hook_meta_actions = '';
 $lines = ReadAndTrimLines($plugin_list_path); 
 foreach ($lines as $line) require($line);
 
-# Only allow alphanumeric titles. If title is needed, but empty, assume "Start".
-$title = $_GET['title']; $legal_title = '[a-zA-Z0-9]+';
-if (!$title) $title = 'Start';
-if (!preg_match('/^'.$legal_title.'$/', $title)) 
-{ echo 'Error</title>'."\n".'</head>'."\n".'<body>'."\n\n".
-                                                        '<h1>Error</h1>'."\n\n".
-                                     '<p><strong>Illegal page title.</strong> '.
-                           'Only alphanumeric characters allowed</p>'.$html_end;
-  exit(); }
-$page_path = $pages_dir.$title; $diff_path = $diff_dir. $title;
-
 # Wiki view HTML start.
 $meta_actions = "\n".'<a href="'.$title_root.'Start">Start</a>';
 eval($hook_meta_actions);
 $wiki_view_start = '</title>'."\n".'</head>'."\n".'<body>'."\n\n".
-                                    '<p>PlomWiki: '.$meta_actions.'</p>'."\n\n";
+                   '<p>PlomWiki: '.$meta_actions.'</p>'."\n\n";
+
+# Only allow alphanumeric titles. If title is needed, but empty, assume "Start".
+$title = $_GET['title']; $legal_title = '[a-zA-Z0-9]+';
+if (!$title) $title = 'Start';
+if (!preg_match('/^'.$legal_title.'$/', $title)) 
+{ echo 'Error'.$wiki_view_start.'<h1>Error</h1>'."\n\n".
+       '<p><strong>Illegal page title.</strong> Only alphanumeric characters '.
+                                                        'allowed</p>'.$html_end;
+  exit(); }
+$page_path = $pages_dir.$title; $diff_path = $diff_dir. $title;
 
 # Page view HTML start.
 $page_actions = '<a href="'.$title_root.$title.'">View</a> 
@@ -87,13 +86,13 @@ function Action_edit()
   else $text = '';
   
   # Final HTML.
-  echo 'Editing "'.$title.$page_view_start.
-   '<form method="post" action="'.$title_root.$title.'&amp;action=write">'."\n".
-                    '<textarea name="text" rows="20" style="width:100%">'.$text.
-                                                       '</textarea><br />'."\n".
-    'Password: <input type="password" name="password" /> <input type="submit" '.
-                                                      'value="Update!" />'."\n".
-                                      '</form>'."\n\n".$markup_help.$html_end; }
+  echo 'Editing "'.$title.$page_view_start.'<form method="post" action="'.
+                                  $title_root.$title.'&amp;action=write">'."\n".
+       '<textarea name="text" rows="20" style="width:100%">'.$text.'</textarea>'
+                                                                 .'<br />'."\n".
+       'Password: <input type="password" name="password" /> <input type='.
+                                             '"submit" value="Update!" />'."\n".
+       '</form>'."\n\n".$markup_help.$html_end; }
 
 function Action_write()
 # Password-protected writing of page update to work/, calling todo that results.
@@ -146,8 +145,8 @@ function Action_write()
   
   # Final HTML.
   echo 'Trying to edit "'.$title.$wiki_view_start.'<p><strong>'.$msg.'</p>'."\n"
-     .'<p>Return to page "<a href="'.$title_root.$title.'">'.$title.'</a>".</p>'
-                                                                   .$html_end; }
+       .'<p>Return to page "<a href="'.$title_root.$title.'">'.$title.'</a>".'.
+                                                             '</p>'.$html_end; }
 
 function Action_history()
 # Show version history of page (based on its diff file), offer reverting.
@@ -214,10 +213,11 @@ function Action_revert()
   # Ask for revert affirmation and password. If reversion date is valid.
   if ($finished)
   { $content = 'Reverting page to before '.$time_string.'?</p>'."\n".
-    '<form method="post" action="'.$title_root.$title.'&amp;action=write">'."\n"
-                    .'<input type="hidden" name="text" value="'.$text.'">'."\n".
-                     'Password: <input type="password" name="password" />'."\n".
-                     '<input type="submit" value="Revert!" />'."\n".'</form>'; }
+               '<form method="post" action="'.$title_root.$title.'&amp;action='.
+                                                                 'write">'."\n".
+               '<input type="hidden" name="text" value="'.$text.'">'."\n".
+               'Password: <input type="password" name="password" />'."\n".
+               '<input type="submit" value="Revert!" />'."\n".'</form>'; }
   else { $content = 'Error. No valid reversion date given.</p>'; }
 
   # Final HTML.
