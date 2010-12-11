@@ -15,8 +15,8 @@ USE
 In your browser window, click on "View" to view a page, on "Edit" to edit a page
 and on "History" to examine a diff history of the page's edits. (Here you can
 also revert changes to the page text by clicking on the "Revert" link over a
-diff.) "Search" provides a form for searching through all of the pages' texts,
-"RecentChanges" gives a chronology of all recent page edits.
+diff.) "Search" provides a form for searching through all of the pages' texts
+and titles, "RecentChanges" gives a chronology of all recent page edits.
 
 Per default, only little markup is possible on pages, though more could be added
 as plugins (see Technical Details section). For examples of usable markups, see
