@@ -359,11 +359,21 @@ function SafeWrite($path_original, $path_temp)
 ########
 
 function NewDiffTemp($text_old, $text_new, $diff_path, $timestamp)
-# Build temp file of $diff_path updated to diff $page_path text -> $text_new.
+# Build temp file of $diff_path updated to diff $page_path $text_old->$text_new.
 { $diff_add = PlomDiff($text_old, $text_new);
+
+  # We assume that a text who was '' previously was previously non-existant.
+  if ($text_old == '')
+  { $diff_lines = explode("\n", $diff_add);
+    $diff_lines[0] = str_replace('1c', '0a', $diff_lines[0]);
+    unset($diff_lines[1]);
+    $diff_add = implode("\n", $diff_lines); }
+
+  # Timestamp diff and concatenate it to $diff_old, if found.
   if (is_file($diff_path)) $diff_old = file_get_contents($diff_path);
   else                     $diff_old = '';
   $diff_new = $timestamp."\n".$diff_add.'%%'."\n".$diff_old;
+
   return NewTempFile($diff_new); }
 
 function PlomDiff($text_A, $text_B)
