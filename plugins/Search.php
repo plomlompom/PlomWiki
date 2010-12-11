@@ -4,6 +4,7 @@ $hook_action_links .= '$action_links .= \' <a href="'.$title_root.'\'.$title.'
                                          .'\'&amp;action=search">Search</a>\';';
 
 function Action_search()
+# Case-insensitive search through all pages' texts.
 { global $legal_title, $pages_dir, $title, $title_root;
 
   # Produce search results HTML if $_GET['query'] is provided.
@@ -18,11 +19,11 @@ function Action_search()
       if (is_file($pages_dir.$fn) and preg_match('/^'.$legal_title.'$/', $fn))
         $titles[] = $fn;
     closedir($p_dir);
-    $matches = array(); $matches_str = '';
+    $matches = array(); $matches_str = ''; $query_low = strtolower($query);
     foreach ($titles as $title)
-    { $content = file_get_contents($pages_dir.$title);
-      if (strstr($content, $query)) $matches[] = '<li><a href="'.$title_root.
-                                               $title.'">'.$title.'</a></li>'; }
+    { $content_low = strtolower(file_get_contents($pages_dir.$title));
+      if (strstr($content_low, $query_low)) $matches[] = '<li><a href="'.
+                                   $title_root.$title.'">'.$title.'</a></li>'; }
     $matches_str .= implode("\n", $matches); 
     if ($matches_str) $results .= '<ul>'."\n".$matches_str."\n".'</ul>'; 
     else              $results .= '<p>None.</p>'; }
