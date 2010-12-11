@@ -366,11 +366,11 @@ function NewDiffTemp($text_old, $text_new, $diff_path, $timestamp)
   # This makes sense because PlomWiki treats texts = '' as non-texts.
   $diff_lines = explode("\n", $diff_add);
   if ($text_old == '')
-  { if (strstr($diff_lines[0], 'c')) # Turn "1c[...]" diff into "1a[...]".
+  { if (strstr($diff_lines[0], 'c'))       # Turn "1c[...]" diff into "1a[...]".
     { $diff_lines[0] = str_replace('1c', '0a', $diff_lines[0]);
       unset($diff_lines[1]); }
-    else        # If a newline is in the new text, diff assumes non-new-line
-    { $end = 0; # text added around that. Un-explode such exploded 'a' diffs.
+    else            # If a newline is in the new text, diff assumes non-new-line
+    { $end = 0;     # text added around that. Un-explode such exploded 'a' diffs.
       $remainder = array_slice($diff_lines, 2, NULL, TRUE);
       foreach ($remainder as $n => $line)
       { if ($line[0] != '>')
