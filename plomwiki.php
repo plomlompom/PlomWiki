@@ -22,6 +22,7 @@ foreach ($lines as $line) require($line);
 
 # Only allow simple alphanumeric titles to avoid security risks.
 $title = $_GET['title']; $legal_title = '[a-zA-Z0-9]+';
+if (!$title) $title = 'Start';
 if (!preg_match('/^'.$legal_title.'$/', $title)) 
 { echo 
     'Error</title>'."\n".'</head>'."\n".'<body>'."\n\n".'<h1>Error</h1>'."\n\n".
