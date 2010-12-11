@@ -113,7 +113,7 @@ function Action_write()
   $text      = $_POST['text'];
   $pw_posted = $_POST['password'];
   $redirect  = '';
-  $old_text  = '';
+  $old_text  = "\r"; # A code to PlomDiff() of $old_text having no lines at all.
   if (is_file($page_path))
     $old_text = file_get_contents($page_path);
 
@@ -362,44 +362,6 @@ function NewDiffTemp($text_old, $text_new, $diff_path, $timestamp)
 # Build temp file of $diff_path updated to diff $page_path $text_old->$text_new.
 { $diff_add = PlomDiff($text_old, $text_new);
 
-  # PlomDiff() sees '' as text of one single empty line. PlomWiki treats '' as a
-  # non-page. Therefore, transform any initial diff that assumes prior presence
-  # of at least one empty line into a diff starting at *zero* lines. (Not a very
-  # elegant solution, I should solve the problem somewhere else. Works for now.)
-  if ($text_old == '')
-  { $diff_lines = explode("\n", $diff_add);
-    $diff_lines[0][0] = '0';              # In any case, '0' will be first char.
-    if ($diff_lines[0][1] == 'c')         # CASE: no empty lines in $text_new
-    { $diff_lines[0][1] = 'a';            # Easy: "1c[...]" -> "0a[...]" and
-      unset($diff_lines[1]); }            # delete a '<' from the diff.
-    else
-    { if ($diff_lines[0][2] == '2')       # CASE: first line empty
-      { $diff_lines[0][2] = '1';          # "0a2[...]" -> "0a1,[...]"
-        if (!$diff_lines[0][3] == ',')
-          $diff_lines[0] .= ',2';
-        $diff_lines[0] .= "\n".'>'; } 
-      elseif ($diff_lines[0][2] == '1')   # CASE: later line empty
-      { $remainder = array_slice($diff_lines, 2, NULL, TRUE);
-        $found = FALSE;
-        foreach ($remainder as $n => $line)
-        { if ($line and $line[0] != '>')  # CASE: later empty line not last one
-          { list($ignore, $end) = explode('a', $line);  # Find second 'a' diff
-            if (strstr($end, ','))                      # and add it to first
-              list($ignore, $end) = explode(',', $end); # one. Also add empty
-            $diff_lines[$n] = '>';                      # line left out as '>'.
-            $diff_lines[0] = '0a1,'.$end;
-            $found = TRUE;
-            break; } }
-        if (!$found)                      # CASE: later empty line is last line
-        { list($ignore, $end) = explode('a', $diff_lines[0]);
-          echo '$end = '.$end;                          # Grow 'a' limit by one
-          if (strstr($end, ','))                        # and add empty line at
-            list($ignore, $end) = explode(',', $end);   # end as '>'.
-          $end++;
-          $diff_lines[0] = '0a1,'.$end;
-          $diff_lines[$end] = '>'; } } }
-    $diff_add = implode("\n", $diff_lines); }
-
   # Timestamp diff and concatenate it to $diff_old, if found.
   if (is_file($diff_path)) $diff_old = file_get_contents($diff_path);
   else                     $diff_old = '';
@@ -415,6 +377,8 @@ function PlomDiff($text_A, $text_B)
   $lines_A_tmp   = explode("\n", $text_A);  
   $lines_B_tmp   = explode("\n", $text_B);
   $original_ln_A = count($lines_A_tmp);     # Will be needed further below, too.
+  if ($text_A = "\r")         # $text = "\r" is our code for $text containing no
+    $original_ln_A = 0;       # lines at all (instead of one single empty line).
   $new_ln        = max($original_ln_A, count($lines_B_tmp)) + 1;
   $lines_A_tmp   = array_pad($lines_A_tmp, $new_ln, "\r");
   $lines_B_tmp   = array_pad($lines_B_tmp, $new_ln, "\r");
