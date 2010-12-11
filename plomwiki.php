@@ -4,9 +4,13 @@
 <meta charset="UTF-8">
 <title><?php
 
+##################
+# Initialization #
+##################
+
 # Filesystem information.
 $config_dir = 'config/';         $markup_list_path = $config_dir.'markups.txt';
-$plugin_dir = 'plugins/';        $password_path    = $config_dir.'password.txt';
+$plugin_dir = 'plugins/';        $pw_path    = $config_dir.'password.txt';
 $pages_dir  = 'pages/';          $plugin_list_path = $config_dir.'plugins.txt';
 $diff_dir = $pages_dir.'diffs/';         $work_dir = 'work/';
 $del_dir = $pages_dir.'deleted/';        $work_temp_dir = $work_dir.'temp/';
@@ -23,24 +27,24 @@ $hook_Action_write = $hook_page_actions = $hook_meta_actions = '';
 $lines = ReadAndTrimLines($plugin_list_path); 
 foreach ($lines as $line) require($line);
 
-# Only allow simple alphanumeric titles to avoid security risks.
+# Only allow alphanumeric titles. If title is needed, but empty, assume "Start".
 $title = $_GET['title']; $legal_title = '[a-zA-Z0-9]+';
 if (!$title) $title = 'Start';
 if (!preg_match('/^'.$legal_title.'$/', $title)) 
-{ echo 
-    'Error</title>'."\n".'</head>'."\n".'<body>'."\n\n".'<h1>Error</h1>'."\n\n".
+{ echo 'Error</title>'."\n".'</head>'."\n".'<body>'."\n\n".
+                                                        '<h1>Error</h1>'."\n\n".
                                      '<p><strong>Illegal page title.</strong> '.
                            'Only alphanumeric characters allowed</p>'.$html_end;
   exit(); }
 $page_path = $pages_dir.$title; $diff_path = $diff_dir. $title;
 
-# Wiki view start.
+# Wiki view HTML start.
 $meta_actions = "\n".'<a href="'.$title_root.'Start">Start</a>';
 eval($hook_meta_actions);
 $wiki_view_start = '</title>'."\n".'</head>'."\n".'<body>'."\n\n".
                                     '<p>PlomWiki: '.$meta_actions.'</p>'."\n\n";
 
-# Page view start.
+# Page view HTML start.
 $page_actions = '<a href="'.$title_root.$title.'">View</a> 
 <a href="'.$title_root.$title.'&amp;action=edit">Edit</a> 
 <a href="'.$title_root.$title.'&amp;action=history">History</a>';
@@ -54,8 +58,7 @@ $action = $_GET['action'];              $action_function = 'Action_'.$action;
 if (!function_exists($action_function)) $action_function = $fallback;
 
 # Before executing user's action, do urgent work if urgent todo file is found.
-WorkToDo($todo_urgent); 
-$action_function();
+WorkToDo($todo_urgent); $action_function();
 
 ################
 # Page actions #
@@ -67,12 +70,10 @@ function Action_view()
   
   # Get text from file. If none, show invitation to create one. Else, markup it.
   if (is_file($page_path)) 
-  { $text = file_get_contents($page_path);
-    $text = EscapeHTML($text);
-    $text = Markup($text); }
+  { $text = file_get_contents($page_path); 
+    $text = EscapeHTML($text); $text = Markup($text); }
   else $text = 'Page does not exist. <a href="'.$title_root.$title.'&amp;action'
                                                           .'=edit">Create?</a>';
-  
   # Final HTML.
   echo $title.$page_view_start.$text.$html_end; }
 
@@ -80,16 +81,14 @@ function Action_edit()
 # Edit form on a page source text. Send results to ?action=write.
 { global $html_end, $markup_help, $page_view_start, $page_path, $title, 
                                                                     $title_root;
-
   # If no page file is found, start with an empty $text.
   if (is_file($page_path)) 
-  { $text = file_get_contents($page_path); 
-    $text = EscapeHTML($text); }
+  { $text = file_get_contents($page_path); $text = EscapeHTML($text); }
   else $text = '';
   
   # Final HTML.
-  echo 'Editing "'.$title.$page_view_start.'<form method="post" action="'.
-                                  $title_root.$title.'&amp;action=write">'."\n".
+  echo 'Editing "'.$title.$page_view_start.
+   '<form method="post" action="'.$title_root.$title.'&amp;action=write">'."\n".
                     '<textarea name="text" rows="20" style="width:100%">'.$text.
                                                        '</textarea><br />'."\n".
     'Password: <input type="password" name="password" /> <input type="submit" '.
@@ -98,36 +97,35 @@ function Action_edit()
 
 function Action_write()
 # Password-protected writing of page update to work/, calling todo that results.
-{ global $html_end, $hook_Action_write, $diff_path, $page_path, $password_path,
+{ global $html_end, $hook_Action_write, $diff_path, $page_path, $pw_path,
                             $title, $title_root, $todo_urgent, $wiki_view_start;
-  $text = $_POST['text']; $password_posted = $_POST['password']; $redirect = '';
-  $old_text = '';
+  $text=$_POST['text'];$pw_posted=$_POST['password']; $redirect='';$old_text='';
   if (is_file($page_path)) $old_text = file_get_contents($page_path);
 
   # Repair problems in submitted text. Undo possible PHP magical_quotes horrors.
-  if (get_magic_quotes_gpc()) $text = stripslashes($text);
+  if (get_magic_quotes_gpc()) $text = stripslashes($text); 
   $text = NormalizeNewlines($text);
   
-  # Check for failure conditions: wrong $password, empty $text, $text unchanged.
-  $password_expected = FALSE;
-  $password_expected = substr(file_get_contents($password_path), 0, -1);
-  if (!$password_expected)
+  # Check for failure conditions: wrong $pw, empty $text, $text unchanged.
+  $pw_expected = FALSE; $pw_expected = substr(file_get_contents($pw_path),0,-1);
+  if (!$pw_expected)            
     $msg = 'No valid password file found.</strong>';
-  elseif ($password_posted !== $password_expected) 
-    $msg ='Wrong password.</strong>';
-  elseif (!$text) 
+  elseif ($pw_posted !== $pw_expected)         
+    $msg = 'Wrong password.</strong>';
+  elseif (!$text)         
     $msg = 'Empty pages not allowed.</strong><br />'."\n".
            'Replace page text with "delete" if you want to eradicate the page.';
-  elseif (NormalizeNewlines(stripslashes($text)) == $old_text)
+  elseif ($text == $old_text)            
     $msg = 'You changed nothing!</strong>';  
-
-  # Successful edit writes to todo_urgent, triggers work on it and a redirect.
-  else
+  
+  # Successful edit writes todo_urgent, triggers work on it and redirect.
+  else   
   { $redirect = "\n".
         '<meta http-equiv="refresh" content="0; URL='.$title_root.$title.'" />';
     $p_todo = fopen($todo_urgent, 'a+'); $timestamp = time();
+    eval($hook_Action_write);                                   # Plugin anchor.
 
-    # In case of "delete", add DeletePage() task to todo file.
+    # In case of page deletion question, add DeletePage() task to todo file.
     if ($text == 'delete')
     { if (is_file($page_path)) 
         fwrite($p_todo, 'DeletePage("'.$page_path.'", "'.$title.'");'."\n");
@@ -141,9 +139,6 @@ function Action_write()
       fwrite($p_todo, 'SafeWrite("'.$page_path.'", "'.$page_temp.'");'."\n");
       $msg = 'Page "'.$title.'" updated.</strong>'; }
 
-    # Plugin anchor.
-    eval($hook_Action_write);
-   
     # Try to finish newly added urgent work straight away before continuing.
     fclose($p_todo);  WorkToDo($todo_urgent);
     $msg .= '<br />'."\n".
@@ -195,8 +190,7 @@ function Action_history()
 
 function Action_revert()
 # Prepare version reversion and ask user for confirmation.
-{ global $html_end, $page_view_start, $diff_path, $title, $title_root, 
-                                                                     $page_path;
+{ global $html_end, $page_view_start, $diff_path, $title,$title_root,$page_path;
   $time = $_GET['time'];        $time_string = date('Y-m-d H:i:s', (int) $time);
 
   # Build $diff_array from $diff_path to be cycled through, keyed by timestamps.
@@ -217,6 +211,7 @@ function Action_revert()
     $text = PlomPatch($text, $reversed_diff);  
     if ($time == $id) $finished = TRUE; }
 
+  # Ask for revert affirmation and password. If reversion date is valid.
   if ($finished)
   { $content = 'Reverting page to before '.$time_string.'?</p>'."\n".
     '<form method="post" action="'.$title_root.$title.'&amp;action=write">'."\n"
