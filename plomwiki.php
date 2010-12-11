@@ -14,7 +14,7 @@ $plugin_dir = 'plugins/';         $pw_path    = $config_dir.'password.txt';
 $pages_dir  = 'pages/';           $plugin_list_path = $config_dir.'plugins.txt';
 $diff_dir = $pages_dir.'diffs/';         $work_dir = 'work/';
 $del_dir = $pages_dir.'deleted/';        $work_temp_dir = $work_dir.'temp/';
-$title_root = 'plomwiki.php?title=';     $todo_urgent = $work_dir.'todo_urgent'; 
+$title_root = 'plomwiki.php?title=';     $todo_urgent = $work_dir.'todo_urgent';
 
 # Common HTML end.
 $html_end = "\n\n".'</body>'."\n".'</html>';
@@ -40,12 +40,14 @@ if (!preg_match('/^'.$legal_title.'$/', $title))
        '<p><strong>Illegal page title.</strong> Only alphanumeric characters '.
                                                         'allowed</p>'.$html_end;
   exit(); }
-$page_path = $pages_dir.$title; $diff_path = $diff_dir. $title;
+$page_path = $pages_dir .$title; 
+$diff_path = $diff_dir  .$title;
+$title_url = $title_root.$title;
 
 # Page view HTML start.
-$page_actions = '<a href="'.$title_root.$title.'">View</a> 
-<a href="'.$title_root.$title.'&amp;action=edit">Edit</a> 
-<a href="'.$title_root.$title.'&amp;action=history">History</a>';
+$page_actions = '<a href="'.$title_url.'">View</a> 
+<a href="'.$title_url.'&amp;action=edit">Edit</a> 
+<a href="'.$title_url.'&amp;action=history">History</a>';
 eval($hook_page_actions);
 $page_view_start = '<h1>'.$title.'</h1>'."\n".'<p>'.$page_actions.'</p>'."\n\n";
 
@@ -63,27 +65,27 @@ WorkToDo($todo_urgent); $action_function();
 
 function Action_view()
 # Formatted display of a page.
-{ global $page_path, $title, $title_root;
+{ global $page_path, $title, $title_url;
   
   # Get text from file. If none, show invitation to create one. Else, markup it.
   if (is_file($page_path)) 
   { $text = file_get_contents($page_path); 
     $text = EscapeHTML($text); $text = Markup($text); }
-  else $text = 'Page does not exist. <a href="'.$title_root.$title.'&amp;action'
-                                                          .'=edit">Create?</a>';
+  else $text = 'Page does not exist. <a href="'.$title_url.'&amp;action=edit">'.
+                                                                  'Create?</a>';
   Output_HTML($title, $text ,TRUE); }
 
 function Action_edit()
 # Edit form on a page source text. Send results to ?action=write.
-{ global $markup_help, $page_path, $title, $title_root;
+{ global $markup_help, $page_path, $title, $title_url;
   # If no page file is found, start with an empty $text.
   if (is_file($page_path)) 
   { $text = file_get_contents($page_path); $text = EscapeHTML($text); }
   else $text = '';
 
   $title_h = 'Editing "'.$title;
-  $content = '<form method="post" action="'.$title_root.$title.
-                                                     '&amp;action=write">'."\n".
+  $content = '<form method="post" action="'.$title_url.'&amp;action=write">'.
+                                                                           "\n".
              '<textarea name="text" rows="20" style="width:100%">'.$text.
                                                     '</textarea>'.'<br />'."\n".
              'Password: <input type="password" name="password" /> <input type='.
@@ -94,7 +96,7 @@ function Action_edit()
 function Action_write()
 # Password-protected writing of page update to work/, calling todo that results.
 { global $html_end, $hook_Action_write, $diff_path, $page_path, $pw_path,
-                            $title, $title_root, $todo_urgent, $wiki_view_start;
+                             $title, $title_url, $todo_urgent, $wiki_view_start;
   $text=$_POST['text'];$pw_posted=$_POST['password']; $redirect='';$old_text='';
   if (is_file($page_path)) $old_text = file_get_contents($page_path);
 
@@ -116,7 +118,8 @@ function Action_write()
   
   # Successful edit writes todo_urgent, triggers work on it and redirect.
   else   
-  { $redirect = $title_root.$title; $p_todo = fopen($todo_urgent, 'a+'); 
+  { $redirect = $title_url; 
+    $p_todo = fopen($todo_urgent, 'a+');
     $timestamp = time();
     eval($hook_Action_write);                                   # Plugin anchor.
 
@@ -141,13 +144,12 @@ function Action_write()
 
   $title_h = 'Trying to edit: '.$title;  
   $content = '<p><strong>'.$msg.'</p>'."\n".
-             '<p>Return to page "<a href="'.$title_root.$title.'">'.$title.
-                                                                   '</a>".</p>';
+             '<p>Return to page "<a href="'.$title_url.'">'.$title.'</a>".</p>';
   Output_HTML($title_h, $content, TRUE, $redirect); }
 
 function Action_history()
 # Show version history of page (based on its diff file), offer reverting.
-{ global $diff_path, $title, $title_root;
+{ global $diff_path, $title, $title_url;
 
   # Check for non-empty diff file on page. Remove superfluous "%%" and "\n".
   $text = '<p>Page "'.$title.'" has no history.</p>';            $diff_all = '';
@@ -176,9 +178,9 @@ function Action_history()
       $diff_output = implode("\n", $diff);
       $diff_output = substr($diff_output, 0, -6); # Delete superfluous "<br />".
       $diffs[$diff_n] = '<p>'."\n".
-      '<a href="'.$title_root.$title.'&amp;action=revert&amp;time='.$time.'">'.
-                                                        'Revert</a><br />'."\n".
-      $diff_output."\n".'</p>'; }
+                        '<a href="'.$title_url.'&amp;action=revert&amp;time='.
+                                                $time.'">Revert</a><br />'."\n".
+                        $diff_output."\n".'</p>'; }
     $text = implode("\n", $diffs); }
 
   $title_h = 'Version history of page: '.$title;
@@ -186,7 +188,7 @@ function Action_history()
 
 function Action_revert()
 # Prepare version reversion and ask user for confirmation.
-{ global $diff_path, $title, $title_root,$page_path;
+{ global $diff_path, $title, $title_url, $page_path;
   $time = $_GET['time'];        $time_string = date('Y-m-d H:i:s', (int) $time);
 
   # Build $diff_array from $diff_path to be cycled through, keyed by timestamps.
@@ -210,8 +212,8 @@ function Action_revert()
   # Ask for revert affirmation and password. If reversion date is valid.
   if ($finished)
   { $content = 'Reverting page to before '.$time_string.'?</p>'."\n".
-               '<form method="post" action="'.$title_root.$title.'&amp;action='.
-                                                                 'write">'."\n".
+               '<form method="post" action="'.$title_url.'&amp;action=write">'.
+                                                                           "\n".
                '<input type="hidden" name="text" value="'.$text.'">'."\n".
                'Password: <input type="password" name="password" />'."\n".
                '<input type="submit" value="Revert!" />'."\n".'</form>'; }
