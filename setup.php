@@ -14,7 +14,6 @@ else       { $msg = 'PlomWiki Setup successful. Reload!'; unlink($setup_file); }
 
 # Final HTML.
 echo $html_start.'PlomWiki Setup</title>'."\n".'</head>'."\n".'<body>'."\n\n".
-     '<h1>PlomWiki Setup</h1>'."\n\n".'<p><strong>'.$msg.'</strong></p>'."\n\n".
-                                                       '</body>'."\n".'</html>';
+  '<h1>PlomWiki Setup</h1>'."\n\n".'<p><strong>'.$msg.'</strong></p>'.$html_end;
 
 exit();

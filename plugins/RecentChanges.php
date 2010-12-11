@@ -16,7 +16,7 @@ function Add_to_RecentChanges($timestamp, $p_todo)
 
 function Action_RecentChanges()
 # Provide formatted output of RecentChanges file.
-{ global $RC_Path, $title_root, $wiki_view_start;
+{ global $html_end, $RC_Path, $title_root, $wiki_view_start;
 
   # Format RecentChanges file content into HTML output.
   $output = '';
@@ -41,4 +41,4 @@ function Action_RecentChanges()
   
   # Final HTML.
   echo 'Recent Changes'.$wiki_view_start.
-                                     '<h1>Recent Changes</h1>'."\n\n".$output; }
+                           '<h1>Recent Changes</h1>'."\n\n".$output.$html_end; }

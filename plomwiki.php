@@ -12,6 +12,9 @@ $diff_dir = $pages_dir.'diffs/';         $work_dir = 'work/';
 $del_dir = $pages_dir.'deleted/';        $work_temp_dir = $work_dir.'temp/';
 $title_root = 'plomwiki.php?title=';     $todo_urgent = $work_dir.'todo_urgent'; 
 
+# Common HTML end.
+$html_end = "\n\n".'</body>'."\n".'</html>';
+
 # Check for unfinished setup file, execute if found.
 $setup_file = 'setup.php'; if (is_file($setup_file)) require($setup_file);
 
@@ -26,8 +29,9 @@ if (!$title) $title = 'Start';
 if (!preg_match('/^'.$legal_title.'$/', $title)) 
 { echo 
     'Error</title>'."\n".'</head>'."\n".'<body>'."\n\n".'<h1>Error</h1>'."\n\n".
- '<p><strong>Illegal page title.</strong> Only alphanumeric characters allowed.'
-                              .'</p>'."\n\n".'</body>'."\n".'</html>'; exit(); }
+                                     '<p><strong>Illegal page title.</strong> '.
+                           'Only alphanumeric characters allowed</p>'.$html_end;
+  exit(); }
 $page_path = $pages_dir.$title; $diff_path = $diff_dir. $title;
 
 # Wiki view start.
@@ -59,7 +63,7 @@ $action_function();
 
 function Action_view()
 # Formatted display of a page.
-{ global $page_view_start, $page_path, $title, $title_root;
+{ global $html_end, $page_view_start, $page_path, $title, $title_root;
   
   # Get text from file. If none, show invitation to create one. Else, markup it.
   if (is_file($page_path)) 
@@ -70,11 +74,12 @@ function Action_view()
                                                           .'=edit">Create?</a>';
   
   # Final HTML.
-  echo $title.$page_view_start.$text; }
+  echo $title.$page_view_start.$text.$html_end; }
 
 function Action_edit()
 # Edit form on a page source text. Send results to ?action=write.
-{ global $markup_help, $page_view_start, $page_path, $title, $title_root;
+{ global $html_end, $markup_help, $page_view_start, $page_path, $title, 
+                                                                    $title_root;
 
   # If no page file is found, start with an empty $text.
   if (is_file($page_path)) 
@@ -89,12 +94,12 @@ function Action_edit()
                                                        '</textarea><br />'."\n".
     'Password: <input type="password" name="password" /> <input type="submit" '.
                                                       'value="Update!" />'."\n".
-                                                '</form>'."\n\n".$markup_help; }
+                                      '</form>'."\n\n".$markup_help.$html_end; }
 
 function Action_write()
 # Password-protected writing of page update to work/, calling todo that results.
-{ global $hook_Action_write, $diff_path, $page_path, $password_path, $title, 
-                                                      $title_root, $todo_urgent;
+{ global $html_end, $hook_Action_write, $diff_path, $page_path, $password_path,
+                            $title, $title_root, $todo_urgent, $wiki_view_start;
   $text = $_POST['text']; $password_posted = $_POST['password']; $redirect = '';
   $old_text = '';
   if (is_file($page_path)) $old_text = file_get_contents($page_path);
@@ -145,16 +150,16 @@ function Action_write()
     'If you read this, then your browser failed to redirect you back.'; }
   
   # Final HTML.
-  echo 'Trying to edit "'.$title.'"</title>'.$redirect."\n".'</head>'."\n".
-                                 '<body>'."\n\n".'<p><strong>'.$msg.'</p>'."\n".
-  '<p>Return to page "<a href="'.$title_root.$title.'">'.$title.'</a>".</p>'; }
+  echo 'Trying to edit "'.$title.$wiki_view_start.'<p><strong>'.$msg.'</p>'."\n"
+     .'<p>Return to page "<a href="'.$title_root.$title.'">'.$title.'</a>".</p>'
+                                                                   .$html_end; }
 
 function Action_history()
 # Show version history of page (based on its diff file), offer reverting.
-{ global $diff_path, $page_view_start, $title, $title_root;
+{ global $html_end, $diff_path, $page_view_start, $title, $title_root;
 
   # Check for non-empty diff file on page. Remove superfluous "%%" and "\n".
-  $text = 'Page "'.$title.'" has no history.';                   $diff_all = '';
+  $text = '<p>Page "'.$title.'" has no history.</p>';            $diff_all = '';
   if (is_file($diff_path))
   { $diff_all = file_get_contents($diff_path);
     if (substr($diff_all,0,2) == '%%'     ) $diff_all = substr($diff_all,3);
@@ -186,11 +191,12 @@ function Action_history()
     $text = implode("\n", $diffs); }
 
   # Final HTML.
-  echo 'Version history of page "'.$title.'"'.$page_view_start.$text; }
+  echo 'Version history of page "'.$title.'"'.$page_view_start.$text.$html_end;}
 
 function Action_revert()
 # Prepare version reversion and ask user for confirmation.
-{ global $page_view_start, $diff_path, $title, $title_root, $page_path;
+{ global $html_end, $page_view_start, $diff_path, $title, $title_root, 
+                                                                     $page_path;
   $time = $_GET['time'];        $time_string = date('Y-m-d H:i:s', (int) $time);
 
   # Build $diff_array from $diff_path to be cycled through, keyed by timestamps.
@@ -220,7 +226,7 @@ function Action_revert()
   else { $content = 'Error. No valid reversion date given.</p>'; }
 
   # Final HTML.
-  echo 'Reverting "'.$title.$page_view_start.'<p>'.$content; }
+  echo 'Reverting "'.$title.$page_view_start.'<p>'.$content.$html_end; }
 
 ####################################
 # Page text manipulation functions #
@@ -491,9 +497,3 @@ function ReadAndTrimLines($path)
     $line = rtrim($line);
     if ($line) $list[] = $line; } 
   return $list; }
-
-?>
-
-
-</body>
-</html>
