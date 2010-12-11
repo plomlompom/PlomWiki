@@ -16,29 +16,28 @@ $title_root = 'plomwiki.php?title=';     $todo_urgent = $work_dir.'todo_urgent';
 $setup_file = 'setup.php'; if (is_file($setup_file)) require($setup_file);
 
 # Insert plugins' code.
-$anchor_Action_write = $anchor_action_links = '';
+$hook_Action_write = $hook_action_links = '';
 $lines = ReadAndTrimLines($plugin_list_path); 
 foreach ($lines as $line) require($line);
 
 # Only allow simple alphanumeric titles to avoid security risks.
-$legal_title = '[a-zA-Z0-9]+';
-$title = $_GET['title']; 
+$title = $_GET['title']; $legal_title = '[a-zA-Z0-9]+';
 if (!preg_match('/^'.$legal_title.'$/', $title)) 
 { echo 'Illegal page title. Only alphanumeric characters allowed.'; exit(); }
 $page_path = $pages_dir.$title; $diff_path = $diff_dir. $title;
 
-# Normal view start.
+# Page view start.
 $action_links = '<a href="'.$title_root.$title.'">View</a> 
 <a href="'.$title_root.$title.'&amp;action=edit">Edit</a> 
 <a href="'.$title_root.$title.'&amp;action=history">History</a>';
-eval($anchor_action_links);
-$normal_view_start = '</title>'."\n".'</head>'."\n".'<body>'."\n\n".'<h1>'.
+eval($hook_action_links);
+$page_view_start = '</title>'."\n".'</head>'."\n".'<body>'."\n\n".'<h1>'.
                 $title.'</h1>'."\n".'<p>'."\n".$action_links."\n".'</p>'."\n\n";
 
 # Find appropriate code for user's '?action='. Assume "view" if not found.
 $fallback = 'Action_view'; 
-$action = $_GET['action'];                 $action_function = 'Action_'.$action;
-if (!function_exists($action_function))    $action_function = $fallback;
+$action = $_GET['action'];              $action_function = 'Action_'.$action;
+if (!function_exists($action_function)) $action_function = $fallback;
 
 # Before executing user's action, do urgent work if urgent todo file is found.
 WorkToDo($todo_urgent); 
@@ -50,7 +49,7 @@ $action_function();
 
 function Action_view()
 # Formatted display of a page.
-{ global $normal_view_start, $page_path, $title, $title_root;
+{ global $page_view_start, $page_path, $title, $title_root;
   
   # Get text from file. If none, show invitation to create one. Else, markup it.
   if (is_file($page_path)) 
@@ -61,11 +60,11 @@ function Action_view()
                                                           .'=edit">Create?</a>';
   
   # Final HTML.
-  echo $title.$normal_view_start.$text; }
+  echo $title.$page_view_start.$text; }
 
 function Action_edit()
 # Edit form on a page source text. Send results to ?action=write.
-{ global $markup_help, $normal_view_start, $page_path, $title, $title_root;
+{ global $markup_help, $page_view_start, $page_path, $title, $title_root;
 
   # If no page file is found, start with an empty $text.
   if (is_file($page_path)) 
@@ -74,7 +73,7 @@ function Action_edit()
   else $text = '';
   
   # Final HTML.
-  echo 'Editing "'.$title.$normal_view_start.'<form method="post" action="'.
+  echo 'Editing "'.$title.$page_view_start.'<form method="post" action="'.
                                   $title_root.$title.'&amp;action=write">'."\n".
                     '<textarea name="text" rows="20" style="width:100%">'.$text.
                                                        '</textarea><br />'."\n".
@@ -84,7 +83,7 @@ function Action_edit()
 
 function Action_write()
 # Password-protected writing of page update to work/, calling todo that results.
-{ global $anchor_Action_write, $diff_path, $page_path, $password_path, $title, 
+{ global $hook_Action_write, $diff_path, $page_path, $password_path, $title, 
                                                       $title_root, $todo_urgent;
   $text = $_POST['text']; $password_posted = $_POST['password']; $redirect = '';
   $old_text = '';
@@ -111,8 +110,7 @@ function Action_write()
   else
   { $redirect = "\n".
         '<meta http-equiv="refresh" content="0; URL='.$title_root.$title.'" />';
-    $p_todo = fopen($todo_urgent, 'a+');
-    $timestamp = time();
+    $p_todo = fopen($todo_urgent, 'a+'); $timestamp = time();
 
     # In case of "delete", add DeletePage() task to todo file.
     if ($text == 'delete')
@@ -129,7 +127,7 @@ function Action_write()
       $msg = 'Page "'.$title.'" updated.</strong>'; }
 
     # Plugin anchor.
-    eval($anchor_Action_write);
+    eval($hook_Action_write);
    
     # Try to finish newly added urgent work straight away before continuing.
     fclose($p_todo);  WorkToDo($todo_urgent);
@@ -143,7 +141,7 @@ function Action_write()
 
 function Action_history()
 # Show version history of page (based on its diff file), offer reverting.
-{ global $diff_path, $normal_view_start, $title, $title_root;
+{ global $diff_path, $page_view_start, $title, $title_root;
 
   # Check for non-empty diff file on page. Remove superfluous "%%" and "\n".
   $text = 'Page "'.$title.'" has no history.';                   $diff_all = '';
@@ -178,11 +176,11 @@ function Action_history()
     $text = implode("\n", $diffs); }
 
   # Final HTML.
-  echo 'Version history of page "'.$title.'"'.$normal_view_start.$text; }
+  echo 'Version history of page "'.$title.'"'.$page_view_start.$text; }
 
 function Action_revert()
 # Prepare version reversion and ask user for confirmation.
-{ global $normal_view_start, $diff_path, $title, $title_root, $page_path;
+{ global $page_view_start, $diff_path, $title, $title_root, $page_path;
   $time = $_GET['time'];        $time_string = date('Y-m-d H:i:s', (int) $time);
 
   # Build $diff_array from $diff_path to be cycled through, keyed by timestamps.
@@ -212,7 +210,7 @@ function Action_revert()
   else { $content = 'Error. No valid reversion date given.</p>'; }
 
   # Final HTML.
-  echo 'Reverting "'.$title.$normal_view_start.'<p>'.$content; }
+  echo 'Reverting "'.$title.$page_view_start.'<p>'.$content; }
 
 ####################################
 # Page text manipulation functions #

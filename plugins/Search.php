@@ -1,7 +1,7 @@
 <?php
 
-$anchor_action_links .= '$action_links .= \' <a href="'.$title_root.'\'.$title.'
-                           .'\'&amp;action=search">Search</a>\';';
+$hook_action_links .= '$action_links .= \' <a href="'.$title_root.'\'.$title.'
+                                         .'\'&amp;action=search">Search</a>\';';
 
 function Action_search()
 { global $legal_title, $pages_dir, $title, $title_root;

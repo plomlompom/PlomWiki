@@ -1,8 +1,8 @@
 <?php
 # RecentChanges plugin.
 
-$anchor_Action_write .= 'Add_to_RecentChanges($timestamp, $p_todo);';
-$anchor_action_links .= '$action_links .= \' <a href="'.$title_root.'\'.$title.'
+$hook_Action_write .= 'Add_to_RecentChanges($timestamp, $p_todo);';
+$hook_action_links .= '$action_links .= \' <a href="'.$title_root.'\'.$title.'
                            .'\'&amp;action=RecentChanges">RecentChanges</a>\';';
 $RC_Path = $plugin_dir.'RecentChanges.txt';
 
