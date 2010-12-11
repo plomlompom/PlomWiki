@@ -1,3 +1,8 @@
+1292106395
+7c7
+<To create a new page, either in the address bar replace the "Start" in the URL part "plomwiki.php?title=Start" with the name for the new page, or create a link to it via the linking markup and click on that. This will open the new page of said pagename ready to be edited and filled with content.
+>To create a new page, either in the address bar replace the "Start" in the URL part "plomwiki.php?title=Start" with the name for the new page, or create a link to it via the linking markup [[SomeNewPage|like this]] and click on that. This will open the new page of the linked pagename ready to be edited and filled with content.
+%%
 1292105977
 0a1,15
 >Welcome to PlomWiki!
