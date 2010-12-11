@@ -94,8 +94,11 @@ function Action_write()
   $text = NormalizeNewlines($text);
   
   # Check for failure conditions: wrong $password, empty $text, $text unchanged.
+  $password_expected = FALSE;
   $password_expected = substr(file_get_contents($password_path), 0, -1);
-  if ($password_posted !== $password_expected) 
+  if (!$password_expected)
+    $msg = 'No valid password file found.</strong>';
+  elseif ($password_posted !== $password_expected) 
     $msg ='Wrong password.</strong>';
   elseif (!$text) 
     $msg = 'Empty pages not allowed.</strong><br />'."\n".
