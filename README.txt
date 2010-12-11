@@ -13,8 +13,10 @@ editing password is "Password", change it in PlomWiki/config/password.txt.
 USE
 
 In your browser window, click on "View" to view a page, on "Edit" to edit a page
-and on "History" to examine a diff history of the pages edits. Here you can also
-revert changes to the page text by clicking on the "Revert" link over a diff.
+and on "History" to examine a diff history of the page's edits. (Here you can
+also revert changes to the page text by clicking on the "Revert" link over a
+diff.) "Search" provides a form for searching through all of the pages' texts,
+"RecentChanges" gives a chronology of all recent page edits.
 
 Per default, only little markup is possible on pages, though more could be added
 as plugins (see Technical Details section). For examples of usable markups, see
@@ -48,7 +50,10 @@ functions like Action_xyz().
 To add code to plomwiki.php for purposes such as this, just put a file of your
 new PHP code into the PlomWiki/plugins/ directory and refer to its relative
 location on a line in the file PlomWiki/config/plugins.txt. All those files
-referenced will be required by plomwiki.php every time it is run.
+referenced will be required by plomwiki.php every time it is run. At specific
+points in plomwiki.php, code contained in string variables is executed that can
+be written into by plugins; thus plugins can hook into various points of the
+main code's execution. The RecentChanges and Search actions are plugins, too.
 
 Standard markup is inserted as the plugin PlomWiki/plugins/standard_markup.php.
 Any text manipulation function can be added as a markup plugin by activating its
