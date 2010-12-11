@@ -362,18 +362,19 @@ function NewDiffTemp($text_old, $text_new, $diff_path, $timestamp)
 # Build temp file of $diff_path updated to diff $page_path $text_old->$text_new.
 { $diff_add = PlomDiff($text_old, $text_new);
 
-  # We assume that a text who was '' previously was previously non-existant.
+  # Make sure initial diff does not assume a text consisting of one empty line.
+  # This makes sense because PlomWiki treats texts = '' as non-texts.
   $diff_lines = explode("\n", $diff_add);
   if ($text_old == '')
-  { if (strstr($diff_lines[0], 'c')) 
+  { if (strstr($diff_lines[0], 'c')) # Turn "1c[...]" diff into "1a[...]".
     { $diff_lines[0] = str_replace('1c', '0a', $diff_lines[0]);
-      unset($diff_lines[1]); echo 'TRIGGERED'; }
-    else
-    { $end = 0; 
+      unset($diff_lines[1]); }
+    else        # If a newline is in the new text, diff assumes non-new-line
+    { $end = 0; # text added around that. Un-explode such exploded 'a' diffs.
       $remainder = array_slice($diff_lines, 2, NULL, TRUE);
       foreach ($remainder as $n => $line)
       { if ($line[0] != '>')
-        { list($ignore, $end) = explode('a', $line); echo 'TRUGGERED';
+        { list($ignore, $end) = explode('a', $line);
           $diff_lines[$n] = '>'; 
           $diff_lines[0] = '0a'.$end; break; } } } }
   $diff_add = implode("\n", $diff_lines);
