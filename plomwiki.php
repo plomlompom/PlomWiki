@@ -363,11 +363,20 @@ function NewDiffTemp($text_old, $text_new, $diff_path, $timestamp)
 { $diff_add = PlomDiff($text_old, $text_new);
 
   # We assume that a text who was '' previously was previously non-existant.
+  $diff_lines = explode("\n", $diff_add);
   if ($text_old == '')
-  { $diff_lines = explode("\n", $diff_add);
-    $diff_lines[0] = str_replace('1c', '0a', $diff_lines[0]);
-    unset($diff_lines[1]);
-    $diff_add = implode("\n", $diff_lines); }
+  { if (strstr($diff_lines[0], 'c')) 
+    { $diff_lines[0] = str_replace('1c', '0a', $diff_lines[0]);
+      unset($diff_lines[1]); echo 'TRIGGERED'; }
+    else
+    { $end = 0; 
+      $remainder = array_slice($diff_lines, 2, NULL, TRUE);
+      foreach ($remainder as $n => $line)
+      { if ($line[0] != '>')
+        { list($ignore, $end) = explode('a', $line); echo 'TRUGGERED';
+          $diff_lines[$n] = '>'; 
+          $diff_lines[0] = '0a'.$end; break; } } } }
+  $diff_add = implode("\n", $diff_lines);
 
   # Timestamp diff and concatenate it to $diff_old, if found.
   if (is_file($diff_path)) $diff_old = file_get_contents($diff_path);
