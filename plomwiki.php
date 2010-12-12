@@ -564,7 +564,7 @@ function ReadAndTrimLines($path)
 
 function Output_HTML($title, $content, $page_view = FALSE, $head = '')
 # Combine all provided HTML snippets to the final HTML output.
-{ global $wiki_view_start, $page_view_start, $html_end;
+{ global $wiki_view_start, $page_view_start;
 
   if (!$page_view) $page_view_start = '';
   if ($head)       $head .= "\n";
