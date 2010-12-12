@@ -37,9 +37,13 @@ $legal_title = '[a-zA-Z0-9]+';
 if (!$title) 
   $title = 'Start';
 if (!preg_match('/^'.$legal_title.'$/', $title)) 
-{ echo 'Error'.$wiki_view_start.'<h1>Error</h1>'."\n\n".
-       '<p><strong>Illegal page title.</strong> Only alphanumeric characters '.
-                                                        'allowed</p>'.$html_end;
+# { echo 'Error'.$wiki_view_start.'<h1>Error</h1>'."\n\n".
+#        '<p><strong>Illegal page title.</strong> Only alphanumeric characters '.
+#                                                         'allowed</p>'.$html_end;
+{ $text = '<h1>Error</h1>'."\n\n".
+          '<p><strong>Illegal page title.</strong><br />'."\n".
+          ' Only alphanumeric characters allowed</p>';
+    Output_HTML('Error', $text);
   exit(); }
 $page_path = $pages_dir .$title; 
 $diff_path = $diff_dir  .$title;
