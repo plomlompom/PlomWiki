@@ -93,7 +93,7 @@ function Action_edit()
   else $text = '';
 
   # Final HTML.
-  $title_h = 'Editing "'.$title;
+  $title_h = 'Editing: '.$title;
   $form = '<form method="post" action="'.$title_url.'&amp;action=write">'."\n".
           '<textarea name="text" rows="20" style="width:100%">'."\n".
           $text.'</textarea>'.'<br />'."\n".
@@ -140,7 +140,7 @@ function Action_history()
     $text = implode("\n", $diffs); }
 
   # Final HTML.
-  $title_h = 'Version history of page: '.$title;
+  $title_h = 'Version history of: '.$title;
   Output_HTML($title_h, $text, TRUE); }
 
 function Action_revert()
