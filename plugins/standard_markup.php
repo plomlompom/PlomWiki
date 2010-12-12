@@ -3,10 +3,10 @@
 
 # Provide help message to be shown in editing window.
 $markup_help = '<h4>PlomWiki markup cheatsheet</h4>'."\n".'<p>In-line:</p>'."\n"
-.'<pre>[*<strong>strong</strong>*] [/<em>emphasis</em>/] [-<del>deleted</del>-]'
-.' [[<a href="'.$title_root.'PagenameOrURL">PagenameOrURL</a>]] [[PagenameOrURL'.
-'|<a href="'.$title_root.'PagenameOrURL">Text displayed instead</a>]]</pre>'.
-                                                                           "\n".
+.'<pre style="white-space: pre-wrap;">[*<strong>strong</strong>*] '.
+         '[/<em>emphasis</em>/] [-<del>deleted</del>-] [[<a href="'.$title_root.
+     'PagenameOrURL">PagenameOrURL</a>]] [[PagenameOrURL|<a href="'.$title_root.
+                       'PagenameOrURL">Text displayed instead</a>]]</pre>'."\n".
 '<p>Multi-line:</p>'."\n".'<pre>*] list element'."\n".
                                             '&nbsp;&nbsp;*] indented once'."\n".
                               '&nbsp;&nbsp;&nbsp;&nbsp;*] indented twice</pre>';
