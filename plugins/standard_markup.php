@@ -8,8 +8,8 @@ $markup_help = '<h4>PlomWiki markup cheatsheet</h4>'."\n".'<p>In-line:</p>'."\n"
      'PagenameOrURL">PagenameOrURL</a>]] [[PagenameOrURL|<a href="'.$title_root.
                        'PagenameOrURL">Text displayed instead</a>]]</pre>'."\n".
 '<p>Multi-line:</p>'."\n".'<pre>*] list element'."\n".
-                                            '&nbsp;&nbsp;*] indented once'."\n".
-                              '&nbsp;&nbsp;&nbsp;&nbsp;*] indented twice</pre>';
+'  *] indented once'."\n".
+'    *] indented twice</pre>';
 
 # Escape symbols / sequences. $esc."\n" newlines won't be replaced by "<br />.
 # Bracket lines to exclude from "<p>" paragraphing in $esc_p_on and $esc_p_off.
