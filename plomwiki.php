@@ -95,8 +95,8 @@ function Action_edit()
   # Final HTML.
   $title_h = 'Editing: '.$title;
   $form = '<form method="post" action="'.$title_url.'&amp;action=write">'."\n".
-          '<textarea name="text" rows="20" style="width:100%">'."\n".
-          $text.'</textarea>'.'<br />'."\n".
+          '<pre><textarea name="text" rows="20" style="width:100%">'."\n".
+          $text.'</textarea></pre>'."\n".
           'Password: <input type="password" name="password" /> <input type='.
                                              '"submit" value="Update!" />'."\n".
           '</form>'."\n\n".$markup_help;
