@@ -106,67 +106,6 @@ function Action_edit()
              '</form>'."\n\n".$markup_help;
    Output_HTML($title_h, $content, TRUE); }
 
-function Action_write()
-# Password-protected writing of page update to work/, calling todo that results.
-{ global $html_end, $hook_Action_write, $diff_path, $page_path, $pw_path,
-         $title, $title_url, $todo_urgent, $wiki_view_start;
-  $text      = $_POST['text'];
-  $pw_posted = $_POST['password'];
-  $redirect  = '';
-  $old_text  = "\r"; # A code to PlomDiff() of $old_text having no lines at all.
-  if (is_file($page_path))
-    $old_text = file_get_contents($page_path);
-
-  # Repair problems in submitted text. Undo possible PHP magical_quotes horrors.
-  if (get_magic_quotes_gpc()) 
-    $text = stripslashes($text); 
-  $text = NormalizeNewlines($text);
-  
-  # Check for failure conditions: wrong $pw, empty $text, $text unchanged.
-  $pw_expected = FALSE;
-  $pw_expected = substr(file_get_contents($pw_path), 0, -1);
-  if (!$pw_expected)            
-    $msg = 'No valid password file found.</strong>';
-  elseif ($pw_posted !== $pw_expected)         
-    $msg = 'Wrong password.</strong>';
-  elseif (!$text)         
-    $msg = 'Empty pages not allowed.</strong><br />'."\n".
-           'Replace page text with "delete" if you want to eradicate the page.';
-  elseif ($text == $old_text)            
-    $msg = 'You changed nothing!</strong>';  
-  
-  # Successful edit writes todo_urgent, triggers work on it and redirect.
-  else   
-  { $redirect = $title_url; 
-    $p_todo = fopen($todo_urgent, 'a+');
-    $timestamp = time();
-    
-    # Plugin hook.
-    eval($hook_Action_write);
-
-    # In case of page deletion question, add DeletePage() task to todo file.
-    if ($text == 'delete')
-    { if (is_file($page_path)) 
-        fwrite($p_todo, 'DeletePage("'.$page_path.'", "'.$title.'");'."\n");
-      $msg = 'Page "'.$title.'" is deleted (if it ever existed).</strong>'; }
-  
-    # Write $text, $diff temp files. Add SafeWrite() tasks to todo.
-    else
-    { $diff_temp = NewDiffTemp($old_text, $text, $diff_path, $timestamp);
-      fwrite($p_todo, 'SafeWrite("'.$diff_path.'", "'.$diff_temp.'");'."\n");
-      $page_temp = NewTempFile($text);
-      fwrite($p_todo, 'SafeWrite("'.$page_path.'", "'.$page_temp.'");'."\n");
-      $msg = 'Page "'.$title.'" updated.</strong>'; }
-
-    # Try to finish newly added urgent work straight away before continuing.
-    fclose($p_todo);
-    WorkToDo($todo_urgent); }
-
-  # Final HTML.
-  $title_h = 'Trying to edit: '.$title;  
-  $content = '<p><strong>'.$msg.'</p>';
-  Output_HTML($title_h, $content, TRUE, $redirect); }
-
 function Action_history()
 # Show version history of page (based on its diff file), offer reverting.
 { global $diff_path, $title, $title_url;
@@ -253,6 +192,67 @@ function Action_revert()
   # Final HTML.
   $title_h = 'Reverting: '.$title; 
   Output_HTML($title_h, $content, TRUE); }
+
+function Action_write()
+# Password-protected writing of page update to work/, calling todo that results.
+{ global $html_end, $hook_Action_write, $diff_path, $page_path, $pw_path,
+         $title, $title_url, $todo_urgent, $wiki_view_start;
+  $text      = $_POST['text'];
+  $pw_posted = $_POST['password'];
+  $redirect  = '';
+  $old_text  = "\r"; # A code to PlomDiff() of $old_text having no lines at all.
+  if (is_file($page_path))
+    $old_text = file_get_contents($page_path);
+
+  # Repair problems in submitted text. Undo possible PHP magical_quotes horrors.
+  if (get_magic_quotes_gpc()) 
+    $text = stripslashes($text); 
+  $text = NormalizeNewlines($text);
+  
+  # Check for failure conditions: wrong $pw, empty $text, $text unchanged.
+  $pw_expected = FALSE;
+  $pw_expected = substr(file_get_contents($pw_path), 0, -1);
+  if (!$pw_expected)            
+    $msg = 'No valid password file found.</strong>';
+  elseif ($pw_posted !== $pw_expected)         
+    $msg = 'Wrong password.</strong>';
+  elseif (!$text)         
+    $msg = 'Empty pages not allowed.</strong><br />'."\n".
+           'Replace page text with "delete" if you want to eradicate the page.';
+  elseif ($text == $old_text)            
+    $msg = 'You changed nothing!</strong>';  
+  
+  # Successful edit writes todo_urgent, triggers work on it and redirect.
+  else   
+  { $redirect = $title_url; 
+    $p_todo = fopen($todo_urgent, 'a+');
+    $timestamp = time();
+    
+    # Plugin hook.
+    eval($hook_Action_write);
+
+    # In case of page deletion question, add DeletePage() task to todo file.
+    if ($text == 'delete')
+    { if (is_file($page_path)) 
+        fwrite($p_todo, 'DeletePage("'.$page_path.'", "'.$title.'");'."\n");
+      $msg = 'Page "'.$title.'" is deleted (if it ever existed).</strong>'; }
+  
+    # Write $text, $diff temp files. Add SafeWrite() tasks to todo.
+    else
+    { $diff_temp = NewDiffTemp($old_text, $text, $diff_path, $timestamp);
+      fwrite($p_todo, 'SafeWrite("'.$diff_path.'", "'.$diff_temp.'");'."\n");
+      $page_temp = NewTempFile($text);
+      fwrite($p_todo, 'SafeWrite("'.$page_path.'", "'.$page_temp.'");'."\n");
+      $msg = 'Page "'.$title.'" updated.</strong>'; }
+
+    # Try to finish newly added urgent work straight away before continuing.
+    fclose($p_todo);
+    WorkToDo($todo_urgent); }
+
+  # Final HTML.
+  $title_h = 'Trying to edit: '.$title;  
+  $content = '<p><strong>'.$msg.'</p>';
+  Output_HTML($title_h, $content, TRUE, $redirect); }
 
 ####################################
 # Page text manipulation functions #
