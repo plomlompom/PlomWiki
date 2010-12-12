@@ -26,10 +26,10 @@ function MarkupLinks($text)
 { global $title_root, $legal_title;
   $text = preg_replace('/\[\[('.$legal_title.')]]/',
                        '<a href="'.$title_root.'$1">$1</a>', $text);
-  $text = preg_replace('/\[\[('.$legal_title.')\|([^'."\n".']+)]]/',
+  $text = preg_replace('/\[\[('.$legal_title.')\|([^'."\n".']+?)]]/',
                        '<a href="'.$title_root.'$1">$2</a>', $text);
-  $legal_url = '((http)|(https)|(ftp)):\/\/[^ '."\n".'|]+';
-  $text = preg_replace('/\[\[('.$legal_url.')\|([^'."\n".']+)]]/',
+  $legal_url = '((http)|(https)|(ftp)):\/\/[^ '."\n".'|]+?';
+  $text = preg_replace('/\[\[('.$legal_url.')\|([^'."\n".']+?)]]/',
                        '<a href="$1">$6</a>', $text);
   return  preg_replace('/\[\[('.$legal_url.')]]/',
                        '<a href="$1">$1</a>', $text); }
