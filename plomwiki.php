@@ -16,9 +16,6 @@ $diff_dir   = $pages_dir.'diffs/';     $work_dir      = 'work/';
 $del_dir    = $pages_dir.'deleted/';   $work_temp_dir = $work_dir.'temp/';
 $title_root = 'plomwiki.php?title=';   $todo_urgent   = $work_dir.'todo_urgent';
 
-# Common HTML end.
-$html_end = "\n\n".'</body>'."\n".'</html>';
-
 # Check for unfinished setup file, execute if found.
 $setup_file = 'setup.php'; 
 if (is_file($setup_file)) 
@@ -570,4 +567,5 @@ function Output_HTML($title, $content, $page_view = FALSE, $redirect = '')
     $redirect = '<meta http-equiv="refresh" content="0; URL='.$redirect.'" />';
 
   echo $title.'</title>'."\n".$redirect.'</head>'."\n".'<body>'."\n\n".
-       $wiki_view_start.$page_view_start.$content.$html_end; }
+       $wiki_view_start.$page_view_start.$content."\n\n".'</body>'."\n".
+       '</html>'; }
