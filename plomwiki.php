@@ -97,13 +97,12 @@ function Action_edit()
 
   # Final HTML.
   $title_h = 'Editing "'.$title;
-  $content = '<form method="post" action="'.$title_url.'&amp;action=write">'.
-                                                                           "\n".
-             '<textarea name="text" rows="20" style="width:100%">'."\n".
-             $text.'</textarea>'.'<br />'."\n".
-             'Password: <input type="password" name="password" /> <input type='.
+  $form = '<form method="post" action="'.$title_url.'&amp;action=write">'."\n".
+          '<textarea name="text" rows="20" style="width:100%">'."\n".
+          $text.'</textarea>'.'<br />'."\n".
+          'Password: <input type="password" name="password" /> <input type='.
                                              '"submit" value="Update!" />'."\n".
-             '</form>'."\n\n".$markup_help;
+          '</form>'."\n\n".$markup_help;
    Output_HTML($title_h, $content, TRUE); }
 
 function Action_history()
