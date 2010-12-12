@@ -127,21 +127,26 @@ function Action_history()
       foreach ($diff as $line_n => $line) 
       { if ($line_n == 0) 
         { $time = $line;
-          $diff[$line_n] = date('Y-m-d H:i:s', (int) $time); }
-        elseif ($line[0] == '>') $diff[$line_n][0] = '+';
-        elseif ($line[0] == '<') $diff[$line_n][0] = '-';
-        $diff[$line_n] = EscapeHTML($diff[$line_n]).'<br />'; }
+          $diff[$line_n] = '<p>'.date('Y-m-d H:i:s', (int) $time).' (<a href="'.
+                           $title_url.'&amp;action=revert&amp;time='.$time.'">'.
+                           'revert</a>):</p>'."\n".'<div class="diff">'; }
+        else
+        { if     ($line[0] == '>') 
+            $diff[$line_n] = '+ '.substr($diff[$line_n], 1);
+          elseif ($line[0] == '<') 
+            $diff[$line_n] = '- '.substr($diff[$line_n], 1);
+          $diff[$line_n] = '<pre>'.EscapeHTML($diff[$line_n]).'</pre>'; } }
       $diff_output = implode("\n", $diff);
-      $diff_output = substr($diff_output, 0, -6); # Delete superfluous "<br />".
-      $diffs[$diff_n] = '<p>'."\n".
-                        '<a href="'.$title_url.'&amp;action=revert&amp;time='.
-                                                $time.'">Revert</a><br />'."\n".
-                        $diff_output."\n".'</p>'; }
+      $diffs[$diff_n] = $diff_output."\n".'</div>'."\n"; }
     $text = implode("\n", $diffs); }
 
   # Final HTML.
   $title_h = 'Version history of: '.$title;
-  Output_HTML($title_h, $text, TRUE); }
+  $css = '<style type="text/css">'."\n".
+         'pre'."\n".'{ white-space: pre-wrap;'."\n".'  text-indent:-12pt;'."\n".
+         '  margin-top:0px;'."\n".'  margin-bottom:0px; }'."\n\n".'.diff '."\n".
+         '{ margin-left:12pt; }'."\n".'</style>';
+  Output_HTML($title_h, $text, TRUE, $css); }
 
 function Action_revert()
 # Prepare version reversion and ask user for confirmation.
@@ -221,7 +226,7 @@ function Action_write()
   
   # Successful edit writes todo_urgent, triggers work on it and redirect.
   else   
-  { $redirect = $title_url; 
+  { $redirect = '<meta http-equiv="refresh" content="0; URL='.$title_url.'" />';
     $p_todo = fopen($todo_urgent, 'a+');
     $timestamp = time();
     
@@ -557,15 +562,13 @@ function ReadAndTrimLines($path)
       $list[] = $line; } 
   return $list; }
 
-function Output_HTML($title, $content, $page_view = FALSE, $redirect = '')
+function Output_HTML($title, $content, $page_view = FALSE, $head = '')
 # Combine all provided HTML snippets to the final HTML output.
 { global $wiki_view_start, $page_view_start, $html_end;
 
-  if (!$page_view)
-    $page_view_start = '';
-  if ($redirect) 
-    $redirect = '<meta http-equiv="refresh" content="0; URL='.$redirect.'" />';
+  if (!$page_view) $page_view_start = '';
+  if ($head)       $head .= "\n";
 
-  echo $title.'</title>'."\n".$redirect.'</head>'."\n".'<body>'."\n\n".
+  echo $title.'</title>'."\n".$head.'</head>'."\n".'<body>'."\n\n".
        $wiki_view_start.$page_view_start.$content."\n\n".'</body>'."\n".
        '</html>'; }
