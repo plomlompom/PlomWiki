@@ -1,3 +1,8 @@
+1292120194
+5c5
+<Per default, only little markup is possible on pages, though more could be added as plugins (see Technical Details section). For examples of usable markups, see the markup cheatcodes below the page text editing window.
+>Per default, only little markup is possible on pages, though more could be added as plugins (see Technical Details section in README.txt). For examples of usable markups, see the markup cheatcodes below the page text editing window.
+%%
 1292106395
 7c7
 <To create a new page, either in the address bar replace the "Start" in the URL part "plomwiki.php?title=Start" with the name for the new page, or create a link to it via the linking markup and click on that. This will open the new page of said pagename ready to be edited and filled with content.
