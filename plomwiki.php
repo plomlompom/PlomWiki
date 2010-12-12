@@ -377,7 +377,7 @@ function PlomDiff($text_A, $text_B)
   $lines_A_tmp   = explode("\n", $text_A);  
   $lines_B_tmp   = explode("\n", $text_B);
   $original_ln_A = count($lines_A_tmp);     # Will be needed further below, too.
-  if ($text_A = "\r")         # $text = "\r" is our code for $text containing no
+  if ($text_A == "\r")        # $text = "\r" is our code for $text containing no
     $original_ln_A = 0;       # lines at all (instead of one single empty line).
   $new_ln        = max($original_ln_A, count($lines_B_tmp)) + 1;
   $lines_A_tmp   = array_pad($lines_A_tmp, $new_ln, "\r");
