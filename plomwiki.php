@@ -103,7 +103,7 @@ function Action_edit()
           'Password: <input type="password" name="password" /> <input type='.
                                              '"submit" value="Update!" />'."\n".
           '</form>'."\n\n".$markup_help;
-   Output_HTML($title_h, $content, TRUE); }
+   Output_HTML($title_h, $form, TRUE); }
 
 function Action_history()
 # Show version history of page (based on its diff file), offer reverting.
@@ -173,7 +173,7 @@ function Action_revert()
   foreach ($diff_array as $id => $diff)
   { if ($finished) break;
     $reversed_diff = ReverseDiff($diff); 
-    $text          = PlomPatch($text, $reversed_diff);  
+    $text          = EscapeHTML(PlomPatch($text, $reversed_diff));  
     if ($time == $id) 
       $finished = TRUE; }
 
