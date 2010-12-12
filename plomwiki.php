@@ -173,9 +173,10 @@ function Action_revert()
   foreach ($diff_array as $id => $diff)
   { if ($finished) break;
     $reversed_diff = ReverseDiff($diff); 
-    $text          = EscapeHTML(PlomPatch($text, $reversed_diff));  
+    $text          = PlomPatch($text, $reversed_diff);
     if ($time == $id) 
       $finished = TRUE; }
+  $text = EscapeHTML($text);
 
   # Ask for revert affirmation and password. If reversion date is valid.
   if ($finished)
