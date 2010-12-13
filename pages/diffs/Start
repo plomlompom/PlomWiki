@@ -1,3 +1,8 @@
+1292284459
+5c5
+<Per default, only little markup is possible on pages, though more could be added as plugins (see Technical Details section in README.txt). For examples of usable markups, see the markup cheatcodes below the page text editing window.
+>Per default, [-only-] [/little/] [*markup*] is possible on pages, though more could be added as plugins (see Technical Details section in README.txt). For examples of usable markups, see the markup cheatcodes below the page text editing window.
+%%
 1292127918
 0a1,15
 >Welcome to PlomWiki!
