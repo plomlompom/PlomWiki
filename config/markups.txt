@@ -1,9 +1,9 @@
 # Insert markups in the order they're to be called on pages. Comment out with #.
-Escape
+MarkupEscape
 MarkupLinks
 MarkupStrong
 MarkupEmphasis
 MarkupDeleted
 MarkupLists
 MarkupLinesParagraphs
-Unescape
+MarkupUnescape
