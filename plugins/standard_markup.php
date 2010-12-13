@@ -7,15 +7,16 @@ $markup_help = '<h4>PlomWiki markup cheatsheet</h4>'."\n".'<p>In-line:</p>'."\n"
          '[/<em>emphasis</em>/] [-<del>deleted</del>-] [[<a href="'.$title_root.
      'PagenameOrURL">PagenameOrURL</a>]] [[PagenameOrURL|<a href="'.$title_root.
                        'PagenameOrURL">Text displayed instead</a>]]</pre>'."\n".
-'<p>Multi-line:</p>'."\n".'<pre>*] list element'."\n".
-'  *] indented once'."\n".
+'<p>Multi-line:</p>'."\n".'<pre>[\Escape markup\]</pre>'."\n".
+'<pre>*] list element'."\n".'  *] indented once'."\n".
 '    *] indented twice</pre>';
 
-# Escape symbols / sequences. $esc."\n" newlines won't be replaced by "<br />.
+# Escaping variables. $esc."\n" newlines won't be replaced by "<br />.
 # Bracket lines to exclude from "<p>" paragraphing in $esc_p_on and $esc_p_off.
 $esc = "\r";
 $esc_p_on = $esc.'p_on';
 $esc_p_off = $esc.'p_off';
+$escaped = array();
 
 ##################
 # In-line markup #
@@ -50,6 +51,23 @@ function MarkupDeleted($text)
 #########################
 # Multiple-lines markup #
 #########################
+
+function Escape($text)
+# Replace "[\This"\]" with "[\r]", store "This" in array $escaped.
+{ global $escaped;
+  preg_match_all('/\[\\\(.*?)\\\]/s', $text, $escaped);
+  $text = preg_replace('/\[\\\.*?\\\]/s', '['."\r".']', $text);
+  return $text; }
+
+function Unescape($text)
+# Replace all "[\r]" with the string originally escaped.
+{ global $escaped;
+  foreach ($escaped[1] as $string)
+  { $pos = strpos($text, '['."\r".']');
+    $text_before = substr($text, 0, $pos);
+    $text_after = substr($text, $pos + 3);
+    $text = $text_before.$string.$text_after; }
+  return $text; }
 
 function MarkupLists($text)
 # Lines starting with '*] ' preceded by multiples of double whitespace -> lists.
