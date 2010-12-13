@@ -4,6 +4,7 @@ MarkupLinks
 MarkupStrong
 MarkupEmphasis
 MarkupDeleted
+MarkupCode
 MarkupLists
-MarkupLinesParagraphs
+MarkupParagraphs
 MarkupUnescape
