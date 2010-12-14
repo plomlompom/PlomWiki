@@ -198,7 +198,7 @@ function Action_revert()
 
 function Action_write()
 # Password-protected writing of page update to work/, calling todo that results.
-{ global $html_end, $hook_Action_write, $diff_path, $page_path, $pw_path,
+{ global $hook_Action_write, $diff_path, $page_path,
          $title, $title_url, $todo_urgent, $wiki_view_start;
   $text      = $_POST['text'];
   $pw_posted = $_POST['password'];
@@ -213,11 +213,7 @@ function Action_write()
   $text = NormalizeNewlines($text);
   
   # Check for failure conditions: wrong $pw, empty $text, $text unchanged.
-  $pw_expected = FALSE;
-  $pw_expected = substr(file_get_contents($pw_path), 0, -1);
-  if (!$pw_expected)            
-    $msg = 'No valid password file found.</strong>';
-  elseif ($pw_posted !== $pw_expected)         
+  if (!CheckPassword($pw_posted))
     $msg = 'Wrong password.</strong>';
   elseif (!$text)         
     $msg = 'Empty pages not allowed.</strong><br />'."\n".
@@ -545,6 +541,28 @@ function ReverseDiff($old_diff)
           $line = $right.$reverse.$left; break; } } }
     $new_diff .= $line."\n"; }
   return $new_diff; }
+
+############
+# Password #
+############
+
+function CheckPassword($pw_posted)
+# Compare $pw_posted to $pw_expected from $pw_path password file.
+{ global $pw_path;
+  $pw_expected = substr(file_get_contents($pw_path), 0, -1);
+
+  # Trigger error if no password file found.
+  if (!$pw_expected)
+  { $title_h = 'Error';
+    $text = '<h1>Error.</h1>'."\n".
+            '<p><strong>No valid password file found.</strong></p>';
+    Output_HTML($title_h, $text);
+    exit(); }
+
+  # Return with success of $pw_posted <-> $pw_expected comparison.
+  if ($pw_posted === $pw_expected)
+    return TRUE;
+  return FALSE; }
 
 ##########################
 # Minor helper functions #
