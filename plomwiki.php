@@ -706,8 +706,6 @@ function Output_HTML($title, $content, $page_view = FALSE, $head = '')
   if (!$page_view) $page_view_start = '';
   if ($head)       $head .= "\n";
 
-  echo '<!DOCTYPE html>'."\n".'<html>'."\n".'<head>'."\n".
-       '<meta charset="UTF-8">'."\n".'<title>'.$title.'</title>'."\n".
-       $head.'</head>'."\n".'<body>'."\n\n".
-       $wiki_view_start.$page_view_start.$content."\n\n".'</body>'."\n".
-       '</html>'; }
+  echo '<!DOCTYPE html>'."\n".'<meta charset="UTF-8">'."\n".
+       '<title>'.$title.'</title>'."\n".
+       $head."\n".$wiki_view_start.$page_view_start.$content; }
