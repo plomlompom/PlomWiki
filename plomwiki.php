@@ -1,8 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title><?php
+<?php
 
 ##################
 # Initialization #
@@ -22,13 +18,15 @@ if (is_file($setup_file))
   require($setup_file);
 
 # Insert plugins' code.
-$hook_Action_write = $hook_page_actions = $hook_meta_actions = '';
+$hook_page_write = $hook_page_actions = $hook_meta_actions = '';
 $lines = ReadAndTrimLines($plugin_list_path); 
 foreach ($lines as $line) require($line);
 
 # Wiki view HTML start.
 $meta_actions    = "\n".'<a href="'.$title_root.'Start">Start</a>';
 eval($hook_meta_actions);
+$meta_actions    .= "\n".'<a href="plomwiki.php?action=set_pw_admin">Set admin'.
+                                                                ' password</a>';
 $wiki_view_start = '<p>PlomWiki: '.$meta_actions.'</p>'."\n\n";
 
 # Only allow alphanumeric titles. If title is needed, but empty, assume "Start".
@@ -47,10 +45,12 @@ $diff_path = $diff_dir  .$title;
 $title_url = $title_root.$title;
 
 # Page view HTML start.
-$page_actions    = '<a href="'.$title_url.'">View</a>'."\n".
-                   '<a href="'.$title_url.'&amp;action=edit">Edit</a>'."\n".
-                   '<a href="'.$title_url.'&amp;action=history">History</a>';
+$page_actions  = '<a href="'.$title_url.'">View</a>'."\n".
+                 '<a href="'.$title_url.'&amp;action=edit">Edit</a>'."\n".
+                 '<a href="'.$title_url.'&amp;action=history">History</a>'."\n";
 eval($hook_page_actions);
+$page_actions .= '<a href="'.$title_url.'&amp;action=set_pw_page">Set page '.
+                                                                 'password</a>';
 $page_view_start = '<h1>'.$title.'</h1>'."\n".'<p>'.$page_actions.'</p>'."\n\n";
 
 # Find appropriate code for user's '?action='. Assume "view" if not found.
@@ -64,9 +64,9 @@ if (!function_exists($action_function))
 WorkToDo($todo_urgent);
 $action_function();
 
-################
-# Page actions #
-################
+#######################
+# Common page actions #
+#######################
 
 function Action_view()
 # Formatted display of a page.
@@ -95,11 +95,12 @@ function Action_edit()
 
   # Final HTML.
   $title_h = 'Editing: '.$title;
-  $form = '<form method="post" action="'.$title_url.'&amp;action=write">'."\n".
+  $form = '<form method="post" action="'.$title_url.
+                                          '&amp;action=write&amp;t=page">'."\n".
           '<pre><textarea name="text" rows="20" style="width:100%">'."\n".
           $text.'</textarea></pre>'."\n".
-          'Password: <input type="password" name="password" /> <input type='.
-                                             '"submit" value="Update!" />'."\n".
+          'Password: <input type="password" name="pw" /> <input type="submit" '.
+                                                      'value="Update!" />'."\n".
           '</form>'."\n\n".$markup_help;
    Output_HTML($title_h, $form, TRUE); }
 
@@ -184,10 +185,10 @@ function Action_revert()
   # Ask for revert affirmation and password. If reversion date is valid.
   if ($finished)
   { $content = 'Reverting page to before '.$time_string.'?</p>'."\n".
-               '<form method="post" action="'.$title_url.'&amp;action=write">'.
-                                                                           "\n".
+               '<form method="post" action="'.$title_url.
+                                          '&amp;action=write&amp;t=page">'."\n".
                '<input type="hidden" name="text" value="'.$text.'">'."\n".
-               'Password: <input type="password" name="password" />'."\n".
+               'Password: <input type="password" name="pw" />'."\n".
                '<input type="submit" value="Revert!" />'."\n".'</form>'; }
   else 
     $content = 'Error. No valid reversion date given.</p>';
@@ -196,91 +197,209 @@ function Action_revert()
   $title_h = 'Reverting: '.$title; 
   Output_HTML($title_h, $content, TRUE); }
 
+#################################
+# User-accessible writing to DB #
+#################################
+
 function Action_write()
-# Password-protected writing of page update to work/, calling todo that results.
-{ global $hook_Action_write, $diff_path, $page_path,
-         $title, $title_url, $todo_urgent, $wiki_view_start;
-  $text      = $_POST['text'];
-  $pw_posted = $_POST['password'];
-  $redirect  = '';
-  $old_text  = "\r"; # A code to PlomDiff() of $old_text having no lines at all.
+# Only way to write to DB. Expect password $_POST['pw'], target type $_GET['t'].
+{ global $todo_urgent; 
+  $pw = $_POST['pw']; $t = $_GET['t'];
+
+  # Get any writing-relevant variables from $x, built by function chosen by $t.
+  if     ($t == 'page') $x = PreparePageWrite();
+  elseif ($t == 'pw')   $x = PreparePasswordWrite();
+  $fail=$x['fail']; $msg=$x['msg']; $hook=$x['hook']; $is_page=$x['is_page'];
+  $tasks=$x['tasks']; $todo=$x['todo']; $temps=$x['temps']; $time=$x['time'];
+
+  # Failure conditions: No target type $t. Positive $mistake. Wrong password.
+  $title_h  = 'Error.';
+  if (!$fail)
+    if (!$t or ($t != 'page' and $t != 'pw'))
+    { $fail = TRUE;
+      $msg = '<p><strong>No known target type specified.</strong></p>'; }
+    elseif (!CheckPW($pw, $t))
+    { $fail = TRUE;
+      $msg = '<p><strong>Wrong password.</strong></p>'; }
+
+  # If writing can go through, start by opening hooks for redirect and plugins.
+  if (!$fail)
+  { $title_h = 'Writing';
+    $p_todo = fopen($todo, 'a+');
+    $redir = $x['redir'];
+    eval($hook);
+
+    # Write temp files, tasks into todo file. Expect well-formed $task content.
+    if ($temps) foreach ($temps as $n => $temp)
+        $temp_paths[$n] = NewTempFile($temp);
+    foreach ($tasks as $n => $task_start)
+    { $temp_path = '';
+      if ($temp_paths[$n])
+        $temp_path = $temp_paths[$n];
+      fwrite($p_todo, $task_start.$temp_path.'");'."\n"); }
+    fclose($p_todo);
+
+    # If todo is urgent, why not start right away?
+    if ($todo == $todo_urgent)
+      WorkToDo($todo_urgent); }
+
+  # Final HTML.
+  Output_HTML($title_h, $msg, $is_page, $redir); }
+
+function PreparePageWrite()
+# Deliver to Action_write() all information needed for page writing process.
+{ global $diff_path, $page_path, $title, $title_url, $todo_urgent, 
+         $hook_page_write;
+  $text = $_POST['text'];
+
+  # All the variables easily filled.
+  $x['redir'] = '<meta http-equiv="refresh" content="0; URL='.$title_url.'" />';
+  $x['is_page'] = TRUE;
+  $x['todo']    = $todo_urgent;
+  $x['msg']     = '<p><strong>Page updated.</strong></p>';
+  $x['hook']    = $hook_page_write;
+  $x['time']    = $timestamp = time();
+
+  # Repair problems in submitted text. Undo possible PHP magical_quotes horrors.
+  if (get_magic_quotes_gpc()) $text = stripslashes($text); 
+  $text = NormalizeNewlines($text);
+
+  # $old_text is for comparison and diff generation.
+  $old_text   = "\r";  # Code to PlomDiff() of $old_text having no lines at all.
   if (is_file($page_path))
     $old_text = file_get_contents($page_path);
 
-  # Repair problems in submitted text. Undo possible PHP magical_quotes horrors.
-  if (get_magic_quotes_gpc()) 
-    $text = stripslashes($text); 
-  $text = NormalizeNewlines($text);
-  
-  # Check for failure conditions: wrong $pw, empty $text, $text unchanged.
-  if (!CheckPassword($pw_posted))
-    $msg = 'Wrong password.</strong>';
-  elseif (!$text)         
-    $msg = 'Empty pages not allowed.</strong><br />'."\n".
-           'Replace page text with "delete" if you want to eradicate the page.';
+  # Check for error conditions: $text empty or unchanged.
+  $x['fail'] = TRUE;
+  if (!$text)         
+    $x['msg'] = '<p><strong>Empty pages not allowed.</strong> Replace page text'
+               .' with "delete" if you want to eradicate the page.</p>';
   elseif ($text == $old_text)            
-    $msg = 'You changed nothing!</strong>';  
-  
-  # Successful edit writes todo_urgent, triggers work on it and redirect.
-  else   
-  { $redirect = '<meta http-equiv="refresh" content="0; URL='.$title_url.'" />';
-    $p_todo = fopen($todo_urgent, 'a+');
-    $timestamp = time();
-    
-    # Plugin hook.
-    eval($hook_Action_write);
+    $x['msg'] = '<p><strong>You changed nothing!</strong></p>';
+  else
+    $x['fail'] = FALSE;
 
+  if (!$x['fail'])
     # In case of page deletion question, add DeletePage() task to todo file.
     if ($text == 'delete')
     { if (is_file($page_path)) 
-        fwrite($p_todo, 'DeletePage("'.$page_path.'", "'.$title.'");'."\n");
-      $msg = 'Page "'.$title.'" is deleted (if it ever existed).</strong>'; }
-  
-    # Write $text, $diff temp files. Add SafeWrite() tasks to todo.
+      $x['tasks'][] = 'DeletePage("'.$page_path.'", "'.$title;
+      $msg = '<p><strong>Page "'.$title.'" is deleted</strong> (if it ever '.
+                                                              'existed).</p>'; }
+
     else
-    { $diff_temp = NewDiffTemp($old_text, $text, $diff_path, $timestamp);
-      fwrite($p_todo, 'SafeWrite("'.$diff_path.'", "'.$diff_temp.'");'."\n");
-      $page_temp = NewTempFile($text);
-      fwrite($p_todo, 'SafeWrite("'.$page_path.'", "'.$page_temp.'");'."\n");
-      $msg = 'Page "'.$title.'" updated.</strong>'; }
+    { # Diff to previous version, add to diff file.
+      $diff_add = PlomDiff($old_text, $text);
+      if (is_file($diff_path)) $diff_old = file_get_contents($diff_path);
+      else                     $diff_old = '';
+      $diff_new = $timestamp."\n".$diff_add.'%%'."\n".$diff_old;
 
-    # Try to finish newly added urgent work straight away before continuing.
-    fclose($p_todo);
-    WorkToDo($todo_urgent); }
+      # Actual writing tasks for Action_write(). Notice key number parallelisms.
+      $x['temps'][] = $diff_new;
+      $x['tasks'][] = 'SafeWrite("'.$diff_path.'", "'; 
+      $x['temps'][] = $text;
+      $x['tasks'][] = 'SafeWrite("'.$page_path.'", "'; }
 
-  # Final HTML.
-  $title_h = 'Trying to edit: '.$title;  
-  $content = '<p><strong>'.$msg.'</p>';
-  Output_HTML($title_h, $content, TRUE, $redirect); }
+  return $x; }
 
-####################################
-# Page text manipulation functions #
-####################################
+function PreparePasswordWrite()
+# Deliver to Action_write() all information needed for pw writing process.
+{ global $pw_path, $todo_urgent;
+  
+  # Check password key and new password for validity.
+  $pw_key = $_POST['pw_key'];
+  $new_pw = $_POST['new_pw'];
+  if (!$new_pw)
+  { $x['fail'] = TRUE;
+    $x['msg']  = '<p><strong>Empty password not allowed.</strong></p>'; }
+  elseif (!$pw_key)
+  { $x['fail'] = TRUE;
+    $x['msg']  = '<p><strong>Not told what to set password for.</strong></p>'; }
 
-function Markup($text)
-# Applying markup functions in the order described by markups.txt to $text.
-{ global $markup_list_path; 
+  if (!$x['fail'])
+  { $x['msg']  = '<p><strong>Password updated.</strong></p>';
+    $x['todo'] = $todo_urgent;
 
-  $lines = ReadAndTrimLines($markup_list_path);
+    # Splice new password into text of password file at $pw_path.
+    $passwords = ReadPasswordList($pw_path);
+    $passwords[$pw_key] = $new_pw;
+    $pw_file_text = '';
+    foreach ($passwords as $key => $pw)
+      $pw_file_text .= $key.':'.$pw."\n";
+
+    # Actual writing tasks for Action_write().
+    $x['temps'][] = $pw_file_text;
+    $x['tasks'][] = 'SafeWrite("'.$pw_path.'", "'; }
+
+  return $x; }
+
+#############
+# Passwords #
+#############
+
+function Action_set_pw_admin()
+# Display page for setting new admin password.
+{ BuildPageChangePW('admin', '*'); }
+
+function Action_set_pw_page()
+# Display page for setting new page password.
+{ global $title;
+  BuildPageChangePW('page', $title, TRUE); }
+
+function BuildPageChangePW($desc, $pw_key, $is_page = FALSE)
+# Build HTML output for $desc password change form.
+{ global $title_url;
+  $h = 1;
+  if ($is_page) $h = 2;
+  $title_h = 'Change '.$desc.' password';
+  $form = '<h'.$h.'>'.$title_h.'</h'.$h.'>'."\n\n".
+          '<form method="post" action="'.$title_url.'&amp;action=write&amp;t='.
+                                                              'pw">'."\n".
+          '<input type="hidden" name="pw_key" value="'.$pw_key.'">'."\n".
+          'New '.$desc.' password: <input type="password" name="new_pw" />'."\n"
+         .'Current admin password: <input type="password" name="pw" />'."\n".
+          '<input type="submit" value="Update!" />'."\n".
+          '</form>';
+  Output_HTML($title_h, $form, $is_page); }
+
+function CheckPW($pw_posted, $t = '')
+# Compare $pw_posted to admin password stored in $pw_path.
+{ global $pw_path, $title;
+  $passwords = ReadPasswordList($pw_path);
+
+  # Return with success of checking $pw_posted against admin or $title password.
+  if ($pw_posted === $passwords['*']
+      or ($t == 'page' and $pw_posted === $passwords[$title]))
+    return TRUE;
+  return FALSE; }
+
+function ReadPasswordList($path)
+# Read password list from $path into array.
+{ global $legal_title;
+  $content = substr(file_get_contents($path), 0, -1);
+
+  # Trigger error if password file is not found / empty.
+  if (!$content)
+  { $title_h = 'Error';
+    $text = '<h1>Error.</h1>'."\n".
+            '<p><strong>No valid password file found.</strong></p>';
+    Output_HTML($title_h, $text);
+    exit(); }
+
+  # Build $passwords list from file's $content.
+  $passwords = array();
+  $lines = explode("\n", $content);
   foreach ($lines as $line)
-    $text = $line($text);
-  return $text; }
+  { preg_match('/^(\*|'.$legal_title.'):(.+)$/', $line, $catch);
+    $range = $catch[1];
+    $pw    = $catch[2];
+    $passwords[$range] = $pw; } 
 
-function NormalizeNewlines($text)
-# Allow "\n" newline only. "\r" stripped from user input is free for other uses.
-{ return str_replace("\r", '', $text); }
+  return $passwords; }
 
-function EscapeHTML($text)
-# Replace symbols that might be confused for HTML markup with HTML entities.
-{ $text = str_replace('&',  '&amp;',  $text);
-  $text = str_replace('<',  '&lt;',   $text); 
-  $text = str_replace('>',  '&gt;',   $text);
-  $text = str_replace('\'', '&apos;', $text); 
-  return  str_replace('"',  '&quot;', $text); }
-
-###################################
-# Database manipulation functions #
-###################################
+######################################
+# Internal DB manipulation functions #
+######################################
 
 function WorkToDo($path_todo)
 # Work through todo file. Comment-out finished lines. Delete file when finished.
@@ -356,17 +475,6 @@ function SafeWrite($path_original, $path_temp)
 ########
 # Diff #
 ########
-
-function NewDiffTemp($text_old, $text_new, $diff_path, $timestamp)
-# Build temp file of $diff_path updated to diff $page_path $text_old->$text_new.
-{ $diff_add = PlomDiff($text_old, $text_new);
-
-  # Timestamp diff and concatenate it to $diff_old, if found.
-  if (is_file($diff_path)) $diff_old = file_get_contents($diff_path);
-  else                     $diff_old = '';
-  $diff_new = $timestamp."\n".$diff_add.'%%'."\n".$diff_old;
-
-  return NewTempFile($diff_new); }
 
 function PlomDiff($text_A, $text_B)
 # Output diff $text_A -> $text_B.
@@ -542,27 +650,30 @@ function ReverseDiff($old_diff)
     $new_diff .= $line."\n"; }
   return $new_diff; }
 
-############
-# Password #
-############
+####################################
+# Page text manipulation functions #
+####################################
 
-function CheckPassword($pw_posted)
-# Compare $pw_posted to $pw_expected from $pw_path password file.
-{ global $pw_path;
-  $pw_expected = substr(file_get_contents($pw_path), 0, -1);
+function Markup($text)
+# Applying markup functions in the order described by markups.txt to $text.
+{ global $markup_list_path; 
 
-  # Trigger error if no password file found.
-  if (!$pw_expected)
-  { $title_h = 'Error';
-    $text = '<h1>Error.</h1>'."\n".
-            '<p><strong>No valid password file found.</strong></p>';
-    Output_HTML($title_h, $text);
-    exit(); }
+  $lines = ReadAndTrimLines($markup_list_path);
+  foreach ($lines as $line)
+    $text = $line($text);
+  return $text; }
 
-  # Return with success of $pw_posted <-> $pw_expected comparison.
-  if ($pw_posted === $pw_expected)
-    return TRUE;
-  return FALSE; }
+function NormalizeNewlines($text)
+# Allow "\n" newline only. "\r" stripped from user input is free for other uses.
+{ return str_replace("\r", '', $text); }
+
+function EscapeHTML($text)
+# Replace symbols that might be confused for HTML markup with HTML entities.
+{ $text = str_replace('&',  '&amp;',  $text);
+  $text = str_replace('<',  '&lt;',   $text); 
+  $text = str_replace('>',  '&gt;',   $text);
+  $text = str_replace('\'', '&apos;', $text); 
+  return  str_replace('"',  '&quot;', $text); }
 
 ##########################
 # Minor helper functions #
@@ -588,6 +699,8 @@ function Output_HTML($title, $content, $page_view = FALSE, $head = '')
   if (!$page_view) $page_view_start = '';
   if ($head)       $head .= "\n";
 
-  echo $title.'</title>'."\n".$head.'</head>'."\n".'<body>'."\n\n".
+  echo '<!DOCTYPE html>'."\n".'<html>'."\n".'<head>'."\n".
+       '<meta charset="UTF-8">'."\n".'<title>'.$title.'</title>'."\n".
+       $head.'</head>'."\n".'<body>'."\n\n".
        $wiki_view_start.$page_view_start.$content."\n\n".'</body>'."\n".
        '</html>'; }

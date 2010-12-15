@@ -8,7 +8,7 @@ INSTALLATION
 
 Copy PlomWiki/ and everything below it onto your server. You can now access your
 wiki via http://[YourDomain/YourPath]/plomwiki.php?title=Start. The default page
-editing password is "Password", change it in PlomWiki/config/password.txt.
+admin password is "Password".
 
 USE
 
@@ -17,6 +17,9 @@ and on "History" to examine a diff history of the page's edits. (Here you can
 also revert changes to the page text by clicking on the "Revert" link over a
 diff.) "Search" provides a form for searching through all of the pages' texts
 and titles, "RecentChanges" gives a chronology of all recent page edits.
+
+Page edits can be saved via the admin password or by page specific page editing
+passwords that can be set via the admin password.
 
 Per default, only little markup is possible on pages, though more could be added
 as plugins (see Technical Details section). For examples of usable markups, see
@@ -72,3 +75,5 @@ viewing a page) can be performed.
 
 Any other todo file only gets worked through if the function WorkToDo($path) is
 called on its path. Feel free to write a plugin like Action_work() for that.
+
+PlomWiki/config/password.txt contains the password file.

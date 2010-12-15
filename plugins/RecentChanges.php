@@ -1,14 +1,15 @@
 <?php
 # RecentChanges plugin.
 
-$hook_Action_write .= 'Add_to_RecentChanges($timestamp, $p_todo);';
+$hook_page_write   .= 'Add_to_RecentChanges($time, $p_todo);';
 $hook_meta_actions .= '$meta_actions .= "\n".\'<a href="plomwiki.php?action='
                                          .'RecentChanges">RecentChanges</a>\';';
 $RC_Path = $plugin_dir.'RecentChanges.txt';
 
 function Add_to_RecentChanges($timestamp, $p_todo)
 # Add time stamp of page change to RecentChanges file.
-{ global $title, $RC_Path;                                         $RC_Txt = '';
+{ global $title, $RC_Path;                                         
+  $RC_Txt = '';
   if (is_file($RC_Path)) $RC_Txt = file_get_contents($RC_Path);
   $RC_Txt = $timestamp.':'.$title."\n".$RC_Txt;
   $RC_Tmp = NewTempFile($RC_Txt);
