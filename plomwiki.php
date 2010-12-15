@@ -81,7 +81,7 @@ function Action_view()
                                                                   'Create?</a>';
 
   # Final HTML.
-  Output_HTML($title, $text ,TRUE); }
+  Output_HTML($title, $text, TRUE); }
 
 function Action_edit()
 # Edit form on a page source text. Send results to ?action=write.
@@ -93,15 +93,22 @@ function Action_edit()
     $text = EscapeHTML($text); }
   else $text = '';
 
-  # Final HTML.
+  # Final HTML of edit form and JavaScript to localStorage password.
   $title_h = 'Editing: '.$title;
   $form = '<form method="post" action="'.$title_url.
                                           '&amp;action=write&amp;t=page">'."\n".
           '<pre><textarea name="text" rows="20" style="width:100%">'."\n".
           $text.'</textarea></pre>'."\n".
-          'Password: <input type="password" name="pw" /> <input type="submit" '.
-                                                      'value="Update!" />'."\n".
-          '</form>'."\n\n".$markup_help;
+          'Password: <input id="password" type="password" name="pw" /> '.
+                                 '<input type="submit" value="Update!" />'."\n".
+          '</form>'."\n\n".$markup_help."\n\n".'<script>'."\n".
+          'if (window.localStorage)'."\n".
+          '{ var pw_input = document.getElementById(\'password\');'."\n\n".
+          '  if (localStorage.pw != null)'."\n".
+          '  { pw_input.value = localStorage.pw; }'."\n\n".
+          '  pw_input.addEventListener('."\n".'    \'keyup\', '."\n".
+          '    function() { localStorage.pw = pw_input.value; },'."\n".
+          '    false); }'."\n".'</script>';
    Output_HTML($title_h, $form, TRUE); }
 
 function Action_history()
