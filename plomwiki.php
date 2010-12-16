@@ -354,8 +354,8 @@ function BuildPageChangePW($desc, $pw_key)
 { global $nl, $nl2, $title_url;
   $title_h = 'Set '.$desc.' password';
   $form = '<h1>'.$title_h.'</h1>'.$nl2.
-          '<form method="post" action="'.$title_url.'&amp;action=write&amp;t='.
-                                                              'pw">'.$nl.
+          '<form method="post" action="'.$title_url.
+                                             '&amp;action=write&amp;t=pw">'.$nl.
           '<input type="hidden" name="pw_key" value="'.$pw_key.'">'.$nl.
           'New '.$desc.' password:<br />'.$nl.
          ' <input type="password" name="new_pw" /><br />'.$nl.
