@@ -10,7 +10,10 @@ $plugin_dir = 'plugins/';        $pw_path          = $config_dir.'password.txt';
 $pages_dir  = 'pages/';          $plugin_list_path = $config_dir.'plugins.txt';
 $diff_dir   = $pages_dir.'diffs/';     $work_dir      = 'work/';
 $del_dir    = $pages_dir.'deleted/';   $work_temp_dir = $work_dir.'temp/';
-$title_root = 'plomwiki.php?title=';   $todo_urgent   = $work_dir.'todo_urgent';
+                                       $todo_urgent   = $work_dir.'todo_urgent';
+
+# URL information.
+$root_rel = 'plomwiki.php';                   $title_root = $root_rel.'?title=';
 
 # Check for unfinished setup file, execute if found.
 $setup_file = 'setup.php'; 
@@ -18,16 +21,15 @@ if (is_file($setup_file))
   require($setup_file);
 
 # Insert plugins' code.
-$hook_page_write = $hook_page_actions = $hook_meta_actions = '';
 $lines = ReadAndTrimLines($plugin_list_path); 
 foreach ($lines as $line) require($line);
 
 # Wiki view HTML start.
-$meta_actions    = "\n".'<a href="'.$title_root.'Start">Start</a>';
+$meta_actions    = '<a href="'.$title_root.'Start">Start</a>'."\n";
 eval($hook_meta_actions);
-$meta_actions    .= "\n".'<a href="plomwiki.php?action=set_pw_admin">Set admin'.
-                                                                ' password</a>';
-$wiki_view_start = '<p>PlomWiki: '.$meta_actions.'</p>'."\n\n";
+$meta_actions    .= '<a href="'.$root_rel.'?action=set_pw_admin">Set admin'.
+                                                           ' password</a>'."\n";
+$wiki_view_start = '<p>'."\n".'PlomWiki: '."\n".$meta_actions.'</p>'."\n\n";
 
 # Only allow alphanumeric titles. If title is needed, but empty, assume "Start".
 $title       = $_GET['title']; 
@@ -50,8 +52,9 @@ $page_actions  = '<a href="'.$title_url.'">View</a>'."\n".
                  '<a href="'.$title_url.'&amp;action=history">History</a>'."\n";
 eval($hook_page_actions);
 $page_actions .= '<a href="'.$title_url.'&amp;action=set_pw_page">Set page '.
-                                                                 'password</a>';
-$page_view_start = '<h1>'.$title.'</h1>'."\n".'<p>'.$page_actions.'</p>'."\n\n";
+                                                            'password</a>'."\n";
+$page_view_start = '<h1>'.$title.'</h1>'."\n".'<p>'."\n".$page_actions.'</p>'.
+                                                                         "\n\n";
 
 # Find appropriate code for user's '?action='. Assume "view" if not found.
 $fallback        = 'Action_view';
@@ -95,7 +98,8 @@ function Action_edit()
 
   # Final HTML of edit form and JavaScript to localStorage password.
   $title_h = 'Editing: '.$title;
-  $form = '<form method="post" action="'.$title_url.
+  $form = '<h2>Edit page</h2>'."\n\n".
+          '<form method="post" action="'.$title_url.
                                           '&amp;action=write&amp;t=page">'."\n".
           '<pre><textarea name="text" rows="20" style="width:100%">'."\n".
           $text.'</textarea></pre>'."\n".
@@ -147,10 +151,10 @@ function Action_history()
           $diff[$line_n] = '<pre>'.EscapeHTML($diff[$line_n]).'</pre>'; } }
       $diff_output = implode("\n", $diff);
       $diffs[$diff_n] = $diff_output."\n".'</div>'."\n"; }
-    $text = implode("\n", $diffs); }
+    $text = '<h2>Diff history of page</h2>'."\n\n".implode("\n", $diffs); }
 
   # Final HTML.
-  $title_h = 'Version history of: '.$title;
+  $title_h = 'Diff history of: '.$title;
   $css = '<style type="text/css">'."\n".
          'pre'."\n".'{ white-space: pre-wrap;'."\n".'  text-indent:-12pt;'."\n".
          '  margin-top:0px;'."\n".'  margin-bottom:0px; }'."\n\n".'.diff '."\n".
@@ -191,7 +195,8 @@ function Action_revert()
 
   # Ask for revert affirmation and password. If reversion date is valid.
   if ($finished)
-  { $content = 'Reverting page to before '.$time_string.'?</p>'."\n".
+  { $content = '<h2>Revert</h2>'."\n\n".
+               'Revert page to before '.$time_string.'?</p>'."\n".
                '<form method="post" action="'.$title_url.
                                           '&amp;action=write&amp;t=page">'."\n".
                '<input type="hidden" name="text" value="'.$text.'">'."\n".
@@ -224,10 +229,12 @@ function Action_write()
   if (!$fail)
     if (!$t or ($t != 'page' and $t != 'pw'))
     { $fail = TRUE;
-      $msg = '<p><strong>No known target type specified.</strong></p>'; }
+      $msg = '<h2>Error</h2>'."\n\n".
+             '<p><strong>No known target type specified.</strong></p>'; }
     elseif (!CheckPW($pw, $t))
     { $fail = TRUE;
-      $msg = '<p><strong>Wrong password.</strong></p>'; }
+      $msg = '<h2>Error</h2>'."\n\n".
+             '<p><strong>Wrong password.</strong></p>'; }
 
   # If writing can go through, start by opening hooks for redirect and plugins.
   if (!$fail)
@@ -358,13 +365,15 @@ function BuildPageChangePW($desc, $pw_key, $is_page = FALSE)
 { global $title_url;
   $h = 1;
   if ($is_page) $h = 2;
-  $title_h = 'Change '.$desc.' password';
+  $title_h = 'Set '.$desc.' password';
   $form = '<h'.$h.'>'.$title_h.'</h'.$h.'>'."\n\n".
           '<form method="post" action="'.$title_url.'&amp;action=write&amp;t='.
                                                               'pw">'."\n".
           '<input type="hidden" name="pw_key" value="'.$pw_key.'">'."\n".
-          'New '.$desc.' password: <input type="password" name="new_pw" />'."\n"
-         .'Current admin password: <input type="password" name="pw" />'."\n".
+          'New '.$desc.' password:<br />'."\n".
+         ' <input type="password" name="new_pw" /><br />'."\n".
+          'Current admin password:<br />'."\n".
+          ' <input type="password" name="pw" />'."\n".
           '<input type="submit" value="Update!" />'."\n".
           '</form>';
   Output_HTML($title_h, $form, $is_page); }

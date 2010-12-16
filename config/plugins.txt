@@ -1,4 +1,4 @@
 # Insert relative paths to plugin files here. Comment out with #.
-plugins/standard_markup.php
+plugins/StandardMarkup.php
 plugins/Search.php
 plugins/RecentChanges.php

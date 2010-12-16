@@ -2,8 +2,8 @@
 # RecentChanges plugin.
 
 $hook_page_write   .= 'Add_to_RecentChanges($time, $p_todo);';
-$hook_meta_actions .= '$meta_actions .= "\n".\'<a href="plomwiki.php?action='
-                                         .'RecentChanges">RecentChanges</a>\';';
+$hook_meta_actions .= '$meta_actions .= \'<a href="'.$root_rel.'?action='
+                                   .'RecentChanges">RecentChanges</a> \'."\n";';
 $RC_Path = $plugin_dir.'RecentChanges.txt';
 
 function Add_to_RecentChanges($timestamp, $p_todo)

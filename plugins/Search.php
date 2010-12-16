@@ -1,7 +1,7 @@
 <?php
 
-$hook_meta_actions .= '$meta_actions .= "\n".\'<a href="plomwiki.php?action='
-                                                       .'search">Search</a>\';';
+$hook_meta_actions .= '$meta_actions .= \'<a href="'.$root_rel.'?action='
+                                                 .'search">Search</a> \'."\n";';
 
 function Action_search()
 # Case-insensitive search through all pages' texts and titles.
@@ -31,7 +31,7 @@ function Action_search()
 
   $title_h = 'Search';
   $content = '<h1>Search</h1>'."\n\n".
-             '<form method="get" action="plomwiki.php">'."\n".
+             '<form method="get" action="'.$root_rel.'">'."\n".
              '<input type="hidden" name="action" value="search" />'."\n".
              '<input type="text" name="query" value="'.$query.'" />'."\n".
              '<input type="submit" value="Search!" />'."\n".
