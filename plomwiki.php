@@ -21,7 +21,7 @@ if (is_file($setup_file)) require($setup_file);
 # URL generation information.
 $root_rel = 'plomwiki.php';      $title_root = $root_rel.'?title=';
 
-# Default action bar links data.
+# Default action bar links data, read by ActionBarLinks() for Output_HTML().
 $actions_meta = array(array('Jump to Start page', '?title=Start'),
                       array('Set admin password', '?action=set_pw_admin'));
 $actions_page = array(array('View',               '&amp;action=view'),
@@ -33,19 +33,13 @@ $actions_page = array(array('View',               '&amp;action=view'),
 $lines = ReadAndTrimLines($plugin_list_path); 
 foreach ($lines as $line) require($line);
 
-# Get page title. If given, generate dependent variables and page action bar.
+# Get page title. If given, build dependent variables.
 $legal_title = '[a-zA-Z0-9]+';
 $title = GetPageTitle($legal_title);
 if ($title)
 { $page_path       = $pages_dir .$title;
   $diff_path       = $diff_dir  .$title;
-  $title_url       = $title_root.$title;
-  $bar_start       = '<h1>'.$title.'</h1>'.$nl.'<p>';
-  $page_view_start = BuildActionBar($actions_page, $title_url, $bar_start); }
-
-# Build main wiki action bar.
-$bar_start       = '<p>PlomWiki: ';
-$wiki_view_start = BuildActionBar($actions_meta, $root_rel, $bar_start);
+  $title_url       = $title_root.$title; }
 
 # Find appropriate code for user's '?action='. Assume "view" if not found.
 $fallback        = 'Action_view';
@@ -707,24 +701,30 @@ function ReadAndTrimLines($path)
   return $list; }
 
 function Output_HTML($title, $content, $page_view = FALSE, $head = '')
-# Combine all provided HTML snippets to the final HTML output.
-{ global $nl, $wiki_view_start, $page_view_start;
+# Generate final HTML output from given parameters and global variables.
+{ global $actions_meta, $actions_page, $nl, $nl2, $title, $title_url;
 
-  if (!$page_view) $page_view_start = '';
-  if ($head)       $head .= $nl;
+  # If we have more $head lines, append a newline for better readability.
+  if ($head) $head .= $nl;
 
+  # Generate header / action bars.
+  $header_wiki = '<p>PlomWiki: '.$nl.
+                 ActionBarLinks($actions_meta, $root_rel).$nl2;
+  if ($title)
+    $header_page = '<h1>'.$title.'</h1>'.$nl.'<p>'.$nl.
+                   ActionBarLinks($actions_page, $title_url).$nl2;
+
+  # Final HTML.
   echo '<!DOCTYPE html>'.$nl.'<meta charset="UTF-8">'.$nl.
-       '<title>'.$title.'</title>'.$nl.
-       $head.$nl.$wiki_view_start.$page_view_start.$content; }
+       '<title>'.$title.'</title>'.$nl.$head.$nl.
+       $header_wiki.$header_page.$content; }
 
-function BuildActionBar($array_actions, $root, $bar_start)
-# Concatenate $bar_start, $array_actions and $root into HTML of an action bar.
-{ global $nl, $nl2;
-
+function ActionBarLinks($array_actions, $root)
+# Build a HTML line of action links from $array_actions over $root.
+{ global $nl;
   foreach ($array_actions as $action)
-    $action_bar .= '<a href="'.$root.$action[1].'">'.$action[0].'</a> '.$nl;
-
-  return $bar_start.$nl.$action_bar.'</p>'.$nl2; }
+    $links .= '<a href="'.$root.$action[1].'">'.$action[0].'</a> '.$nl;
+  return $links; }
 
 function GetPageTitle($legal_title)
 # Only allow alphanumeric titles. If title is needed, but empty, assume "Start".
