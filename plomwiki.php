@@ -64,7 +64,7 @@ function Action_view()
                                                                   'Create?</a>';
 
   # Final HTML.
-  Output_HTML($title, $text, TRUE); }
+  Output_HTML($title, $text); }
 
 function Action_edit()
 # Edit form on a page source text. Send results to ?action=write.
