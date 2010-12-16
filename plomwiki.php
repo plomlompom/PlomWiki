@@ -150,7 +150,7 @@ function Action_history()
          'pre'.$nl.'{ white-space: pre-wrap;'.$nl.'  text-indent:-12pt;'.$nl.
          '  margin-top:0px;'.$nl.'  margin-bottom:0px; }'.$nl2.'.diff '.$nl.
          '{ margin-left:12pt; }'.$nl.'</style>';
-  Output_HTML($title_h, $text, TRUE, $css); }
+  Output_HTML($title_h, $text, $css); }
 
 function Action_revert()
 # Prepare version reversion and ask user for confirmation.
@@ -248,7 +248,7 @@ function Action_write()
       WorkToDo($todo_urgent); }
 
   # Final HTML.
-  Output_HTML($title_h, $msg, $is_page, $redir); }
+  Output_HTML($title_h, $msg, $redir); }
 
 function PreparePageWrite()
 # Deliver to Action_write() all information needed for page writing process.
@@ -366,7 +366,7 @@ function BuildPageChangePW($desc, $pw_key, $is_page = FALSE)
           ' <input type="password" name="pw" />'.$nl.
           '<input type="submit" value="Update!" />'.$nl.
           '</form>';
-  Output_HTML($title_h, $form, $is_page); }
+  Output_HTML($title_h, $form); }
 
 function CheckPW($pw_posted, $t = '')
 # Compare $pw_posted to admin password stored in $pw_path.
@@ -705,7 +705,7 @@ function ReadAndTrimLines($path)
       $list[] = $line; } 
   return $list; }
 
-function Output_HTML($title_h, $content, $page_view = FALSE, $head = '')
+function Output_HTML($title_h, $content, $head = '')
 # Generate final HTML output from given parameters and global variables.
 { global $actions_meta, $actions_page, $nl, $nl2, $title, $title_url;
 
