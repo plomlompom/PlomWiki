@@ -29,8 +29,7 @@ function Action_search()
     else              $results .= '<p>None.</p>'; }
 
   $title_h = 'Search';
-  $content = '<h1>Search</h1>'."\n\n".
-             '<form method="get" action="'.$root_rel.'">'.$nl.
+  $content = '<form method="get" action="'.$root_rel.'">'.$nl.
              '<input type="hidden" name="action" value="search" />'.$nl.
              '<input type="text" name="query" value="'.$query.'" />'.$nl.
              '<input type="submit" value="Search!" />'.$nl.

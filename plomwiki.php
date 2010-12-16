@@ -79,8 +79,7 @@ function Action_edit()
 
   # Final HTML of edit form and JavaScript to localStorage-store password.
   $title_h = 'Editing: '.$title;
-  $form = '<h2>Edit page</h2>'.$nl2.
-          '<form method="post" action="'.$title_url.
+  $form = '<form method="post" action="'.$title_url.
                                            '&amp;action=write&amp;t=page">'.$nl.
           '<pre><textarea name="text" rows="20" style="width:100%">'.$nl.
           $text.'</textarea></pre>'.$nl.
@@ -142,7 +141,7 @@ function Action_history()
     # Concatenate lines into diffs and diffs into HTML string to output.
       $diff_output = implode($nl, $diff_lines);
       $diffs[$diff_n] = $diff_output.$nl.'</div>'.$nl; }
-    $text = '<h2>Diff history of page</h2>'.$nl2.implode($nl, $diffs); }
+    $text = implode($nl, $diffs); }
 
   # Final HTML.
   $title_h = 'Diff history of: '.$title;
@@ -184,8 +183,7 @@ function Action_revert()
 
   # Ask for revert affirmation and password. If reversion date is valid.
   if ($finished)
-  { $content = '<h2>Revert</h2>'.$nl2.
-               'Revert page to before '.$time_string.'?</p>'.$nl.
+  { $content = 'Revert page to before '.$time_string.'?</p>'.$nl.
                '<form method="post" action="'.$title_url.
                                            '&amp;action=write&amp;t=page">'.$nl.
                '<input type="hidden" name="text" value="'.$text.'">'.$nl.
@@ -347,14 +345,13 @@ function Action_set_pw_admin()
 function Action_set_pw_page()
 # Display page for setting new page password.
 { global $title;
-  BuildPageChangePW('page', $title, TRUE); }
+  BuildPageChangePW('page "'.$title.'"', $title, TRUE); }
 
 function BuildPageChangePW($desc, $pw_key)
 # Build HTML output for $desc password change form.
 { global $nl, $nl2, $title_url;
   $title_h = 'Set '.$desc.' password';
-  $form = '<h1>'.$title_h.'</h1>'.$nl2.
-          '<form method="post" action="'.$title_url.
+  $form = '<form method="post" action="'.$title_url.
                                              '&amp;action=write&amp;t=pw">'.$nl.
           '<input type="hidden" name="pw_key" value="'.$pw_key.'">'.$nl.
           'New '.$desc.' password:<br />'.$nl.
@@ -713,13 +710,12 @@ function Output_HTML($title_h, $content, $head = '')
   $header_wiki = '<p>PlomWiki: '.$nl.
                  ActionBarLinks($actions_meta, $root_rel).$nl2;
   if ($title)
-    $header_page = '<h1>'.$title.'</h1>'.$nl.'<p>'.$nl.
-                   ActionBarLinks($actions_page, $title_url).$nl2;
+    $header_page = '<p>'.$nl.ActionBarLinks($actions_page, $title_url).$nl2;
 
   # Final HTML.
   echo '<!DOCTYPE html>'.$nl.'<meta charset="UTF-8">'.$nl.
        '<title>'.$title_h.'</title>'.$nl.$head.$nl.
-       $header_wiki.$header_page.$content; }
+       $header_wiki.'<h1>'.$title_h.'</h1>'.$header_page.$content; }
 
 function ActionBarLinks($array_actions, $root)
 # Build a HTML line of action links from $array_actions over $root.

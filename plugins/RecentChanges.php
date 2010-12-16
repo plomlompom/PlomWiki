@@ -40,5 +40,4 @@ function Action_RecentChanges()
   else $output = '<p>No RecentChanges file found.</p>';
   
   $title_h = 'Recent Changes';
-  $content = '<h1>Recent Changes</h1>'.$nl2.$output;
-  Output_HTML($title_h, $content); }
+  Output_HTML($title_h, $output); }
