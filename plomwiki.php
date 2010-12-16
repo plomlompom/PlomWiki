@@ -211,8 +211,8 @@ function Action_write()
   # Get relevant variables from $x, built by target-type-chosen function.
   if     ($t == 'page') $x = PreparePageWrite();
   elseif ($t == 'pw')   $x = PreparePasswordWrite();
-  $fail=$x['fail']; $msg=$x['msg']; $hook=$x['hook']; $is_page=$x['is_page'];
-  $tasks=$x['tasks']; $todo=$x['todo']; $temps=$x['temps']; $time=$x['time'];
+  $fail=$x['fail']; $msg=$x['msg']; $hook=$x['hook']; $time=$x['time'];
+  $tasks=$x['tasks']; $todo=$x['todo']; $temps=$x['temps'];
 
   # Failure conditions: No target type $t. Positive $mistake. Wrong password.
   $title_h  = 'Error.';
@@ -258,7 +258,6 @@ function PreparePageWrite()
 
   # All the variables easily filled.
   $x['redir'] = '<meta http-equiv="refresh" content="0; URL='.$title_url.'" />';
-  $x['is_page'] = TRUE;
   $x['todo']    = $todo_urgent;
   $x['msg']     = '<p><strong>Page updated.</strong></p>';
   $x['hook']    = $hook_page_write;
@@ -350,13 +349,11 @@ function Action_set_pw_page()
 { global $title;
   BuildPageChangePW('page', $title, TRUE); }
 
-function BuildPageChangePW($desc, $pw_key, $is_page = FALSE)
+function BuildPageChangePW($desc, $pw_key)
 # Build HTML output for $desc password change form.
 { global $nl, $nl2, $title_url;
-  $h = 1;
-  if ($is_page) $h = 2;
   $title_h = 'Set '.$desc.' password';
-  $form = '<h'.$h.'>'.$title_h.'</h'.$h.'>'.$nl2.
+  $form = '<h1>'.$title_h.'</h1>'.$nl2.
           '<form method="post" action="'.$title_url.'&amp;action=write&amp;t='.
                                                               'pw">'.$nl.
           '<input type="hidden" name="pw_key" value="'.$pw_key.'">'.$nl.
