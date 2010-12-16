@@ -690,9 +690,9 @@ function Output_HTML($title_h, $content, $head = '')
 
   # Generate header / action bars.
   $header_wiki = '<p>PlomWiki: '.$nl.
-                 ActionBarLinks($actions_meta, $root_rel).$nl2;
+                 ActionBarLinks($actions_meta, $root_rel).$nl;
   if ($title)
-    $header_page = '<p>'.$nl.ActionBarLinks($actions_page, $title_url).$nl2;
+    $header_page = '<p>'.$nl.ActionBarLinks($actions_page, $title_url).$nl;
 
   # Final HTML.
   echo '<!DOCTYPE html>'.$nl.'<meta charset="UTF-8">'.$nl.
