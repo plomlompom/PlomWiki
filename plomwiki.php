@@ -61,8 +61,8 @@ function Action_view()
     $text = EscapeHTML($text); 
     $text = Markup($text); }
   else
-    $text = 'Page does not exist. <a href="'.$title_url.'&amp;action=edit">'.
-                                                                  'Create?</a>';
+    $text = '<p>Page does not exist. <a href="'.$title_url.'&amp;action=edit">'.
+                                                              'Create?</a></p>';
 
   # Final HTML.
   Output_HTML($title, $text); }

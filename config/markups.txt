@@ -8,3 +8,4 @@ MarkupCode
 MarkupLists
 MarkupParagraphs
 MarkupUnescape
+MarkupAutolink
