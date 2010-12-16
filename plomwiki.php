@@ -139,6 +139,7 @@ function Action_history()
           $diff_lines[$line_n] = '<pre>'.EscapeHTML($diff_lines[$line_n]).
                                                                    '</pre>'; } }
 
+    # Concatenate lines into diffs and diffs into HTML string to output.
       $diff_output = implode($nl, $diff_lines);
       $diffs[$diff_n] = $diff_output.$nl.'</div>'.$nl; }
     $text = '<h2>Diff history of page</h2>'.$nl2.implode($nl, $diffs); }
