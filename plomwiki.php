@@ -159,18 +159,18 @@ function Action_revert()
   $time_string = date('Y-m-d H:i:s', (int) $time);
 
   # Build $diff_array from $diff_path to be cycled through, keyed by timestamps.
-  $diffs_text = explode('%%'.$nl, file_get_contents($diff_path));
-  foreach ($diffs_text as $diff_n => $diff_str)
-  { $diff = explode($nl, $diff_str);
-    $diff_text = '';
+  $diffs = explode('%%'.$nl, file_get_contents($diff_path));
+  foreach ($diffs as $diff_n => $diff_txt)
+  { $diff_lines = explode($nl, $diff_txt);
+    $diff = '';
     $id = 0;
-    foreach ($diff as $line_n => $line) 
+    foreach ($diff_lines as $line_n => $line) 
     { if ($line_n == 0 and $line !== '') 
         $id = $line;
       else                               
-        $diff_text .= $line.$nl; }
+        $diff .= $line.$nl; }
     if ($id > 0) 
-      $diff_array[$id] = $diff_text; }
+      $diff_array[$id] = $diff; }
 
   # Revert $text back through $diff_array until $time hits $id.
   $text = file_get_contents($page_path);
