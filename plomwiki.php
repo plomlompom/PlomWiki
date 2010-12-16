@@ -94,7 +94,7 @@ function Action_edit()
           '  pw_input.addEventListener('.$nl.'    \'keyup\', '.$nl.
           '    function() { localStorage.pw = pw_input.value; },'.$nl.
           '    false); }'.$nl.'</script>';
-   Output_HTML($title_h, $form, TRUE); }
+   Output_HTML($title_h, $form); }
 
 function Action_history()
 # Show version history of page (based on its diff file), offer reverting.
@@ -696,7 +696,7 @@ function ReadAndTrimLines($path)
       $list[] = $line; } 
   return $list; }
 
-function Output_HTML($title, $content, $page_view = FALSE, $head = '')
+function Output_HTML($title_h, $content, $page_view = FALSE, $head = '')
 # Generate final HTML output from given parameters and global variables.
 { global $actions_meta, $actions_page, $nl, $nl2, $title, $title_url;
 
@@ -712,7 +712,7 @@ function Output_HTML($title, $content, $page_view = FALSE, $head = '')
 
   # Final HTML.
   echo '<!DOCTYPE html>'.$nl.'<meta charset="UTF-8">'.$nl.
-       '<title>'.$title.'</title>'.$nl.$head.$nl.
+       '<title>'.$title_h.'</title>'.$nl.$head.$nl.
        $header_wiki.$header_page.$content; }
 
 function ActionBarLinks($array_actions, $root)
