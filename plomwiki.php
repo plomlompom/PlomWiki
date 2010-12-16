@@ -12,14 +12,14 @@ $diff_dir   = $pages_dir.'diffs/';     $work_dir      = 'work/';
 $del_dir    = $pages_dir.'deleted/';   $work_temp_dir = $work_dir.'temp/';
 $setup_file = 'setup.php';             $todo_urgent   = $work_dir.'todo_urgent';
 
-# URL information.
-$root_rel = 'plomwiki.php';      $title_root = $root_rel.'?title=';
-
 # Newline information. PlomWiki likes "\n", dislikes "\r".
 $nl = "\n";                      $nl2 = $nl.$nl;                    $esc = "\r";
 
 # Check for unfinished setup file, execute if found.
 if (is_file($setup_file)) require($setup_file);
+
+# URL generation information.
+$root_rel = 'plomwiki.php';      $title_root = $root_rel.'?title=';
 
 # Default action bar links data.
 $actions_meta = array(array('Jump to Start page', '?title=Start'),
@@ -33,26 +33,19 @@ $actions_page = array(array('View',               '&amp;action=view'),
 $lines = ReadAndTrimLines($plugin_list_path); 
 foreach ($lines as $line) require($line);
 
-# Only allow alphanumeric titles. If title is needed, but empty, assume "Start".
-$title       = $_GET['title']; 
+# Get page title. If given, generate dependent variables and page action bar.
 $legal_title = '[a-zA-Z0-9]+';
-if (!$title) 
-  $title = 'Start';
-if (!preg_match('/^'.$legal_title.'$/', $title)) 
-{ $text = '<h1>Error</h1>'.$nl2.
-          '<p><strong>Illegal page title.</strong><br />'.$nl.
-          ' Only alphanumeric characters allowed</p>';
-    Output_HTML('Error', $text);
-  exit(); }
-$page_path = $pages_dir .$title; 
-$diff_path = $diff_dir  .$title;
-$title_url = $title_root.$title;
+$title = GetPageTitle($legal_title);
+if ($title)
+{ $page_path       = $pages_dir .$title;
+  $diff_path       = $diff_dir  .$title;
+  $title_url       = $title_root.$title;
+  $bar_start       = '<h1>'.$title.'</h1>'.$nl.'<p>';
+  $page_view_start = BuildActionBar($actions_page, $title_url, $bar_start); }
 
-# Build action / navigation bars.
+# Build main wiki action bar.
 $bar_start       = '<p>PlomWiki: ';
-$wiki_view_start = BuildActionBar($actions_meta, $root_rel,   $bar_start);
-$bar_start       = '<h1>'.$title.'</h1>'.$nl.'<p>';
-$page_view_start = BuildActionBar($actions_page, $title_root, $bar_start);
+$wiki_view_start = BuildActionBar($actions_meta, $root_rel, $bar_start);
 
 # Find appropriate code for user's '?action='. Assume "view" if not found.
 $fallback        = 'Action_view';
@@ -732,3 +725,17 @@ function BuildActionBar($array_actions, $root, $bar_start)
     $action_bar .= '<a href="'.$root.$action[1].'">'.$action[0].'</a> '.$nl;
 
   return $bar_start.$nl.$action_bar.'</p>'.$nl2; }
+
+function GetPageTitle($legal_title)
+# Only allow alphanumeric titles. If title is needed, but empty, assume "Start".
+{ $title              = $_GET['title']; 
+  if (!$title) $title = 'Start';
+
+  if (!preg_match('/^'.$legal_title.'$/', $title)) 
+  { $text = '<h1>Error</h1>'.$nl2.
+            '<p><strong>Illegal page title.</strong><br />'.$nl.
+            ' Only alphanumeric characters allowed</p>';
+      Output_HTML('Error', $text);
+    exit(); } 
+
+ return $title; }
