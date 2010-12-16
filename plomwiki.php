@@ -81,7 +81,7 @@ function Action_edit()
   $title_h = 'Editing: '.$title;
   $form = '<h2>Edit page</h2>'.$nl2.
           '<form method="post" action="'.$title_url.
-                                          '&amp;action=write&amp;t=page">'.$nl.
+                                           '&amp;action=write&amp;t=page">'.$nl.
           '<pre><textarea name="text" rows="20" style="width:100%">'.$nl.
           $text.'</textarea></pre>'.$nl.
           'Password: <input id="password" type="password" name="pw" /> '.
@@ -100,37 +100,46 @@ function Action_history()
 # Show version history of page (based on its diff file), offer reverting.
 { global $diff_path, $nl, $nl2, $title, $title_url;
 
-  # Check for non-empty diff file on page. Remove superfluous "%%" and $nl.
+  # Fallback if no diff is found.
   $text = '<p>Page "'.$title.'" has no history.</p>';
-  $diff_all = '';
-  if (is_file($diff_path))
-  { $diff_all = file_get_contents($diff_path);
-    if (substr($diff_all,0,2) == '%%'    ) $diff_all = substr($diff_all,3);
-    if (substr($diff_all, -3) == '%%'.$nl) $diff_all = substr($diff_all,0,-3);
-    if (substr($diff_all, -2) == '%%'    ) $diff_all = substr($diff_all,0,-2);
-    if (substr($diff_all, -1) == $nl     ) $diff_all = substr($diff_all,0,-1); }
-  if ($diff_all != '')
 
-  # Transform $diff_all into structured HTML output. Add revert-by-time hooks.
-  { $diffs = explode('%%'.$nl, $diff_all);
-    foreach ($diffs as $diff_n => $diff_str)
-    { if (substr($diff_str, -1) == $nl)      # Last element's ending $nl isn't
-        $diff_str = substr($diff_str, 0, -1); # needed, would trigger explode()
-      $diff = explode($nl, $diff_str);       # to an empty final element.
-      $time = '';
-      foreach ($diff as $line_n => $line) 
-      { if ($line_n == 0) 
+  # $diff_path must be a file not empty after removing superfluous "%%" and $nl.
+  if (is_file($diff_path))
+  { $file_txt = file_get_contents($diff_path);
+    if (substr($file_txt,0,2) == '%%'    ) $file_txt = substr($file_txt,3);
+    if (substr($file_txt, -3) == '%%'.$nl) $file_txt = substr($file_txt,0,-3);
+    if (substr($file_txt, -2) == '%%'    ) $file_txt = substr($file_txt,0,-2);
+    if (substr($file_txt, -1) == $nl     ) $file_txt = substr($file_txt,0,-1); }
+  if ($file_txt != '')
+
+  # Break $file_txt down into separate $diffs. Remove superfluous trailing $nl.
+  { $diffs = explode('%%'.$nl, $file_txt);
+    foreach ($diffs as $diff_n => $diff_txt)
+    { if (substr($diff_txt, -1) == $nl)
+        $diff_txt = substr($diff_txt, 0, -1);
+
+      # Transform diff line by line into HTML and human readibility.
+      $diff_lines = explode($nl, $diff_txt);
+      foreach ($diff_lines as $line_n => $line) 
+      { 
+        # First diff line -> diff head, time display, time-specific revert link.
+        if ($line_n == 0) 
         { $time = $line;
-          $diff[$line_n] = '<p>'.date('Y-m-d H:i:s', (int) $time).' (<a href="'.
-                           $title_url.'&amp;action=revert&amp;time='.$time.'">'.
-                           'revert</a>):</p>'.$nl.'<div class="diff">'; }
+          $diff_lines[$line_n] = '<p>'.date('Y-m-d H:i:s', (int) $time).' (<a '.
+                                  'href="'.$title_url.'&amp;action=revert&amp;'.
+                                         'time='.$time.'">revert</a>):</p>'.$nl.
+                                 '<div class="diff">'; }
+        
+        # Preformat remaining lines. Translate arrows into less ambiguous +/-.
         else
         { if     ($line[0] == '>') 
-            $diff[$line_n] = '+ '.substr($diff[$line_n], 1);
+            $diff_lines[$line_n] = '+ '.substr($diff_lines[$line_n], 1);
           elseif ($line[0] == '<') 
-            $diff[$line_n] = '- '.substr($diff[$line_n], 1);
-          $diff[$line_n] = '<pre>'.EscapeHTML($diff[$line_n]).'</pre>'; } }
-      $diff_output = implode($nl, $diff);
+            $diff_lines[$line_n] = '- '.substr($diff_lines[$line_n], 1);
+          $diff_lines[$line_n] = '<pre>'.EscapeHTML($diff_lines[$line_n]).
+                                                                   '</pre>'; } }
+
+      $diff_output = implode($nl, $diff_lines);
       $diffs[$diff_n] = $diff_output.$nl.'</div>'.$nl; }
     $text = '<h2>Diff history of page</h2>'.$nl2.implode($nl, $diffs); }
 
