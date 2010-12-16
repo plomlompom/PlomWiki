@@ -190,7 +190,7 @@ function Action_revert()
                'Password: <input type="password" name="pw" />'.$nl.
                '<input type="submit" value="Revert!" />'.$nl.'</form>'; }
   else 
-    $content = 'Error. No valid reversion date given.</p>';
+    ErrorFail('No valid reversion date given.');
 
   # Final HTML.
   $title_h = 'Reverting: '.$title; 
@@ -206,44 +206,37 @@ function Action_write()
 { global $nl, $nl2, $todo_urgent; 
   $pw = $_POST['pw']; $t = $_GET['t'];
 
-  # Get relevant variables from $x, built by target-type-chosen function.
+  # Target type chooses writing preparation function, gets variables from it.
   if     ($t == 'page') $x = PreparePageWrite();
   elseif ($t == 'pw')   $x = PreparePasswordWrite();
-  $fail=$x['fail']; $msg=$x['msg']; $hook=$x['hook']; $time=$x['time'];
-  $tasks=$x['tasks']; $todo=$x['todo']; $temps=$x['temps'];
+  $msg=$x['msg']; $hook=$x['hook']; $time=$x['time']; $todo=$x['todo'];
+  $tasks=$x['tasks']; $temps=$x['temps'];
 
-  # Failure conditions: No target type $t. Positive $mistake. Wrong password.
-  $title_h  = 'Error.';
-  if (!$fail)
-    if (!$t or ($t != 'page' and $t != 'pw'))
-    { $fail = TRUE;
-      $msg = '<h2>Error</h2>'.$nl2.
-             '<p><strong>No known target type specified.</strong></p>'; }
-    elseif (!CheckPW($pw, $t))
-    { $fail = TRUE;
-      $msg = '<h2>Error</h2>'.$nl2.
-             '<p><strong>Wrong password.</strong></p>'; }
+  # Last possible failure conditions: No target type $t. Wrong password.
+  if (!$t or ($t != 'page' and $t != 'pw'))
+    ErrorFail('No known target type specified.');
+  elseif (!CheckPW($pw, $t))
+    ErrorFail('Wrong password.');
 
   # If writing can go through, start by opening hooks for redirect and plugins.
-  if (!$fail)
-  { $title_h = 'Writing';
-    $p_todo = fopen($todo, 'a+');
-    $redir = $x['redir'];
-    eval($hook);
+  $title_h = 'Writing';
+  $p_todo = fopen($todo, 'a+');
+  $redir = $x['redir'];
+  eval($hook);
 
-    # Write temp files, tasks into todo file. Expect well-formed $task content.
-    if ($temps) foreach ($temps as $n => $temp)
-        $temp_paths[$n] = NewTempFile($temp);
-    foreach ($tasks as $n => $task_start)
-    { $temp_path = '';
-      if ($temp_paths[$n])
-        $temp_path = $temp_paths[$n];
-      fwrite($p_todo, $task_start.$temp_path.'");'.$nl); }
-    fclose($p_todo);
+  # Write temp files, tasks into todo file. Expect well-formed $task content.
+  if ($temps) foreach ($temps as $n => $temp)
+      $temp_paths[$n] = NewTempFile($temp);
+  foreach ($tasks as $n => $task_start)
+  { $temp_path = '';
+    if ($temp_paths[$n])
+      $temp_path = $temp_paths[$n];
+    fwrite($p_todo, $task_start.$temp_path.'");'.$nl); }
+  fclose($p_todo);
 
-    # If todo is urgent, why not start right away?
-    if ($todo == $todo_urgent)
-      WorkToDo($todo_urgent); }
+  # If todo is urgent, why not start right away?
+  if ($todo == $todo_urgent)
+    WorkToDo($todo_urgent);
 
   # Final HTML.
   Output_HTML($title_h, $msg, $redir); }
@@ -266,40 +259,35 @@ function PreparePageWrite()
   $text = NormalizeNewlines($text);
 
   # $old_text is for comparison and diff generation.
-  $old_text   = $esc;  # Code to PlomDiff() of $old_text having no lines at all.
+  $old_text = $esc;    # Code to PlomDiff() of $old_text having no lines at all.
   if (is_file($page_path))
     $old_text = file_get_contents($page_path);
 
   # Check for error conditions: $text empty or unchanged.
-  $x['fail'] = TRUE;
   if (!$text)         
-    $x['msg'] = '<p><strong>Empty pages not allowed.</strong> Replace page text'
-               .' with "delete" if you want to eradicate the page.</p>';
+    ErrorFail('Empty pages not allowed.', 
+              'Replace text with "delete" if you want to delete the page.');
   elseif ($text == $old_text)            
-    $x['msg'] = '<p><strong>You changed nothing!</strong></p>';
-  else
-    $x['fail'] = FALSE;
+    ErrorFail('You changed nothing!');
 
-  if (!$x['fail'])
-    # In case of page deletion question, add DeletePage() task to todo file.
-    if ($text == 'delete')
-    { if (is_file($page_path)) 
-      $x['tasks'][] = 'DeletePage("'.$page_path.'", "'.$title;
-      $msg = '<p><strong>Page "'.$title.'" is deleted</strong> (if it ever '.
+  # In case of page deletion question, add DeletePage() task to todo file.
+  if ($text == 'delete')
+  { if (is_file($page_path)) 
+    $x['tasks'][] = 'DeletePage("'.$page_path.'", "'.$title;
+    $msg = '<p><strong>Page "'.$title.'" is deleted</strong> (if it ever '.
                                                               'existed).</p>'; }
-
-    else
-    { # Diff to previous version, add to diff file.
-      $diff_add = PlomDiff($old_text, $text);
-      if (is_file($diff_path)) $diff_old = file_get_contents($diff_path);
-      else                     $diff_old = '';
-      $diff_new = $timestamp.$nl.$diff_add.'%%'.$nl.$diff_old;
-
-      # Actual writing tasks for Action_write(). Notice key number parallelisms.
-      $x['temps'][] = $diff_new;
-      $x['tasks'][] = 'SafeWrite("'.$diff_path.'", "'; 
-      $x['temps'][] = $text;
-      $x['tasks'][] = 'SafeWrite("'.$page_path.'", "'; }
+  else
+  { # Diff to previous version, add to diff file.
+    $diff_add = PlomDiff($old_text, $text);
+    if (is_file($diff_path)) $diff_old = file_get_contents($diff_path);
+    else                     $diff_old = '';
+    $diff_new = $timestamp.$nl.$diff_add.'%%'.$nl.$diff_old;
+    
+    # Actual writing tasks for Action_write(). Notice key number parallelisms.
+    $x['temps'][] = $diff_new;
+    $x['tasks'][] = 'SafeWrite("'.$diff_path.'", "'; 
+    $x['temps'][] = $text;
+    $x['tasks'][] = 'SafeWrite("'.$page_path.'", "'; }
 
   return $x; }
 
@@ -311,26 +299,23 @@ function PreparePasswordWrite()
   $pw_key = $_POST['pw_key'];
   $new_pw = $_POST['new_pw'];
   if (!$new_pw)
-  { $x['fail'] = TRUE;
-    $x['msg']  = '<p><strong>Empty password not allowed.</strong></p>'; }
+    ErrorFail('Empty password not allowed.');
   elseif (!$pw_key)
-  { $x['fail'] = TRUE;
-    $x['msg']  = '<p><strong>Not told what to set password for.</strong></p>'; }
+    ErrorFail('Not told what to set password for.');
 
-  if (!$x['fail'])
-  { $x['msg']  = '<p><strong>Password updated.</strong></p>';
-    $x['todo'] = $todo_urgent;
+  $x['msg']  = '<p><strong>Password updated.</strong></p>';
+  $x['todo'] = $todo_urgent;
+  
+  # Splice new password into text of password file at $pw_path.
+  $passwords = ReadPasswordList($pw_path);
+  $passwords[$pw_key] = $new_pw;
+  $pw_file_text = '';
+  foreach ($passwords as $key => $pw)
+    $pw_file_text .= $key.':'.$pw.$nl;
 
-    # Splice new password into text of password file at $pw_path.
-    $passwords = ReadPasswordList($pw_path);
-    $passwords[$pw_key] = $new_pw;
-    $pw_file_text = '';
-    foreach ($passwords as $key => $pw)
-      $pw_file_text .= $key.':'.$pw.$nl;
-
-    # Actual writing tasks for Action_write().
-    $x['temps'][] = $pw_file_text;
-    $x['tasks'][] = 'SafeWrite("'.$pw_path.'", "'; }
+  # Actual writing tasks for Action_write().
+  $x['temps'][] = $pw_file_text;
+  $x['tasks'][] = 'SafeWrite("'.$pw_path.'", "';
 
   return $x; }
 
@@ -380,11 +365,7 @@ function ReadPasswordList($path)
 
   # Trigger error if password file is not found / empty.
   if (!$content)
-  { $title_h = 'Error';
-    $text = '<h1>Error.</h1>'.$nl.
-            '<p><strong>No valid password file found.</strong></p>';
-    Output_HTML($title_h, $text);
-    exit(); }
+    ErrorFail('No valid password file found.');
 
   # Build $passwords list from file's $content.
   $passwords = array();
@@ -730,11 +711,7 @@ function GetPageTitle($legal_title)
   if (!$title) $title = 'Start';
 
   if (!preg_match('/^'.$legal_title.'$/', $title)) 
-  { $text = '<h1>Error</h1>'.$nl2.
-            '<p><strong>Illegal page title.</strong><br />'.$nl.
-            ' Only alphanumeric characters allowed</p>';
-      Output_HTML('Error', $text);
-    exit(); } 
+    ErrorFail('Illegal page title.', 'Only alphanumeric characters allowed'); 
 
  return $title; }
 
@@ -746,3 +723,10 @@ function GetUserAction()
   if (!function_exists($action_function)) 
     $action_function = $fallback;
   return $action_function; }
+
+function ErrorFail($msg, $help = '')
+# Fail and output error $msg. $help may provide additional helpful advice.
+{ global $nl;
+  $text = '<p><strong>'.$msg.'</strong></p>'.$nl.'<p>'.$help.'</p>';
+  Output_HTML('Error', $text); 
+  exit(); }
