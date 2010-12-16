@@ -60,7 +60,8 @@ function Action_view()
   { $text = file_get_contents($page_path); 
     $text = EscapeHTML($text); 
     $text = Markup($text); }
-  else $text = 'Page does not exist. <a href="'.$title_url.'&amp;action=edit">'.
+  else
+    $text = 'Page does not exist. <a href="'.$title_url.'&amp;action=edit">'.
                                                                   'Create?</a>';
 
   # Final HTML.
