@@ -42,16 +42,10 @@ if ($title)
   $diff_path       = $diff_dir  .$title;
   $title_url       = $title_root.$title; }
 
-# Find appropriate code for user's '?action='. Assume "view" if not found.
-$fallback        = 'Action_view';
-$action          = $_GET['action'];
-$action_function = 'Action_'.$action;
-if (!function_exists($action_function)) 
-  $action_function = $fallback;
-
 # Before executing user's action, do urgent work if urgent todo file is found.
 WorkToDo($todo_urgent);
-$action_function();
+$action = GetUserAction();
+$action();
 
 #######################
 # Common page actions #
@@ -740,3 +734,12 @@ function GetPageTitle($legal_title)
     exit(); } 
 
  return $title; }
+
+function GetUserAction()
+# Find appropriate code for user's '?action='. Assume "view" if not found.
+{ $fallback        = 'Action_view';
+  $action          = $_GET['action'];
+  $action_function = 'Action_'.$action;
+  if (!function_exists($action_function)) 
+    $action_function = $fallback;
+  return $action_function; }
