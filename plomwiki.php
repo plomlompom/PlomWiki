@@ -258,10 +258,10 @@ function PreparePageWrite()
 
   # All the variables easily filled.
   $x['redir'] = '<meta http-equiv="refresh" content="0; URL='.$title_url.'" />';
-  $x['todo']    = $todo_urgent;
-  $x['msg']     = '<p><strong>Page updated.</strong></p>';
-  $x['hook']    = $hook_page_write;
-  $x['time']    = $timestamp = time();
+  $x['todo']  = $todo_urgent;
+  $x['msg']   = '<p><strong>Page updated.</strong></p>';
+  $x['hook']  = $hook_page_write;
+  $x['time']  = $timestamp = time();
 
   # Repair problems in submitted text. Undo possible PHP magical_quotes horrors.
   if (get_magic_quotes_gpc()) $text = stripslashes($text); 
