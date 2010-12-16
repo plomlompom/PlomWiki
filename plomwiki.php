@@ -209,7 +209,7 @@ function Action_write()
   # Target type chooses writing preparation function, gets variables from it.
   if     ($t == 'page') $x = PreparePageWrite();
   elseif ($t == 'pw')   $x = PreparePasswordWrite();
-  $msg=$x['msg']; $hook=$x['hook']; $time=$x['time']; $todo=$x['todo'];
+  $msg=$x['msg']; $hook=$x['hook']; $todo=$x['todo'];  $redir = $x['redir'];
   $tasks=$x['tasks']; $temps=$x['temps'];
 
   # Last possible failure conditions: No target type $t. Wrong password.
@@ -218,13 +218,8 @@ function Action_write()
   elseif (!CheckPW($pw, $t))
     ErrorFail('Wrong password.');
 
-  # If writing can go through, start by opening hooks for redirect and plugins.
-  $title_h = 'Writing';
-  $p_todo = fopen($todo, 'a+');
-  $redir = $x['redir'];
-  eval($hook);
-
   # Write temp files, tasks into todo file. Expect well-formed $task content.
+  $p_todo = fopen($todo, 'a+');
   if ($temps) foreach ($temps as $n => $temp)
       $temp_paths[$n] = NewTempFile($temp);
   foreach ($tasks as $n => $task_start)
@@ -239,7 +234,7 @@ function Action_write()
     WorkToDo($todo_urgent);
 
   # Final HTML.
-  Output_HTML($title_h, $msg, $redir); }
+  Output_HTML('Writing', $msg, $redir); }
 
 function PreparePageWrite()
 # Deliver to Action_write() all information needed for page writing process.
@@ -252,7 +247,6 @@ function PreparePageWrite()
   $x['todo']  = $todo_urgent;
   $x['msg']   = '<p><strong>Page updated.</strong></p>';
   $x['hook']  = $hook_page_write;
-  $x['time']  = $timestamp = time();
 
   # Repair problems in submitted text. Undo possible PHP magical_quotes horrors.
   if (get_magic_quotes_gpc()) $text = stripslashes($text); 
@@ -269,6 +263,9 @@ function PreparePageWrite()
               'Replace text with "delete" if you want to delete the page.');
   elseif ($text == $old_text)            
     ErrorFail('You changed nothing!');
+
+  # Collect a $timestamp, to date diffs, and for plugins.
+  $timestamp = time();
 
   # In case of page deletion question, add DeletePage() task to todo file.
   if ($text == 'delete')
@@ -288,6 +285,8 @@ function PreparePageWrite()
     $x['tasks'][] = 'SafeWrite("'.$diff_path.'", "'; 
     $x['temps'][] = $text;
     $x['tasks'][] = 'SafeWrite("'.$page_path.'", "'; }
+
+  eval($hook_page_write);
 
   return $x; }
 
