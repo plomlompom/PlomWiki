@@ -294,6 +294,10 @@ function PreparePageWrite()
 function PreparePasswordWrite()
 # Deliver to Action_write() all information needed for pw writing process.
 { global $nl, $pw_path, $todo_urgent;
+
+  # All the variables easily filled.
+  $x['msg']  = '<p><strong>Password updated.</strong></p>';
+  $x['todo'] = $todo_urgent;
   
   # Check password key and new password for validity.
   $pw_key = $_POST['pw_key'];
@@ -303,9 +307,6 @@ function PreparePasswordWrite()
   elseif (!$pw_key)
     ErrorFail('Not told what to set password for.');
 
-  $x['msg']  = '<p><strong>Password updated.</strong></p>';
-  $x['todo'] = $todo_urgent;
-  
   # Splice new password into text of password file at $pw_path.
   $passwords = ReadPasswordList($pw_path);
   $passwords[$pw_key] = $new_pw;
@@ -707,12 +708,10 @@ function ActionBarLinks($array_actions, $root)
 
 function GetPageTitle($legal_title)
 # Only allow alphanumeric titles. If title is needed, but empty, assume "Start".
-{ $title              = $_GET['title']; 
+{ $title = $_GET['title']; 
   if (!$title) $title = 'Start';
-
   if (!preg_match('/^'.$legal_title.'$/', $title)) 
     ErrorFail('Illegal page title.', 'Only alphanumeric characters allowed'); 
-
  return $title; }
 
 function GetUserAction()
