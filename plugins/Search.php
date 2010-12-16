@@ -1,7 +1,6 @@
 <?php
 
-$hook_meta_actions .= '$meta_actions .= \'<a href="'.$root_rel.'?action='
-                                                  .'search">Search</a> \'.$nl;';
+$actions_meta[] = array('Search', '?action=search');
 
 function Action_search()
 # Case-insensitive search through all pages' texts and titles.

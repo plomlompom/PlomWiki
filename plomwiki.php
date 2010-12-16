@@ -13,25 +13,26 @@ $del_dir    = $pages_dir.'deleted/';   $work_temp_dir = $work_dir.'temp/';
 $setup_file = 'setup.php';             $todo_urgent   = $work_dir.'todo_urgent';
 
 # URL information.
-$root_rel = 'plomwiki.php';            $title_root = $root_rel.'?title=';
+$root_rel = 'plomwiki.php';      $title_root = $root_rel.'?title=';
 
-# Newline information.
+# Newline information. PlomWiki likes "\n", dislikes "\r".
 $nl = "\n";                      $nl2 = $nl.$nl;                    $esc = "\r";
 
 # Check for unfinished setup file, execute if found.
 if (is_file($setup_file)) 
   require($setup_file);
 
+# Default action bar links data.
+$actions_meta = array(array('Jump to Start page', '?title=Start'),
+                      array('Set admin password', '?action=set_pw_admin'));
+$actions_page = array(array('View',               '&amp;action=view'),
+                      array('Edit',               '&amp;action=edit'),
+                      array('History',            '&amp;action=history'),
+                      array('Set page password',  '&amp;action=set_pw_page'));
+
 # Insert plugins' code.
 $lines = ReadAndTrimLines($plugin_list_path); 
 foreach ($lines as $line) require($line);
-
-# Wiki view HTML start.
-$meta_actions    = '<a href="'.$title_root.'Start">Start</a>'.$nl;
-eval($hook_meta_actions);
-$meta_actions    .= '<a href="'.$root_rel.'?action=set_pw_admin">Set admin'.
-                                                            ' password</a>'.$nl;
-$wiki_view_start = '<p>'.$nl.'PlomWiki: '.$nl.$meta_actions.'</p>'.$nl2;
 
 # Only allow alphanumeric titles. If title is needed, but empty, assume "Start".
 $title       = $_GET['title']; 
@@ -48,15 +49,11 @@ $page_path = $pages_dir .$title;
 $diff_path = $diff_dir  .$title;
 $title_url = $title_root.$title;
 
-# Page view HTML start.
-$page_actions  = '<a href="'.$title_url.'">View</a>'.$nl.
-                 '<a href="'.$title_url.'&amp;action=edit">Edit</a>'.$nl.
-                 '<a href="'.$title_url.'&amp;action=history">History</a>'.$nl;
-eval($hook_page_actions);
-$page_actions .= '<a href="'.$title_url.'&amp;action=set_pw_page">Set page '.
-                                                            'password</a>'.$nl;
-$page_view_start = '<h1>'.$title.'</h1>'.$nl.'<p>'.$nl.$page_actions.'</p>'.
-                                                                           $nl2;
+# Build action / navigation bars.
+$bar_start       = '<p>PlomWiki: ';
+$wiki_view_start = BuildActionBar($actions_meta, $root_rel,   $bar_start);
+$bar_start       = '<h1>'.$title.'</h1>'.$nl.'<p>';
+$page_view_start = BuildActionBar($actions_page, $title_root, $bar_start);
 
 # Find appropriate code for user's '?action='. Assume "view" if not found.
 $fallback        = 'Action_view';
@@ -727,3 +724,12 @@ function Output_HTML($title, $content, $page_view = FALSE, $head = '')
   echo '<!DOCTYPE html>'.$nl.'<meta charset="UTF-8">'.$nl.
        '<title>'.$title.'</title>'.$nl.
        $head.$nl.$wiki_view_start.$page_view_start.$content; }
+
+function BuildActionBar($array_actions, $root, $bar_start)
+# Concatenate $array_actions into list of action links over $root.
+{ global $nl, $nl2;
+
+  foreach ($array_actions as $action)
+    $action_bar .= '<a href="'.$root.$action[1].'">'.$action[0].'</a> '.$nl;
+
+  return $bar_start.$nl.$action_bar.'</p>'.$nl2; }

@@ -1,10 +1,9 @@
 <?php
 # RecentChanges plugin.
 
+$RC_Path            = $plugin_dir.'RecentChanges.txt';
+$actions_meta[]     = array('RecentChanges', '?action=RecentChanges');
 $hook_page_write   .= 'Add_to_RecentChanges($time, $p_todo);';
-$hook_meta_actions .= '$meta_actions .= \'<a href="'.$root_rel.'?action='
-                                    .'RecentChanges">RecentChanges</a> \'.$nl;';
-$RC_Path = $plugin_dir.'RecentChanges.txt';
 
 function Add_to_RecentChanges($timestamp, $p_todo)
 # Add time stamp of page change to RecentChanges file.
