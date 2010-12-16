@@ -1,27 +1,34 @@
 <?php
 # RecentChanges plugin.
 
-$RC_Path            = $plugin_dir.'RecentChanges.txt';
+$RC_dir             = $plugin_dir.'RecentChanges/';
+$RC_path            = $RC_dir.'RecentChanges.txt';
 $actions_meta[]     = array('RecentChanges', '?action=RecentChanges');
 $hook_page_write   .= 'Add_to_RecentChanges($time, $p_todo);';
 
 function Add_to_RecentChanges($timestamp, $p_todo)
 # Add time stamp of page change to RecentChanges file.
-{ global $nl, $title, $RC_Path;                                         
+{ global $nl, $title, $RC_dir, $RC_path;
+
+  if (!is_dir($RC_dir))
+    mkdir($RC_dir);
+
   $RC_Txt = '';
-  if (is_file($RC_Path)) $RC_Txt = file_get_contents($RC_Path);
+  if (is_file($RC_path))
+    $RC_Txt = file_get_contents($RC_path);
+
   $RC_Txt = $timestamp.':'.$title.$nl.$RC_Txt;
   $RC_Tmp = NewTempFile($RC_Txt);
-  fwrite($p_todo, 'SafeWrite("'.$RC_Path.'", "'.$RC_Tmp.'");'.$nl); }
+  fwrite($p_todo, 'SafeWrite("'.$RC_path.'", "'.$RC_Tmp.'");'.$nl); }
 
 function Action_RecentChanges()
-# Provide formatted output of RecentChanges file.
-{ global $nl, $nl2, $RC_Path, $title_root;
+# Provide HTML output of RecentChanges file.
+{ global $nl, $nl2, $RC_path, $title_root;
 
   # Format RecentChanges file content into HTML output.
   $output = '';
-  if (is_file($RC_Path)) 
-  { $txt = file_get_contents($RC_Path);
+  if (is_file($RC_path)) 
+  { $txt = file_get_contents($RC_path);
     $lines = explode($nl, $txt, -1);
     $date_str_old = '';
     foreach ($lines as $n => $line)
@@ -37,7 +44,8 @@ function Action_RecentChanges()
     $lines[0] = substr($lines[0], 14);
     $output = '<ul>'.$nl.implode($nl, $lines).$nl.'  </ul>'.$nl.'</li>'.$nl
                                                                      .'</ul>'; }
-  else $output = '<p>No RecentChanges file found.</p>';
+  else 
+    $output = '<p>No RecentChanges file found.</p>';
   
   $title_h = 'Recent Changes';
   Output_HTML($title_h, $output); }
