@@ -203,11 +203,12 @@ function Action_revert()
 #################################
 
 function Action_write()
-# Only way to write to DB. Expect password $_POST['pw'], target type $_GET['t'].
+# User writing to DB. Expects password $_POST['pw'] and target type $_GET['t'],
+# which determines the function shaping the details (like what to write where).
 { global $nl, $nl2, $todo_urgent; 
   $pw = $_POST['pw']; $t = $_GET['t'];
 
-  # Get any writing-relevant variables from $x, built by function chosen by $t.
+  # Get relevant variables from $x, built by target-type-chosen function.
   if     ($t == 'page') $x = PreparePageWrite();
   elseif ($t == 'pw')   $x = PreparePasswordWrite();
   $fail=$x['fail']; $msg=$x['msg']; $hook=$x['hook']; $is_page=$x['is_page'];
