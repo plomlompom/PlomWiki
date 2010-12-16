@@ -19,8 +19,7 @@ $root_rel = 'plomwiki.php';      $title_root = $root_rel.'?title=';
 $nl = "\n";                      $nl2 = $nl.$nl;                    $esc = "\r";
 
 # Check for unfinished setup file, execute if found.
-if (is_file($setup_file)) 
-  require($setup_file);
+if (is_file($setup_file)) require($setup_file);
 
 # Default action bar links data.
 $actions_meta = array(array('Jump to Start page', '?title=Start'),
@@ -726,7 +725,7 @@ function Output_HTML($title, $content, $page_view = FALSE, $head = '')
        $head.$nl.$wiki_view_start.$page_view_start.$content; }
 
 function BuildActionBar($array_actions, $root, $bar_start)
-# Concatenate $array_actions into list of action links over $root.
+# Concatenate $bar_start, $array_actions and $root into HTML of an action bar.
 { global $nl, $nl2;
 
   foreach ($array_actions as $action)
