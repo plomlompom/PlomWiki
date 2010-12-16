@@ -16,7 +16,8 @@ $setup_file = 'setup.php';             $todo_urgent   = $work_dir.'todo_urgent';
 $nl = "\n";                      $nl2 = $nl.$nl;                    $esc = "\r";
 
 # Check for unfinished setup file, execute if found.
-if (is_file($setup_file)) require($setup_file);
+if (is_file($setup_file))
+  require($setup_file);
 
 # URL generation information.
 $root_rel = 'plomwiki.php';      $title_root = $root_rel.'?title=';
@@ -30,8 +31,8 @@ $actions_page = array(array('View',               '&amp;action=view'),
                       array('Set page password',  '&amp;action=set_pw_page'));
 
 # Insert plugins' code.
-$lines = ReadAndTrimLines($plugin_list_path); 
-foreach ($lines as $line) require($line);
+foreach (ReadAndTrimLines($plugin_list_path) as $line)
+  require($line);
 
 # Get page title. If given, build dependent variables.
 $legal_title = '[a-zA-Z0-9]+';
