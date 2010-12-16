@@ -1,11 +1,11 @@
 <?php
 
 $hook_meta_actions .= '$meta_actions .= \'<a href="'.$root_rel.'?action='
-                                                 .'search">Search</a> \'."\n";';
+                                                  .'search">Search</a> \'.$nl;';
 
 function Action_search()
 # Case-insensitive search through all pages' texts and titles.
-{ global $legal_title, $pages_dir, $title_root;
+{ global $nl, $legal_title, $pages_dir, $title_root;
 
   # Produce search results HTML if $_GET['query'] is provided.
   $results = ''; $query = ''; 
@@ -25,15 +25,15 @@ function Action_search()
       if (strstr($content_low, $query_low) 
           or strstr(strtolower($title), $query_low)) 
         $matches[]='<li><a href="'.$title_root.$title.'">'.$title.'</a></li>'; }
-    $matches_str .= implode("\n", $matches); 
-    if ($matches_str) $results .= '<ul>'."\n".$matches_str."\n".'</ul>'; 
+    $matches_str .= implode($nl, $matches); 
+    if ($matches_str) $results .= '<ul>'.$nl.$matches_str.$nl.'</ul>'; 
     else              $results .= '<p>None.</p>'; }
 
   $title_h = 'Search';
   $content = '<h1>Search</h1>'."\n\n".
-             '<form method="get" action="'.$root_rel.'">'."\n".
-             '<input type="hidden" name="action" value="search" />'."\n".
-             '<input type="text" name="query" value="'.$query.'" />'."\n".
-             '<input type="submit" value="Search!" />'."\n".
+             '<form method="get" action="'.$root_rel.'">'.$nl.
+             '<input type="hidden" name="action" value="search" />'.$nl.
+             '<input type="text" name="query" value="'.$query.'" />'.$nl.
+             '<input type="submit" value="Search!" />'.$nl.
              '</form>'.$results; 
   Output_HTML($title_h, $content); }

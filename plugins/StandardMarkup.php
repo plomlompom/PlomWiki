@@ -2,24 +2,23 @@
 # PlomWiki StandardMarkup
 
 # Provide help message to be shown in editing window.
-$markup_help = '<h4>PlomWiki markup cheatsheet</h4>'."\n".'<p>In-line:</p>'."\n"
+$markup_help = '<h4>PlomWiki markup cheatsheet</h4>'.$nl.'<p>In-line:</p>'.$nl
               .'<pre style="white-space: pre-wrap;">[*<strong>strong</strong>*]'
               .' [/<em>emphasis</em>/] [-<del>deleted</del>-] [[<a href="'.
                $title_root.'PagenameOrURL">PagenameOrURL</a>]] [[PagenameOrURL|'
               .'<a href="'.$title_root.'PagenameOrURL">Text displayed instead</'
-              .'a>]] [\Escaped [*markup*]\]</pre>'."\n".
-               '<p>Multi-line:</p>'."\n".'<pre>*] list element'."\n".
-               '  *] indented once'."\n".'    *] indented twice'."\n\n".
-               '[@'."\n".'echo "Code, preformatted";'."\n".'@]</pre>';
+              .'a>]] [\Escaped [*markup*]\]</pre>'.$nl.
+               '<p>Multi-line:</p>'.$nl.'<pre>*] list element'.$nl.
+               '  *] indented once'.$nl.'    *] indented twice'."\n\n".
+               '[@'.$nl.'echo "Code, preformatted";'.$nl.'@]</pre>';
 
-# Escape marks. Remember "\r" is stripped from any page text by plomwiki.php.
-# A line starting with $markup_esc escapes paragraphing by MarkupParagraphs().
-# $markup_esc_{on,off,store} are used by MarkupEscape() and MarkupUnescape()
+# Escape marks. Remember $esc is stripped from any page text by plomwiki.php.
+# A line starting with $esc escapes paragraphing by MarkupParagraphs().
+# $esc_{on,off,store} are used by MarkupEscape() and MarkupUnescape()
 # for the user-defined markup escaping via "[\...\]".
-$markup_esc       = "\r";
-$markup_esc_on    = '['.$markup_esc;
-$markup_esc_off   = $markup_esc.']';
-$markup_esc_store = array();
+$esc_on    = '['.$esc;
+$esc_off   = $esc.']';
+$esc_store = array();
 
 ##################
 # In-line markup #
@@ -27,17 +26,17 @@ $markup_esc_store = array();
 
 function MarkupLinks($text)
 # [[LinkedPagename]], [[Linked|Text displayed]], [[http://linked-url.com]].
-{ global $title_root, $legal_title;
+{ global $nl, $title_root, $legal_title;
 
   # [[Title]] and [[Title|Text]]
   $text = preg_replace('/\[\[('.$legal_title.')]]/',
                        '<a href="'.$title_root.'$1">$1</a>', $text);
-  $text = preg_replace('/\[\[('.$legal_title.')\|([^'."\n".']+?)]]/',
+  $text = preg_replace('/\[\[('.$legal_title.')\|([^'.$nl.']+?)]]/',
                        '<a href="'.$title_root.'$1">$2</a>', $text);
 
   # [[URL|Text]] and [[URL]]
-  $legal_url = '((http)|(https)|(ftp)):\/\/[^ '."\n".'|]+?';
-  $text = preg_replace('/\[\[('.$legal_url.')\|([^'."\n".']+?)]]/',
+  $legal_url = '((http)|(https)|(ftp)):\/\/[^ '.$nl.'|]+?';
+  $text = preg_replace('/\[\[('.$legal_url.')\|([^'.$nl.']+?)]]/',
                        '<a href="$1">$6</a>', $text);
   return  preg_replace('/\[\[('.$legal_url.')]]/',
                        '<a href="$1">$1</a>', $text); }
@@ -55,8 +54,8 @@ function MarkupDeleted($text)
 { return preg_replace('/\[-(.*?)-]/',   '<del>$1</del>',       $text); }
 
 function MarkupEscape($text)
-# Replace "[\This"\]" with "[\r]", store "This" in array $markup_escaped.
-{ global $markup_esc_off, $markup_esc_on, $markup_esc_store;
+# Replace "[\This"\]" with "[\r]", store "This" in array $escaped.
+{ global $esc_off, $esc_on, $esc_store;
   $regex = '/\[\\\(.*?)\\\]/';
 
   # Catch all escaped strings in $store_tmp.
@@ -65,27 +64,27 @@ function MarkupEscape($text)
   $store_tmp = $store_tmp[1];
 
   # Replace escapes in $text with placeholders for / keys to escaped strings.
-  $offset = count($markup_esc_store);
+  $offset = count($esc_store);
   foreach ($store_tmp as $n => $string)
   { $n += $offset;
-    $repl = $markup_esc_on.$n.$markup_esc_off;
+    $repl = $esc_on.$n.$esc_off;
     $text = preg_replace($regex, $repl, $text, $limit = 1); }
 
   # Add $store_tmp to markup_esc_store.
   foreach ($store_tmp as $add)
-    $markup_esc_store[] = $add;
+    $esc_store[] = $add;
 
   return $text; }
 
 function MarkupUnescape($text)
 # Replace all "[\r]" with the string originally escaped.
-{ global $markup_esc_off, $markup_esc_on, $markup_esc_store;
+{ global $esc_off, $esc_on, $esc_store;
 
-  foreach ($markup_esc_store as $n => $string)
-    $text = str_replace($markup_esc_on.$n.$markup_esc_off, $string, $text);
+  foreach ($esc_store as $n => $string)
+    $text = str_replace($esc_on.$n.$esc_off, $string, $text);
 
-  foreach ($markup_esc_store as $n => $string)
-    $text = str_replace($markup_esc_on.$n.$markup_esc_off, $string, $text);
+  foreach ($esc_store as $n => $string)
+    $text = str_replace($esc_on.$n.$esc_off, $string, $text);
 
   return $text; }
 
@@ -95,9 +94,9 @@ function MarkupUnescape($text)
 
 function MarkupCode($text)
 # <pre>-format multi-line code block.
-{ global $markup_esc;
-  $line_start = '^|'."\n";
-  $line_end   = '$|'."\n";
+{ global $nl, $esc;
+  $line_start = '^|'.$nl;
+  $line_end   = '$|'.$nl;
   $regex      = '\[@(.*?)@]';
 
   # For further modification, temporarily store marked up code in $store.
@@ -109,20 +108,20 @@ function MarkupCode($text)
   # Escape $store'd lines. Replace marked up code with these, <pre>-format it.
   foreach ($store as $pre)
   { $pre  = preg_replace('/(?<='.$line_start.')(.*?)(?='.$line_end.')/', 
-                         $markup_esc.'$1', $pre);
+                         $esc.'$1', $pre);
     $text = preg_replace('/(?<='.$line_start.')'.$regex.'(?='.$line_end.')/s', 
-                         $markup_esc.'<pre>'."\n".$pre."\n\r".'</pre>', 
+                         $esc.'<pre>'.$nl.$pre."\n\r".'</pre>', 
                          $text, $limit = 1); }
   
   return $text; }
 
 function MarkupLists($text)
 # Lines starting with '*] ' preceded by multiples of double whitespace -> lists.
-{ global $markup_esc;
+{ global $nl, $esc;
   $li_on = '*] '; 
-  $lines = explode("\n", $text);
+  $lines = explode($nl, $text);
   $lines[] = ''; # Add virtual last line for backwards line-by-line comparisons.
-  $mark_list = $markup_esc.'l'.$markup_esc;
+  $mark_list = $esc.'l'.$esc;
   $ln_mark = strlen($mark_list);
 
   # Find lines marked as list elements. Search up to $failed_tries_limit depth.
@@ -181,19 +180,19 @@ function MarkupLists($text)
     { $depth = $catch[1];
       $line_short = substr($line, $ln_mark + strlen($depth));
       $whitespace = str_pad('', $depth * 5);
-      $lines_new[$n] = $markup_esc.$whitespace.$line_short; } }
+      $lines_new[$n] = $esc.$whitespace.$line_short; } }
   
   # Delete virtual last line added at beginning of function.
   unset($lines[-1]);
-  return implode("\n", $lines_new); }
+  return implode($nl, $lines_new); }
 
 function MarkupParagraphs($text)
-# Build paragraphs (& linebreaks therein) from lines not started by $markup_esc.
-{ global $markup_esc;
+# Build paragraphs (& linebreaks therein) from lines not started by $esc.
+{ global $nl, $esc;
   
   # For line-by-line comparison reasons, add virtual, temporary last line.
-  $lines   = explode("\n", $text);
-  $lines[] = $markup_esc;
+  $lines   = explode($nl, $text);
+  $lines[] = $esc;
 
   # Empty p-lines coming before non-empty p-lines? Absorb to latter's paragraph.
   # (Mark every empty line following a non-empty one as a paragraph break.)
@@ -201,28 +200,28 @@ function MarkupParagraphs($text)
   foreach ($lines as $n => $line)
   { if ($line_prev != '' 
         and  $line == '')
-      $lines[$n] = $markup_esc;
+      $lines[$n] = $esc;
     $line_prev = $line; }
   
   # Add '<p>', '</p>' and '<br />' on p-line blocks.
   $lines_new = array();
   $n_new = -1;
-  $line_prev = $markup_esc;
+  $line_prev = $esc;
   foreach ($lines as $line)
-  { if ($line[0] != $markup_esc)           # Line is a p-line.
-      if ($line_prev[0] == $markup_esc)      # First p-line, prepend '<p>'.
+  { if ($line[0] != $esc)           # Line is a p-line.
+      if ($line_prev[0] == $esc)      # First p-line, prepend '<p>'.
         $line = '<p>'.$line; 
       else                                   # Later p-line, prepend '<br />'.
         $lines_new[$n_new] .= '<br />';
-    elseif ($line_prev[0] != $markup_esc) # Non-p-line after p-line? Add '</p>'.
+    elseif ($line_prev[0] != $esc) # Non-p-line after p-line? Add '</p>'.
       $lines_new[$n_new] .= '</p>';
     $line_prev = $line; 
-    if ($line != $markup_esc)
+    if ($line != $esc)
     { $lines_new[] = $line; $n_new++; } }
 
-  # Eliminate $markup_esc starts from non-p lines.
+  # Eliminate $esc starts from non-p lines.
   foreach ($lines_new as $n => $line)
-    if ($line[0] == $markup_esc)
+    if ($line[0] == $esc)
       $lines_new[$n] = substr($line, 1);
 
-  return implode("\n", $lines_new); }
+  return implode($nl, $lines_new); }
