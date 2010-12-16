@@ -77,7 +77,7 @@ function Action_edit()
     $text = EscapeHTML($text); }
   else $text = '';
 
-  # Final HTML of edit form and JavaScript to localStorage password.
+  # Final HTML of edit form and JavaScript to localStorage-store password.
   $title_h = 'Editing: '.$title;
   $form = '<h2>Edit page</h2>'.$nl2.
           '<form method="post" action="'.$title_url.
@@ -159,7 +159,6 @@ function Action_revert()
   $time_string = date('Y-m-d H:i:s', (int) $time);
 
   # Build $diff_array from $diff_path to be cycled through, keyed by timestamps.
-  $diff_array = array();
   $diffs_text = explode('%%'.$nl, file_get_contents($diff_path));
   foreach ($diffs_text as $diff_n => $diff_str)
   { $diff = explode($nl, $diff_str);
@@ -174,8 +173,7 @@ function Action_revert()
       $diff_array[$id] = $diff_text; }
 
   # Revert $text back through $diff_array until $time hits $id.
-  $text     = file_get_contents($page_path);
-  $finished = FALSE;
+  $text = file_get_contents($page_path);
   foreach ($diff_array as $id => $diff)
   { if ($finished) break;
     $reversed_diff = ReverseDiff($diff); 
@@ -198,7 +196,7 @@ function Action_revert()
 
   # Final HTML.
   $title_h = 'Reverting: '.$title; 
-  Output_HTML($title_h, $content, TRUE); }
+  Output_HTML($title_h, $content); }
 
 #################################
 # User-accessible writing to DB #
