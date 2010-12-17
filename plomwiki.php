@@ -246,7 +246,7 @@ function WriteTasks($tasks, $todo)
 
 function PrepareWrite_page()
 # Deliver to Action_write() all information needed for page writing process.
-{ global $diff_path, $esc, $hook_page_write, $nl, $page_path, $title,
+{ global $diff_path, $esc, $hook_PrepareWrite_page, $nl, $page_path, $title,
          $title_url, $todo_urgent;
   $text = $_POST['text'];
 
