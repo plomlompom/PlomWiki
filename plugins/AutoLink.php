@@ -3,6 +3,10 @@
 $AutoLink_dir   = $plugin_dir.'AutoLink/';
 $actions_meta[] = array('Build AutoLink DB', '?action=autolink_build_db');
 
+##########
+# Markup #
+##########
+
 function MarkupAutolink($text)
 # Autolink $text according to its Autolink file.
 { global $AutoLink_dir, $root_rel, $title;
@@ -26,15 +30,9 @@ function MarkupAutolink($text)
   
   return $text; }
 
-function Autolink_GetFromFileLine($path, $line, $return_as_array = FALSE)
-# Return $line of file $path. $return_as_array string separated by ' ' if set.
-{ global $nl;
-  $x = explode($nl, file_get_contents($path));
-  $x = $x[$line];
-  if ($return_as_array)
-  { $x = rtrim($x);
-    $x = explode(' ', $x); }
-  return $x; }
+####################
+# DB bootstrapping #
+####################
 
 function Action_autolink_build_db()
 # Form asking for confirmation and password before triggering AutoLink DB build.
@@ -65,27 +63,35 @@ function PrepareWrite_autolink_build_db()
   # Build page file creation, linking tasks.
   $titles = GetAllPageTitles();
   foreach ($titles as $title)
-    $x['tasks'][] = AutoLink_CreateFile($title);
+    $x['tasks'][] = array('AutoLink_CreateFile', $title);
   foreach ($titles as $title)
-  { $page_txt = file_get_contents($pages_dir.$title);
     foreach ($titles as $linkable)
       if ($linkable != $title)
-        # Works for now. Later we'll want to match the regexes from the files.
-        if (preg_match('/'.$linkable.'/iu', $page_txt))
-        { $x['tasks'][] = array('AutoLink_InsertInLine', $title, 
-                                                            '1'.$nl.$linkable);
-          $x['tasks'][] = array('AutoLink_InsertInLine', $linkable, 
-                                                            '2'.$nl.$title); } }
+        $x['tasks'][] = array('AutoLink_TryLinking', $title.'_'.$linkable);
+
   return $x; }
 
-function AutoLink_InsertInLine($title, $path_temp)
+##########################################
+# DB writing tasks to be called by todo. #
+##########################################
+
+function AutoLink_TryLinking($titles)
+{ global $AutoLink_dir, $nl, $pages_dir;
+  list($title, $linkable) = explode('_', $titles);
+  $page_txt = file_get_contents($pages_dir.$title);
+
+  $path_linkable = $AutoLink_dir.$linkable;
+  $regex_linkable = Autolink_GetFromFileLine($path_linkable, 0);
+  if (preg_match('/'.$regex_linkable.'/iu', $page_txt))
+  { AutoLink_InsertInLine($title.'_1_'.$linkable);
+    AutoLink_InsertInLine($linkable.'_2_'.$title); } }
+
+function AutoLink_InsertInLine($string)
 # Add in $path_file on $line_n $insert (last two found in $path_temp file).
 { global $AutoLink_dir, $nl;
 
-  # Get $line_n, $insert from $path_temp.
-  $array  = explode($nl, file_get_contents($path_temp));
-  $line_n = $array[0];
-  $insert = $array[1];
+  # Get $title, $line_n, $insert from $string.
+  list($title, $line_n, $insert) = explode('_', $string);
 
   # Get $content from $title's AutoLink file, add $insert.whitespace on $line_n.
   $path_file = $AutoLink_dir.$title;
@@ -94,13 +100,31 @@ function AutoLink_InsertInLine($title, $path_temp)
   $content = implode($nl, $lines);
     
   # Put $content into temp file for SafeWrite() to harvest.
-  $path_temp_new = NewTempFile($content);
-  SafeWrite($path_file, $path_temp_new); }
+  $path_temp= NewTempFile($content);
+  SafeWrite($path_file, $path_temp); }
 
 function AutoLink_CreateFile($title)
-# Build link-empty file conte on page $title, return file writing task.
+# Start AutoLink file of page $title, empty but for title regex.
 { global $AutoLink_dir, $nl2;
 
+  # $content (at start empty but for first, regex line) shall rest at $path.
   $path    = $AutoLink_dir.$title;
   $content = $title.$nl2;
-  return     array('SafeWrite', $path, $content); }
+  
+  # Put $content into temp file for SafeWrite() to harvest.
+  $path_temp = NewTempFile($content);
+  SafeWrite($path, $path_temp); }
+
+##########################
+# Minor helper functions #
+##########################
+
+function Autolink_GetFromFileLine($path, $line, $return_as_array = FALSE)
+# Return $line of file $path. $return_as_array string separated by ' ' if set.
+{ global $nl;
+  $x = explode($nl, file_get_contents($path));
+  $x = $x[$line];
+  if ($return_as_array)
+  { $x = rtrim($x);
+    $x = explode(' ', $x); }
+  return $x; }
