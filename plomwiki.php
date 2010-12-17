@@ -346,9 +346,9 @@ function BuildPageChangePW($desc, $pw_key)
                                              '&amp;action=write&amp;t=pw">'.$nl.
           '<input type="hidden" name="pw_key" value="'.$pw_key.'">'.$nl.
           'New '.$desc.' password:<br />'.$nl.
-         ' <input type="password" name="new_pw" /><br />'.$nl.
+          '<input type="password" name="new_pw" /><br />'.$nl.
           'Current admin password:<br />'.$nl.
-          ' <input type="password" name="pw" />'.$nl.
+          '<input type="password" name="pw" />'.$nl.
           '<input type="submit" value="Update!" />'.$nl.
           '</form>';
   Output_HTML($title_h, $form); }
@@ -692,21 +692,22 @@ function ReadAndTrimLines($path)
 
 function Output_HTML($title_h, $content, $head = '')
 # Generate final HTML output from given parameters and global variables.
-{ global $action, $actions_meta, $actions_page, $nl, $nl2, $title, $title_url;
+{ global $action, $actions_meta, $actions_page, $nl, $nl2, $root_rel, $title, 
+                                                                     $title_url;
 
   # If we have more $head lines, append a newline for better readability.
   if ($head) $head .= $nl;
 
   # Generate header / action bars.
-  $header_wiki = '<p>PlomWiki: '.$nl.
-                 ActionBarLinks($actions_meta, $root_rel).$nl;
+  $header_wiki = '<p>'.$nl.'PlomWiki: '.$nl.
+                 ActionBarLinks($actions_meta, $root_rel).'</p>'.$nl2;
   if (substr($action, 7, 5) == 'page_')
-    $header_page = '<p>'.$nl.ActionBarLinks($actions_page, $title_url).$nl;
-
+    $header_page = $nl.'<p>'.$nl.ActionBarLinks($actions_page, $title_url).
+                                                                     '</p>'.$nl;
   # Final HTML.
   echo '<!DOCTYPE html>'.$nl.'<meta charset="UTF-8">'.$nl.
        '<title>'.$title_h.'</title>'.$nl.$head.$nl.
-       $header_wiki.'<h1>'.$title_h.'</h1>'.$header_page.$content; }
+       $header_wiki.'<h1>'.$title_h.'</h1>'.$nl.$header_page.$nl.$content; }
 
 function ActionBarLinks($array_actions, $root)
 # Build a HTML line of action links from $array_actions over $root.
