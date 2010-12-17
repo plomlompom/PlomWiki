@@ -62,14 +62,8 @@ function PrepareWrite_autolink_build_db()
     ErrorFail('Not building AutoLink DB.', 'Directory already exists.');
   $x['tasks'][] = array('mkdir', $AutoLink_dir);
 
-  # Snippet also used by RecentChanges.php. Outsource into a general plugin lib?
-  $p_dir = opendir($pages_dir);
-    while (FALSE !== ($fn = readdir($p_dir)))
-      if (is_file($pages_dir.$fn) and preg_match('/^'.$legal_title.'$/', $fn))
-        $titles[] = $fn;
-    closedir($p_dir);
-
   # Scan all pages for occurences of other pages' names, store in $links_out.
+  $titles = GetAllPageTitles();
   foreach ($titles as $title)
   { $page_txt = file_get_contents($pages_dir.$title);
     $links_out = array();

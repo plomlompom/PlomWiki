@@ -14,15 +14,9 @@ function Action_search()
 
     $results = $nl2.'<h2>Search results for: '.$query.'</h2>'.$nl2;
 
-    $p_dir = opendir($pages_dir);
-    while (FALSE !== ($fn = readdir($p_dir)))
-      if (is_file($pages_dir.$fn) and preg_match('/^'.$legal_title.'$/', $fn))
-        $titles[] = $fn;
-    closedir($p_dir);
-
     $matches = array();
     $query_low = strtolower($query);
-    foreach ($titles as $title)
+    foreach (GetAllPageTitles() as $title)
     { $content_low = strtolower(file_get_contents($pages_dir.$title));
       if (strstr($content_low, $query_low) 
           or strstr(strtolower($title), $query_low)) 
