@@ -6,24 +6,24 @@ $actions_meta[] = array('Build AutoLink DB', '?action=autolink_build_db');
 function MarkupAutolink($text)
 # Autolink $text according to its Autolink file.
 { global $AutoLink_dir, $root_rel, $title;
-
+  
   # Don't do anything if there's no Autolink file for the page displayed
   $cur_page_file = $AutoLink_dir.$title;
   if (!is_file($cur_page_file))
     return $text; 
-
+  
   # Get $links_out from $cur_page_file, turn into regex from their resp. files.
   $links_out = Autolink_GetFromFileLine($cur_page_file, 1, TRUE);
   foreach ($links_out as $pagename)
   { $linked_page_file = $AutoLink_dir.$pagename;
     $regex_pagename = Autolink_GetFromFileLine($linked_page_file, 0);
-
+    
     # Build autolinks into $text where $avoid applies.
     $avoid = '(?=[^>]*($|<(?!\/(a|script))))';
     $match = '/('.$regex_pagename.')'.$avoid.'/iu';
     $repl  = '<a href="'.$root_rel.'?title='.$pagename.'">$1</a>';
     $text  = preg_replace($match, $repl, $text); }
-
+  
   return $text; }
 
 function Autolink_GetFromFileLine($path, $line, $return_as_array = FALSE)
@@ -33,7 +33,8 @@ function Autolink_GetFromFileLine($path, $line, $return_as_array = FALSE)
   $x = explode($nl, $x);
   $x = $x[$line];
   if ($return_as_array)
-    $x = explode(' ', $x);
+  { $x = rtrim($x);
+    $x = explode(' ', $x); }
   return $x; }
 
 function Action_autolink_build_db()
@@ -51,7 +52,7 @@ function Action_autolink_build_db()
 
 function PrepareWrite_autolink_build_db()
 # Deliver to Action_write() all information needed for AutoLink DB building.
-{ global $AutoLink_dir, $legal_title, $nl, $pages_dir, $todo_urgent;
+{ global $AutoLink_dir, $nl, $pages_dir, $todo_urgent;
 
   # Variables easily produced.
   $x['todo'] = $todo_urgent;
@@ -62,19 +63,44 @@ function PrepareWrite_autolink_build_db()
     ErrorFail('Not building AutoLink DB.', 'Directory already exists.');
   $x['tasks'][] = array('mkdir', $AutoLink_dir);
 
-  # Scan all pages for occurences of other pages' names, store in $links_out.
+  # Build page file creation, linking tasks.
   $titles = GetAllPageTitles();
   foreach ($titles as $title)
+    $x['tasks'][] = AutoLink_CreateFile($title);
+  foreach ($titles as $title)
   { $page_txt = file_get_contents($pages_dir.$title);
-    $links_out = array();
     foreach ($titles as $linkable)
       if ($linkable != $title)
         if (preg_match('/'.$linkable.'/iu', $page_txt))
-          $links_out[] = $linkable;
-    $links_out = implode(' ', $links_out);
-
-    # For each page, prepare writing of its AutoLink DB file.
-    $txt = $title.$nl.$links_out;
-    $x['tasks'][] = array('SafeWrite', $AutoLink_dir.$title, $txt); }
-
+        { $x['tasks'][] = array('AutoLink_InsertInLine', $title, 
+                                                            '1'.$nl.$linkable);
+          $x['tasks'][] = array('AutoLink_InsertInLine', $linkable, 
+                                                            '2'.$nl.$title); } }
   return $x; }
+
+function AutoLink_InsertInLine($title, $path_temp)
+# Add in $path_file on $line_n $insert (last two found in $path_temp file).
+{ global $AutoLink_dir, $nl;
+
+  # Get $line_n, $insert from $path_temp.
+  $array  = explode($nl, file_get_contents($path_temp));
+  $line_n = $array[0];
+  $insert = $array[1];
+
+  # Get $content from $title's AutoLink file, add $insert.whitespace on $line_n.
+  $path_file = $AutoLink_dir.$title;
+  $lines = explode($nl, file_get_contents($path_file));
+  $lines[$line_n] = $lines[$line_n].$insert.' ';
+  $content = implode($nl, $lines);
+    
+  # Put $content into temp file for SafeWrite() to harvest.
+  $path_temp_new = NewTempFile($content);
+  SafeWrite($path_file, $path_temp_new); }
+
+function AutoLink_CreateFile($title)
+# Build link-empty file conte on page $title, return file writing task.
+{ global $AutoLink_dir, $nl2;
+
+  $path    = $AutoLink_dir.$title;
+  $content = $title.$nl2;
+  return     array('SafeWrite', $path, $content); }
