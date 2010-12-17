@@ -212,7 +212,7 @@ function Action_write()
     $x = $prep_func();
   else 
     ErrorFail('No known target type specified.');
-  $msg=$x['msg']; $hook=$x['hook']; $todo=$x['todo'];  $redir = $x['redir'];
+  $msg=$x['msg']; $todo=$x['todo']; $redir = $x['redir'];
   $tasks=$x['tasks']; $temps=$x['temps'];
 
   # Password check.
