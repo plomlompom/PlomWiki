@@ -293,7 +293,8 @@ function PrepareWrite_page()
     $x['tasks'][] = array('SafeWrite', $diff_path, $diff_new);
     $x['tasks'][] = array('SafeWrite', $page_path, $text); }
 
-  eval($hook_page_write);
+  # Plugin hook.
+  eval($hook_PrepareWrite_page);
 
   return $x; }
 
