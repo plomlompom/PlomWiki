@@ -432,8 +432,8 @@ function LockOn($dir)
   if (is_file($lock))
   { $time = file_get_contents($lock);
     if ($time + $lock_duration > $now)
-    { echo 'Lockfile found, timestamp too recent. Try again later.'; 
-      exit(); } }
+      ErrorFail('Stuck by a lockfile of too recent a timestamp.',
+                'Lock effective '.$lock_duration.' seconds. Try a bit later.');}
   file_put_contents($lock, $now); }
 
 function LockOff($dir)
