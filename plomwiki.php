@@ -425,7 +425,7 @@ function NewTempFile($string)
   return $temp_path; }
 
 function LockOn($dir)
-# Check for and create lockfile for $dir. Lockfiling runs out after $max_time.
+# Check for and create lockfile for $dir. Lockfiling only lasts $lock_duration.
 { $lock_duration = 60;   # Lockfile duration. Should be > server execution time.
   $now = time();
   $lock = $dir.'lock';
