@@ -76,6 +76,7 @@ function PrepareWrite_autolink_build_db()
 ##########################################
 
 function AutoLink_TryLinking($titles)
+# $titles = $title_$linkable. Try auto-linking both pages, write to their files.
 { global $AutoLink_dir, $nl, $pages_dir;
   list($title, $linkable) = explode('_', $titles);
   $page_txt = file_get_contents($pages_dir.$title);
