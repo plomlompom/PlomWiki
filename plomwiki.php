@@ -226,20 +226,20 @@ function Action_write()
   Output_HTML('Writing', $msg, $redir); }
 
 function WriteTasks($tasks, $todo)
-# Write $tasks (form: array($function_name, $value_1, $value_2)) into $todo.
+# Write $tasks (form: array($function, $value_direct, $value_temp)) into $todo.
 { global $nl;
   $p_todo = fopen($todo, 'a+');
   foreach ($tasks as $task)
-  { $function_name = $task[0];
-    $value_1       = $task[1];
-    $value_2       = $task[2];
+  { $function     = $task[0];
+    $value_direct = $task[1];
+    $value_temp   = $task[2];
 
-    # If $value2, store it in a temp file and tell $todo to look there for it.
-    if (!$value_2)
-      $line = $function_name.'(\''.$value_1.'\');';
+    # $value_temp will be stored in temp file. Tell $todo to look there for it.
+    if (!$value_temp)
+      $line = $function.'(\''.$value_direct.'\');';
     else
-    { $temp_path = NewTempFile($value_2);
-      $line = $function_name.'(\''.$value_1.'\', \''.$temp_path.'\');'; }
+    { $temp_path = NewTempFile($value_temp);
+      $line = $function.'(\''.$value_direct.'\', \''.$temp_path.'\');'; }
     fwrite($p_todo, $line.$nl); }
 
   fclose($p_todo); }
