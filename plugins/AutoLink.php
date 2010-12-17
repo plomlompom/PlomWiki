@@ -29,8 +29,7 @@ function MarkupAutolink($text)
 function Autolink_GetFromFileLine($path, $line, $return_as_array = FALSE)
 # Return $line of file $path. $return_as_array string separated by ' ' if set.
 { global $nl;
-  $x = file_get_contents($path);
-  $x = explode($nl, $x);
+  $x = explode($nl, file_get_contents($path));
   $x = $x[$line];
   if ($return_as_array)
   { $x = rtrim($x);
