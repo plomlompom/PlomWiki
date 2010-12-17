@@ -183,7 +183,7 @@ function Action_revert()
 
   # Ask for revert affirmation and password. If reversion date is valid.
   if ($finished)
-  { $content = 'Revert page to before '.$time_string.'?</p>'.$nl.
+  { $content = '<p>Revert page to before '.$time_string.'?</p>'.$nl.
                '<form method="post" action="'.$title_url.
                                            '&amp;action=write&amp;t=page">'.$nl.
                '<input type="hidden" name="text" value="'.$text.'">'.$nl.
