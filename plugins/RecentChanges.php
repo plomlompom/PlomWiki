@@ -1,10 +1,10 @@
 <?php
 # RecentChanges plugin.
 
-$RC_dir           = $plugin_dir.'RecentChanges/';
-$RC_path          = $RC_dir.'RecentChanges.txt';
-$actions_meta[]   = array('RecentChanges', '?action=RecentChanges');
-$hook_page_write .= '$x = Add_to_RecentChanges($timestamp, $x); ';
+$RC_dir                  = $plugin_dir.'RecentChanges/';
+$RC_path                 = $RC_dir.'RecentChanges.txt';
+$actions_meta[]          = array('RecentChanges', '?action=RecentChanges');
+$hook_PrepareWrite_page .= '$x = Add_to_RecentChanges($timestamp, $x); ';
 
 function Add_to_RecentChanges($timestamp, $x)
 # Add time stamp of page change to RecentChanges file.
