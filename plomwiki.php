@@ -207,15 +207,16 @@ function Action_write()
   $pw = $_POST['pw']; $t = $_GET['t'];
 
   # Target type chooses writing preparation function, gets variables from it.
-  if     ($t == 'page') $x = PreparePageWrite();
-  elseif ($t == 'pw')   $x = PreparePasswordWrite();
+  $prep_func = 'PrepareWrite_'.$t;
+  if (function_exists($prep_func))
+    $x = $prep_func();
+  else 
+    ErrorFail('No known target type specified.');
   $msg=$x['msg']; $hook=$x['hook']; $todo=$x['todo'];  $redir = $x['redir'];
   $tasks=$x['tasks']; $temps=$x['temps'];
 
-  # Last possible failure conditions: No target type $t. Wrong password.
-  if (!$t or ($t != 'page' and $t != 'pw'))
-    ErrorFail('No known target type specified.');
-  elseif (!CheckPW($pw, $t))
+  # Password check.
+  if (!CheckPW($pw, $t))
     ErrorFail('Wrong password.');
 
   # Write temp files, tasks into todo file. Expect well-formed $task content.
@@ -236,7 +237,7 @@ function Action_write()
   # Final HTML.
   Output_HTML('Writing', $msg, $redir); }
 
-function PreparePageWrite()
+function PrepareWrite_page()
 # Deliver to Action_write() all information needed for page writing process.
 { global $diff_path, $esc, $hook_page_write, $nl, $page_path, $title,
          $title_url, $todo_urgent;
@@ -290,7 +291,7 @@ function PreparePageWrite()
 
   return $x; }
 
-function PreparePasswordWrite()
+function PrepareWrite_pw()
 # Deliver to Action_write() all information needed for pw writing process.
 { global $nl, $pw_path, $todo_urgent;
 
