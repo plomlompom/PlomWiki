@@ -70,6 +70,7 @@ function PrepareWrite_autolink_build_db()
   { $page_txt = file_get_contents($pages_dir.$title);
     foreach ($titles as $linkable)
       if ($linkable != $title)
+        # Works for now. Later we'll want to match the regexes from the files.
         if (preg_match('/'.$linkable.'/iu', $page_txt))
         { $x['tasks'][] = array('AutoLink_InsertInLine', $title, 
                                                             '1'.$nl.$linkable);
