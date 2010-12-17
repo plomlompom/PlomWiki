@@ -13,6 +13,9 @@ else       { $msg = 'PlomWiki Setup successful. Reload!'; unlink($setup_file); }
 
 $title_h = 'PlomWiki Setup';
 $content = '<h1>PlomWiki Setup</h1>'.$nl2.'<p><strong>'.$msg.'</strong></p>';
-Output_HTML($title_h, $content);
+
+echo '<!DOCTYPE html>'.$nl.'<meta charset="UTF-8">'.$nl.
+     '<title>PlomWiki Setup</title>'.$nl.'<h1>PlomWiki Setup</h1>'.$nl2.
+     '<p><strong>'.$msg.'</strong></p>';
 
 exit();

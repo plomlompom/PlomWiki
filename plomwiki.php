@@ -212,30 +212,38 @@ function Action_write()
     $x = $prep_func();
   else 
     ErrorFail('No known target type specified.');
-  $msg=$x['msg']; $todo=$x['todo']; $redir = $x['redir'];
-  $tasks=$x['tasks']; $temps=$x['temps'];
+  $msg=$x['msg']; $todo=$x['todo']; $redir = $x['redir']; $tasks=$x['tasks'];
 
   # Password check.
   if (!CheckPW($pw, $t))
     ErrorFail('Wrong password.');
 
-  # Write temp files, tasks into todo file. Expect well-formed $task content.
-  $p_todo = fopen($todo, 'a+');
-  if ($temps) foreach ($temps as $n => $temp)
-      $temp_paths[$n] = NewTempFile($temp);
-  foreach ($tasks as $n => $task_start)
-  { $temp_path = '';
-    if ($temp_paths[$n])
-      $temp_path = $temp_paths[$n];
-    fwrite($p_todo, $task_start.$temp_path.'");'.$nl); }
-  fclose($p_todo);
-
-  # If todo is urgent, why not start right away?
+  # Write tasks into todo. And if todo is urgent, why not start right away?
+  WriteTasks($tasks, $todo);
   if ($todo == $todo_urgent)
     WorkToDo($todo_urgent);
 
   # Final HTML.
   Output_HTML('Writing', $msg, $redir); }
+
+function WriteTasks($tasks, $todo)
+# Write $tasks (form: array($function_name, $value_1, $value_2)) into $todo.
+{ global $nl;
+  $p_todo = fopen($todo, 'a+');
+  foreach ($tasks as $task)
+  { $function_name = $task[0];
+    $value_1       = $task[1];
+    $value_2       = $task[2];
+
+    # If $value2, store it in a temp file and tell $todo to look there for it.
+    if (!$value_2)
+      $line = $function_name.'(\''.$value_1.'\');';
+    else
+    { $temp_path = NewTempFile($value_2);
+      $line = $function_name.'(\''.$value_1.'\', \''.$temp_path.'\');'; }
+    fwrite($p_todo, $line.$nl); }
+
+  fclose($p_todo); }
 
 function PrepareWrite_page()
 # Deliver to Action_write() all information needed for page writing process.
@@ -271,7 +279,7 @@ function PrepareWrite_page()
   # In case of page deletion question, add DeletePage() task to todo file.
   if ($text == 'delete')
   { if (is_file($page_path)) 
-    $x['tasks'][] = 'DeletePage("'.$page_path.'", "'.$title;
+    $x['tasks'][] = array('DeletePage', $title);
     $msg = '<p><strong>Page "'.$title.'" is deleted</strong> (if it ever '.
                                                               'existed).</p>'; }
   else
@@ -281,11 +289,9 @@ function PrepareWrite_page()
     else                     $diff_old = '';
     $diff_new = $timestamp.$nl.$diff_add.'%%'.$nl.$diff_old;
     
-    # Actual writing tasks for Action_write(). Notice key number parallelisms.
-    $x['temps'][] = $diff_new;
-    $x['tasks'][] = 'SafeWrite("'.$diff_path.'", "'; 
-    $x['temps'][] = $text;
-    $x['tasks'][] = 'SafeWrite("'.$page_path.'", "'; }
+    # Actual writing tasks for Action_write().
+    $x['tasks'][] = array('SafeWrite', $diff_path, $diff_new);
+    $x['tasks'][] = array('SafeWrite', $page_path, $text); }
 
   eval($hook_page_write);
 
@@ -315,8 +321,7 @@ function PrepareWrite_pw()
     $pw_file_text .= $key.':'.$pw.$nl;
 
   # Actual writing tasks for Action_write().
-  $x['temps'][] = $pw_file_text;
-  $x['tasks'][] = 'SafeWrite("'.$pw_path.'", "';
+  $x['tasks'][] = array('SafeWrite', $pw_path, $pw_file_text);
 
   return $x; }
 
@@ -435,16 +440,20 @@ function LockOff($dir)
 # Unlock $dir.
 { unlink($dir.'lock'); }
 
-function DeletePage($page_path, $title) 
-# Deletion renames and timestamps a page and its diff and moves it to $del_dir.
-{ global $pages_dir, $diff_dir, $del_dir;
+function DeletePage($title)
+# Rename, timestamp page $title and its diff. Move both files to $del_dir.
+{ global $del_dir, $diff_dir, $pages_dir;
 
+  $page_path = $pages_dir.$title;
   $timestamp = time();
-  $deleted_page_path = $del_dir.$title.',del-page-'.$timestamp;
   $diff_path = $diff_dir.$title;
-  $deleted_diff_path = $del_dir.$title.',del-diff-'.$timestamp;
-  if (is_file($diff_path)) rename($diff_path, $deleted_diff_path);
-  if (is_file($page_path)) rename($page_path, $deleted_page_path); }
+  $path_diff_del = $del_dir.$title.',del-diff-'.$timestamp;
+  $path_page_del = $del_dir.$title.',del-page-'.$timestamp;
+
+  if (is_file($diff_path))
+    rename($diff_path, $path_diff_del);
+  if (is_file($page_path))
+    rename($page_path, $path_page_del); }
 
 function SafeWrite($path_original, $path_temp)
 # Avoid data corruption: Exit if no temp file. Rename, don't overwrite directly.

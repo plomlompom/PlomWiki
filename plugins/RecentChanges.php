@@ -18,8 +18,7 @@ function Add_to_RecentChanges($timestamp, $x)
     $RC_txt = file_get_contents($RC_path);
   $RC_txt = $timestamp.':'.$title.$nl.$RC_txt;
 
-  $x['temps'][] = $RC_txt;
-  $x['tasks'][] = 'SafeWrite("'.$RC_path.'", "'; 
+  $x['tasks'][] = array('SafeWrite', $RC_path, $RC_txt);
   return $x; }
 
 function Action_RecentChanges()
