@@ -25,22 +25,21 @@ $root_rel = 'plomwiki.php';      $title_root = $root_rel.'?title=';
 # Default action bar links data, read by ActionBarLinks() for Output_HTML().
 $actions_meta = array(array('Jump to Start page', '?title=Start'),
                       array('Set admin password', '?action=set_pw_admin'));
-$actions_page = array(array('View',               '&amp;action=view'),
-                      array('Edit',               '&amp;action=edit'),
-                      array('History',            '&amp;action=history'),
-                      array('Set page password',  '&amp;action=set_pw_page'));
+$actions_page = array(array('View',               '&amp;action=page_view'),
+                      array('Edit',               '&amp;action=page_edit'),
+                      array('History',            '&amp;action=page_history'),
+                      array('Set page password',  '&amp;action=page_set_pw'));
 
 # Insert plugins' code.
 foreach (ReadAndTrimLines($plugin_list_path) as $line)
   require($line);
 
-# Get page title. If given, build dependent variables.
+# Get page title. Build dependent variables.
 $legal_title = '[a-zA-Z0-9]+';
-$title = GetPageTitle($legal_title);
-if ($title)
-{ $page_path       = $pages_dir .$title;
-  $diff_path       = $diff_dir  .$title;
-  $title_url       = $title_root.$title; }
+$title       = GetPageTitle($legal_title);
+$page_path   = $pages_dir .$title;
+$diff_path   = $diff_dir  .$title;
+$title_url   = $title_root.$title;
 
 # Before executing user's action, do urgent work if urgent todo file is found.
 WorkToDo($todo_urgent);
@@ -51,7 +50,7 @@ $action();
 # Common page actions #
 #######################
 
-function Action_view()
+function Action_page_view()
 # Formatted display of a page.
 { global $page_path, $title, $title_url;
   
@@ -67,7 +66,7 @@ function Action_view()
   # Final HTML.
   Output_HTML($title, $text); }
 
-function Action_edit()
+function Action_page_edit()
 # Edit form on a page source text. Send results to ?action=write.
 { global $markup_help, $nl, $nl2, $page_path, $title, $title_url;
 
@@ -95,7 +94,7 @@ function Action_edit()
           '    false); }'.$nl.'</script>';
    Output_HTML($title_h, $form); }
 
-function Action_history()
+function Action_page_history()
 # Show version history of page (based on its diff file), offer reverting.
 { global $diff_path, $nl, $nl2, $title, $title_url;
 
@@ -125,8 +124,8 @@ function Action_history()
         if ($line_n == 0) 
         { $time = $line;
           $diff_lines[$line_n] = '<p>'.date('Y-m-d H:i:s', (int) $time).' (<a '.
-                                  'href="'.$title_url.'&amp;action=revert&amp;'.
-                                         'time='.$time.'">revert</a>):</p>'.$nl.
+                                  'href="'.$title_url.'&amp;action=page_revert'.
+                                    '&amp;time='.$time.'">revert</a>):</p>'.$nl.
                                  '<div class="diff">'; }
         
         # Preformat remaining lines. Translate arrows into less ambiguous +/-.
@@ -151,7 +150,7 @@ function Action_history()
          '{ margin-left:12pt; }'.$nl.'</style>';
   Output_HTML($title_h, $text, $css); }
 
-function Action_revert()
+function Action_page_revert()
 # Prepare version reversion and ask user for confirmation.
 { global $diff_path, $nl, $nl2, $title, $title_url, $page_path;
   $time        = $_GET['time'];
@@ -334,7 +333,7 @@ function Action_set_pw_admin()
 # Display page for setting new admin password.
 { BuildPageChangePW('admin', '*'); }
 
-function Action_set_pw_page()
+function Action_page_set_pw()
 # Display page for setting new page password.
 { global $title;
   BuildPageChangePW('page "'.$title.'"', $title, TRUE); }
@@ -693,7 +692,7 @@ function ReadAndTrimLines($path)
 
 function Output_HTML($title_h, $content, $head = '')
 # Generate final HTML output from given parameters and global variables.
-{ global $actions_meta, $actions_page, $nl, $nl2, $title, $title_url;
+{ global $action, $actions_meta, $actions_page, $nl, $nl2, $title, $title_url;
 
   # If we have more $head lines, append a newline for better readability.
   if ($head) $head .= $nl;
@@ -701,7 +700,7 @@ function Output_HTML($title_h, $content, $head = '')
   # Generate header / action bars.
   $header_wiki = '<p>PlomWiki: '.$nl.
                  ActionBarLinks($actions_meta, $root_rel).$nl;
-  if ($title)
+  if (substr($action, 7, 5) == 'page_')
     $header_page = '<p>'.$nl.ActionBarLinks($actions_page, $title_url).$nl;
 
   # Final HTML.
@@ -716,18 +715,17 @@ function ActionBarLinks($array_actions, $root)
     $links .= '<a href="'.$root.$action[1].'">'.$action[0].'</a> '.$nl;
   return $links; }
 
-function GetPageTitle($legal_title)
-# Only allow alphanumeric titles. If title is needed, but empty, assume "Start".
+function GetPageTitle($legal_title, $fallback = 'Start')
+# Only allow alphanumeric titles. If title is empty, assume $fallback.
 { $title = $_GET['title']; 
-  if (!$title) $title = 'Start';
+  if (!$title) $title = $fallback;
   if (!preg_match('/^'.$legal_title.'$/', $title)) 
     ErrorFail('Illegal page title.', 'Only alphanumeric characters allowed'); 
  return $title; }
 
-function GetUserAction()
-# Find appropriate code for user's '?action='. Assume "view" if not found.
-{ $fallback        = 'Action_view';
-  $action          = $_GET['action'];
+function GetUserAction($fallback = 'Action_page_view')
+# Find appropriate code for user's '?action='. Assume $fallback if not found.
+{ $action          = $_GET['action'];
   $action_function = 'Action_'.$action;
   if (!function_exists($action_function)) 
     $action_function = $fallback;
