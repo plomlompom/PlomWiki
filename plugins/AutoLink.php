@@ -49,8 +49,8 @@ function AutoLink_SetLink($string, $titles)
       $last_score = $score; }
 
   # Build link.
-  return '<a class="autolink" href="'.$root_rel.'?title='.$title.'">[['.$string.
-                                                                     ']]</a>'; }
+  return '<a class="autolink" href="'.$root_rel.'?title='.$title.'">'.$string.
+                                                                       '</a>'; }
 
 ####################
 # Regex generation #
