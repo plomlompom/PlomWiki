@@ -1,7 +1,8 @@
 <?php
 
 $AutoLink_dir   = $plugin_dir.'AutoLink/';
-$actions_meta[] = array('Build AutoLink DB', '?action=autolink_build_db');
+$actions_meta[] = array('Start AutoLink DB', '?action=autolink_start_db');
+$actions_meta[] = array('Destroy AutoLink DB', '?action=autolink_destroy_db');
 $hook_PrepareWrite_page .= '$x[\'tasks\'] = UpdateAutoLinks($x[\'tasks\'], '.
                                                            '$text, $diff_add);';
 ##########
@@ -113,20 +114,20 @@ function UpdateAutoLinks($t, $text, $diff)
 
   return $t; }
 
-function Action_autolink_build_db()
+function Action_autolink_start_db()
 # Form asking for confirmation and password before triggering AutoLink DB build.
 { global $nl, $root_rel;
 
   # Final HTML.
-  $title_h = 'Build AutoLink DB.';
-  $form    = '<p>Build AutoLink DB?</p>'.$nl.
+  $title_h = 'Start AutoLink DB.';
+  $form    = '<p>Start AutoLink DB?</p>'.$nl.
              '<form method="post" action="'.$root_rel.'?action=write&amp;t='.
-                                                      'autolink_build_db">'.$nl.
+                                                      'autolink_start_db">'.$nl.
              'Admin password: <input type="password" name="pw" />'.$nl.
              '<input type="submit" value="Build!" />'.$nl.'</form>';
   Output_HTML($title_h, $form); }
 
-function PrepareWrite_autolink_build_db()
+function PrepareWrite_autolink_start_db()
 # Deliver to Action_write() all information needed for AutoLink DB building.
 { global $AutoLink_dir, $nl, $root_rel, $pages_dir, $todo_urgent;
 
@@ -138,7 +139,7 @@ function PrepareWrite_autolink_build_db()
   if (is_dir($AutoLink_dir))
     ErrorFail('Not building AutoLink DB.', 
               'Directory already exists. <a href="'.$root_rel.
-                                       '?action=autolink_purge_db">Purge?</a>');
+                                     '?action=autolink_destroy_db">Purge?</a>');
   $x['tasks'][] = array('mkdir', $AutoLink_dir);
 
   # Build page file creation, linking tasks.
@@ -152,21 +153,21 @@ function PrepareWrite_autolink_build_db()
 
   return $x; }
 
-function Action_autolink_purge_db()
+function Action_autolink_destroy_db()
 # Form asking for confirmation and password before triggering AutoLink DB purge.
 { global $nl, $root_rel;
 
   # Final HTML.
-  $title_h = 'Purge AutoLink DB.';
-  $form    = '<p>Purge AutoLink DB?</p>'.$nl.
+  $title_h = 'Destroy AutoLink DB.';
+  $form    = '<p>Destroy AutoLink DB?</p>'.$nl.
              '<form method="post" action="'.$root_rel.'?action=write&amp;t='.
-                                                      'autolink_purge_db">'.$nl.
+                                                    'autolink_destroy_db">'.$nl.
              'Admin password: <input type="password" name="pw" />'.$nl.
              '<input type="submit" value="Purge!" />'.$nl.'</form>';
   Output_HTML($title_h, $form); }
 
-function PrepareWrite_autolink_purge_db()
-# Deliver to Action_write() all information needed for AutoLink DB purging.
+function PrepareWrite_autolink_destroy_db()
+# Deliver to Action_write() all information needed for AutoLink DB destruction.
 { global $AutoLink_dir, $nl, $root_rel, $todo_urgent;
 
   # Variables easily produced.
@@ -175,7 +176,7 @@ function PrepareWrite_autolink_purge_db()
 
   # Abort if $AutoLink_dir found, else prepare task to create it.
   if (!is_dir($AutoLink_dir))
-    ErrorFail('Not purging AutoLink DB.', 'Directory does not exist.');
+    ErrorFail('Not destroying AutoLink DB.', 'Directory does not exist.');
 
   # Add unlink(), rmdir() tasks for $AutoLink_dir and its contents.
   $p_dir = opendir($AutoLink_dir);
