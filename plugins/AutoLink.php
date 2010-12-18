@@ -230,8 +230,8 @@ function AutoLink_InsertInLine($string)
   $strings        = explode(' ', $line);
   $strings[]      = $insert;
   usort($strings, 'AutoLink_SortByLengthAlphabetCase');
-  $line           = implode(' ', $strings).' ';
-  $lines[$line_n] = $line.' ';
+  $line           = implode(' ', $strings);
+  $lines[$line_n] = rtrim($line).' ';
   $content        = implode($nl, $lines);
     
   # Put $content into temp file for SafeWrite() to harvest.
