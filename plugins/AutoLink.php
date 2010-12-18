@@ -182,7 +182,7 @@ function AutoLink_TryLinking($input_string)
 # $titles = $title_$linkable. Try auto-linking both pages, write to their files.
 { global $AutoLink_dir, $nl, $pages_dir;
 
-  # Get $title, $linkable from $titles. (Hack around WriteTasks().)
+  # Get $title, $linkable from $input_string. (Hack around WriteTasks().)
   list($title, $linkable) = explode('_', $input_string);
 
   $page_txt       = file_get_contents($pages_dir.$title);
