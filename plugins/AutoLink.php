@@ -11,7 +11,7 @@ $hook_PrepareWrite_page .= '$x[\'tasks\'] = UpdateAutoLinks($x[\'tasks\'], '.
 
 function MarkupAutolink($text)
 # Autolink $text according to its Autolink file.
-{ global $AutoLink_dir, $root_rel, $title;
+{ global $AutoLink_dir, $title;
   
   # Don't do anything if there's no Autolink file for the page displayed
   $cur_page_file = $AutoLink_dir.$title;
@@ -25,11 +25,35 @@ function MarkupAutolink($text)
     
     # Build autolinks into $text where $avoid applies.
     $avoid = '(?=[^>]*($|<(?!\/(a|script))))';
-    $match = '/('.$regex_pagename.')'.$avoid.'/iu';
-    $repl  = '<a href="'.$root_rel.'?title='.$pagename.'">$1</a>';
+    $match = '/('.$regex_pagename.')'.$avoid.'/ieu';
+    $repl  = 'AutoLink_SetLink("$1", $links_out)';
     $text  = preg_replace($match, $repl, $text); }
   
   return $text; }
+
+function AutoLink_SetLink($string, $titles)
+# From $links_out choose best title regex match to $string, return HTML link.
+{ global $root_rel; 
+
+  # In $titles_ranked, store for each title its levenshtein distance to $string.
+  $titles_ranked = array();
+  foreach ($titles as $title)
+    $titles_ranked[$title] = levenshtein($title, $string);
+
+  # Choose from $titles_ranked $title with lowest levenshtein distance.
+  $title = '';
+  $last_score = 9000;
+  foreach ($titles_ranked as $title_ranked => $score)
+    if ($score < $last_score)
+    { $title      = $title_ranked;
+      $last_score = $score; }
+
+  # Build link.
+  return '<a href="'.$root_rel.'?title='.$title.'">[['.$string.']]</a>'; }
+
+####################
+# Regex generation #
+####################
 
 function BuildRegex($title)
 # Generate the regular expression to match $title for autolinking in pages.
