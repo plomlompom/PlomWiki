@@ -69,7 +69,7 @@ function UpdateAutoLinks($t, $text, $diff)
     $diff_del = array();
     $diff_add = array();
     foreach ($lines as $line)
-      if ($line[0] == '<')
+      if     ($line[0] == '<')
         $diff_del[] = substr($line, 1);
       elseif ($line[0] == '>')
         $diff_add[] = substr($line, 1);
@@ -223,10 +223,16 @@ function AutoLink_InsertInLine($string)
   list($title, $line_n, $insert) = explode('_', $string);
 
   # Get $content from $title's AutoLink file, add $insert.whitespace on $line_n.
-  $path_file = $AutoLink_dir.$title;
-  $lines = explode($nl, file_get_contents($path_file));
-  $lines[$line_n] = $lines[$line_n].$insert.' ';
-  $content = implode($nl, $lines);
+  $path_file      = $AutoLink_dir.$title;
+  $lines          = explode($nl, file_get_contents($path_file));
+  $line           = $lines[$line_n];
+  $line           = rtrim($line);
+  $strings        = explode(' ', $line);
+  $strings[]      = $insert;
+  usort($strings, 'AutoLink_SortByLengthAlphabetCase');
+  $line           = implode(' ', $strings).' ';
+  $lines[$line_n] = $line.' ';
+  $content        = implode($nl, $lines);
     
   # Put $content into temp file for SafeWrite() to harvest.
   $path_temp= NewTempFile($content);
@@ -268,3 +274,15 @@ function Autolink_GetFromFileLine($path, $line, $return_as_array = FALSE)
     if (!$x[0])
       return array(); }
   return $x; }
+
+function Autolink_SortByLengthAlphabetCase($a, $b)
+# Try to sort by stringlength, then follow sort() for uppercase vs. lowercase.
+{ $strlen_a = strlen($a);
+  $strlen_b = strlen($b);
+  if ($strlen_a < $strlen_b) return 1;
+  elseif ($strlen_a > $strlen_b) return -1;
+
+  $sort = array($a, $b);
+  sort($sort);
+  if ($sort[0] == $a) return -1;
+  return 1; }
