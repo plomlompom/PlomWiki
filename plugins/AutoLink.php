@@ -84,7 +84,8 @@ function UpdateAutoLinks($t, $text, $diff)
       $regex = Autolink_GetFromFileLine($linked_page_file, 0);
       foreach ($diff_add as $line)
         if (preg_match('/'.$regex.'/iu', $line))
-          $links_new[] = $pagename; }
+        { $links_new[] = $pagename; 
+          break; } }
     foreach ($links_new as $pagename)
     { $t[] = array('AutoLink_InsertInLine', $title.'_1_'.$pagename);
       $t[] = array('AutoLink_InsertInLine', $pagename.'_2_'.$title); }
