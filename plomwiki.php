@@ -46,6 +46,12 @@ WorkToDo($todo_urgent);
 $action = GetUserAction();
 $action();
 
+############################################
+#                                          #
+#   P A G E - S P E C I F IC   S T U F F   #
+#                                          #
+############################################
+
 #######################
 # Common page actions #
 #######################
@@ -194,6 +200,38 @@ function Action_page_revert()
   # Final HTML.
   $title_h = 'Reverting: '.$title; 
   Output_HTML($title_h, $content); }
+
+####################################
+# Page text manipulation functions #
+####################################
+
+function Markup($text)
+# Applying markup functions in the order described by markups.txt to $text.
+{ global $markup_list_path; 
+
+  $lines = ReadAndTrimLines($markup_list_path);
+  foreach ($lines as $line)
+    $text = $line($text);
+  return $text; }
+
+function NormalizeNewlines($text)
+# Allow $nl newline only. $esc stripped from user input is free for other uses.
+{ global $esc;
+  return str_replace($esc, '', $text); }
+
+function EscapeHTML($text)
+# Replace symbols that might be confused for HTML markup with HTML entities.
+{ $text = str_replace('&',  '&amp;',  $text);
+  $text = str_replace('<',  '&lt;',   $text); 
+  $text = str_replace('>',  '&gt;',   $text);
+  $text = str_replace('\'', '&apos;', $text); 
+  return  str_replace('"',  '&quot;', $text); }
+
+###########################
+#                         #
+#   D B   W R I T I N G   #
+#                         #
+###########################
 
 #################################
 # User-accessible writing to DB #
@@ -463,9 +501,11 @@ function SafeWrite($path_original, $path_temp)
     unlink($path_original); 
   rename($path_temp, $path_original); }
 
-########
-# Diff #
-########
+###############
+#             #
+#   D I F F   #
+#             #
+###############
 
 function PlomDiff($text_A, $text_B)
 # Output diff $text_A -> $text_B.
@@ -645,35 +685,11 @@ function ReverseDiff($old_diff)
     $new_diff .= $line.$nl; }
   return $new_diff; }
 
-####################################
-# Page text manipulation functions #
-####################################
-
-function Markup($text)
-# Applying markup functions in the order described by markups.txt to $text.
-{ global $markup_list_path; 
-
-  $lines = ReadAndTrimLines($markup_list_path);
-  foreach ($lines as $line)
-    $text = $line($text);
-  return $text; }
-
-function NormalizeNewlines($text)
-# Allow $nl newline only. $esc stripped from user input is free for other uses.
-{ global $esc;
-  return str_replace($esc, '', $text); }
-
-function EscapeHTML($text)
-# Replace symbols that might be confused for HTML markup with HTML entities.
-{ $text = str_replace('&',  '&amp;',  $text);
-  $text = str_replace('<',  '&lt;',   $text); 
-  $text = str_replace('>',  '&gt;',   $text);
-  $text = str_replace('\'', '&apos;', $text); 
-  return  str_replace('"',  '&quot;', $text); }
-
-##########################
-# Minor helper functions #
-##########################
+###################################################
+#                                                 #
+#   M I N O R   H E L P E R   F U N C T I O N S   #
+#                                                 #
+###################################################
 
 function ReadAndTrimLines($path)
 # Read file $path into a list of all lines sans comments and ending whitespaces.
