@@ -98,7 +98,7 @@ function UpdateAutoLinks($t, $text, $diff)
       $regex = Autolink_GetFromFileLine($linked_page_file, 0);
       foreach ($diff_del as $line)
         if (preg_match('/'.$regex.'/iu', $line))
-          $links_maybe_dead[] = array($pagename, $regex); }
+          $links_maybe_dead[$pagename] = $regex; }
     foreach ($links_maybe_dead as $pagename => $regex)
       foreach ($diff_add as $line)
         if (preg_match('/'.$regex.'/iu', $line))
@@ -107,9 +107,8 @@ function UpdateAutoLinks($t, $text, $diff)
     foreach ($links_maybe_dead as $pagename => $regex)
       if (preg_match('/'.$regex.'/iu', $text))
         unset($links_maybe_dead[$pagename]);
-    foreach ($links_maybe_dead as $array)
-    { $pagename = $array[0];
-      $t[] = array('AutoLink_RemoveFromLine', $title.'_1_'.$pagename);
+    foreach ($links_maybe_dead as $pagename)
+    { $t[] = array('AutoLink_RemoveFromLine', $title.'_1_'.$pagename);
       $t[] = array('AutoLink_RemoveFromLine', $pagename.'_2_'.$title); } }
 
   return $t; }
