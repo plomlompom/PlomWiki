@@ -31,6 +31,92 @@ function MarkupAutolink($text)
   
   return $text; }
 
+function BuildRegex($title)
+# Generate the regular expression to match $title for autolinking in pages.
+{ $umlaut_table = array('äÄ' => array('ae', 'Ae'), 'öÖ' => array('oe', 'Oe'),
+                        'üÜ' => array('ue', 'Ue'), 'ß'  => array('ss'));
+  $encoding           = 'UTF-8';
+  $minimal_root       = 4;
+  $suffix_tolerance   = 3;
+  $gaps_to_allow_easy = ' .,:;';
+  $gaps_to_allow_hard = array('\'', '/', '\\', '(', ')', '[', ']');
+  $gaps_to_allow_long = array();
+
+  # Divide with "!" where digit meets char, where char is followed by uppercase.
+  $regex = preg_replace(   '/([0-9])([A-Za-z])/', '$1!$2', $title);
+  $regex = preg_replace('/([A-Za-z])([0-9])/',    '$1!$2', $regex);
+  $regex = preg_replace('/([A-Za-z])(?=[A-Z])/',  '$1!',   $regex);
+
+  # Umlauts to be allowed in the tolerances at regex part ends (see next step).
+  $legal_umlauts = '';
+  foreach($umlaut_table as $umlaut => $translation)
+    $legal_umlauts .= mb_substr($umlaut, 0, 1, $encoding);
+
+  # Build toleration for char additions or even changes, at regex part ends.
+  $regex_parts      = explode('!', $regex);
+  foreach ($regex_parts as &$part)
+  {
+    # In non-numerical parts, see if changed ending chars can be tolerated.
+    if (strpos('0123456789', $part[0]) === FALSE)
+    {
+      # $ln_flexible: number of chars in string left after $minimal_root.
+      $ln_part       = strlen($part);
+      $ln_static     = min($minimal_root, $ln_part);
+      $minimal_root -= $ln_static;
+      $ln_flexible   = $ln_part - $ln_static;
+
+      # $replace_tolerance: largest-possible mirror of $suffix_tolerance that
+      # its into $ln_flexible and is not larger than 1/3 of $ln_part.
+      $replace_tolerance = $suffix_tolerance;
+      while ($replace_tolerance > 0)
+      { if (    ($ln_flexible >= $replace_tolerance) 
+            and ($ln_part >= 2 * $replace_tolerance))
+        { $part = substr($part, 0, -$replace_tolerance);
+          break; }
+        $replace_tolerance--; }
+
+      # To a possibly reduced $part, add tolerance => $suffix_tolerance.
+      $tolerance_sum = min($ln_part, ($replace_tolerance + $suffix_tolerance));
+      $part .= '[a-z'.$legal_umlauts.']{0,'.$tolerance_sum.'}'; }
+
+    # In a numerical $part, just add tolerance of $suffix_tolerance size.
+    else $part .= '[a-z'.$legal_umlauts.']{0,'.$suffix_tolerance.'}'; }
+
+  # $gaps_to_allow: glue for $regex_parts. Integrate $gaps_to_allow_easy as is,
+  # $...hard with escape chars and $...long with their own "or" parantheses.
+  $gaps_to_allow = $gaps_to_allow_easy;
+  foreach ($gaps_to_allow_hard as $char)
+    $gaps_to_allow .= '\\'.$char;
+  $gaps_to_allow = '['.$gaps_to_allow.'\-]';
+  if (!empty($gaps_to_allow_long))
+    $gaps_to_allow =
+          '(('.implode(')|(', $gaps_to_allow_long).')|'.$gaps_to_allow.')';
+  $regex = implode($gaps_to_allow.'*', $regex_parts);
+
+  # Make regexes umlaut-cognitive according to $umlaut_table.
+  foreach ($umlaut_table as $umlaut => $transl)
+  { 
+    # Slice uppercase and lowercase versions off $umlaut *multibyte-compatibly*.
+    $umlaut_lower = mb_substr($umlaut, 0, 1, $encoding);
+    $umlaut_upper = mb_substr($umlaut, 1, 1, $encoding);
+
+    # For any multi-char umlaut translation, also allow a first-char version.
+    $transl_lower = $transl[0];
+    $transl_upper = $transl[1];
+    if (strlen($transl_lower) > 1) 
+                             $transl_lower = $transl_lower.'|'.$transl_lower[0];
+    if (strlen($transl_upper) > 1) 
+                             $transl_upper = $transl_upper.'|'.$transl_upper[0];
+
+    # Replace "ae" etc. with "(ä|ae)" etc. Check for uppercase versions.
+    $regex = str_replace($transl[0], '('.$transl_lower.'|'.$umlaut_lower.')', 
+                                                                        $regex);
+    if ($umlaut_upper != '')
+      $regex = str_replace($transl[1], '('.$transl_upper.'|'.$umlaut_upper.')',
+                                                                      $regex); }
+
+  return $regex; }
+
 ####################################
 # DB updating / building / purging #
 ####################################
@@ -175,7 +261,7 @@ function AutoLink_CreateFile($title)
 # Start AutoLink file of page $title, empty but for title regex.
 { global $AutoLink_dir, $nl2;
   $path    = $AutoLink_dir.$title;
-  $content = $title.$nl2;
+  $content = BuildRegex($title).$nl2;
   AutoLink_SendToSafeWrite($path, $content); }
 
 function AutoLink_TryLinking($input_string)
