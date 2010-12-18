@@ -19,7 +19,7 @@ function MarkupAutolink($text)
     return $text; 
   
   # Get $links_out from $cur_page_file, turn into regex from their resp. files.
-  $links_out = Autolink_GetFromFileLine($cur_page_file, 1, TRUE);
+  $links_out = AutoLink_GetFromFileLine($cur_page_file, 1, TRUE);
   foreach ($links_out as $pagename)
   { $regex_pagename = AutoLink_RetrieveRegexForTitle($pagename);
     
@@ -52,13 +52,13 @@ function UpdateAutoLinks($t, $text, $diff)
       $t[] = array('AutoLink_TryLinking', $linkable.'_'.$title); } }
 
   else
-  { $links_out  = Autolink_GetFromFileLine($cur_page_file, 1, TRUE);
+  { $links_out  = AutoLink_GetFromFileLine($cur_page_file, 1, TRUE);
 
     # Page deletion severs links between files before $cur_page_file deletion.
     if ($text == 'delete')
     { foreach ($links_out as $pagename)
         $t[] = array('AutoLink_ChangeLine', $pagename.'_2_out_'.$title);
-      $links_in = Autolink_GetFromFileLine($cur_page_file, 2, TRUE);
+      $links_in = AutoLink_GetFromFileLine($cur_page_file, 2, TRUE);
       foreach ($links_in as $pagename)
         $t[] = array('AutoLink_ChangeLine', $pagename.'_1_out_'.$title);
       $t[] = array('unlink', $cur_page_file); }
@@ -217,7 +217,7 @@ function AutoLink_ChangeLine($input_string)
 # Minor helper functions #
 ##########################
 
-function Autolink_GetFromFileLine($path, $line_n, $return_as_array = FALSE)
+function AutoLink_GetFromFileLine($path, $line_n, $return_as_array = FALSE)
 # Return $line_n of file $path. $return_as_array string separated by ' ' if set.
 # From empty lines, explode() generates $x = array(''); return array() instead.
 { global $nl;
@@ -229,7 +229,7 @@ function Autolink_GetFromFileLine($path, $line_n, $return_as_array = FALSE)
       return array();
   return $x; }
 
-function Autolink_SortByLengthAlphabetCase($a, $b)
+function AutoLink_SortByLengthAlphabetCase($a, $b)
 # Try to sort by stringlength, then follow sort() for uppercase vs. lowercase.
 { $strlen_a = strlen($a);
   $strlen_b = strlen($b);
@@ -245,7 +245,7 @@ function AutoLink_RetrieveRegexForTitle($title)
 # Return regex matching $title according to its AutoLink file.
 { global $AutoLink_dir;
   $AutoLink_file = $AutoLink_dir.$title;
-  $regex = Autolink_GetFromFileLine($AutoLink_file, 0);
+  $regex = AutoLink_GetFromFileLine($AutoLink_file, 0);
   return $regex; }
 
 function AutoLink_TitlesInLines($titles, $lines)
