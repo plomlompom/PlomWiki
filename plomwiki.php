@@ -58,7 +58,7 @@ $action();
 
 function Action_page_view()
 # Formatted display of a page.
-{ global $page_path, $title, $title_url;
+{ global $hook_Action_page_view, $page_path, $title, $title_url;
   
   # Get text from file. If none, show invitation to create one. Else, markup it.
   if (is_file($page_path)) 
@@ -68,6 +68,9 @@ function Action_page_view()
   else
     $text = '<p>Page does not exist. <a href="'.$title_url.
                                        '&amp;action=page_edit">Create?</a></p>';
+
+  # Plugin hook.
+  eval($hook_Action_page_view);
 
   # Final HTML.
   Output_HTML($title, $text); }
@@ -393,14 +396,22 @@ function BuildPageChangePW($desc, $pw_key)
 
 function CheckPW($pw_posted, $t = '')
 # Compare $pw_posted to admin password stored in $pw_path.
-{ global $pw_path, $title;
+{ global $hook_CheckPW, $pw_path, $title;
   $passwords = ReadPasswordList($pw_path);
+  $return = FALSE;
+
+  # Plugin hook. Set $return_at_once to TRUE to end right after eval().
+  $return_at_once = FALSE;
+  eval($hook_CheckPW);
+  if ($return_at_once)
+    return $return;
 
   # Return with success of checking $pw_posted against admin or $title password.
   if ($pw_posted === $passwords['*']
-      or ($t == 'page' and $pw_posted === $passwords[$title]))
-    return TRUE;
-  return FALSE; }
+      or ($t == 'page'    and $pw_posted === $passwords[$title]))
+    $return = TRUE;
+
+  return $return; }
 
 function ReadPasswordList($path)
 # Read password list from $path into array.
@@ -415,7 +426,9 @@ function ReadPasswordList($path)
   $passwords = array();
   $lines = explode($nl, $content);
   foreach ($lines as $line)
-  { preg_match('/^(\*|'.$legal_title.'):(.+)$/', $line, $catch);
+  { 
+    # Allowed password keys: '*', pagenames and any "_"-preceded [a-z_] chars.
+    preg_match('/^(\*|_[a-z_]+|'.$legal_title.'):(.+)$/', $line, $catch);
     $range = $catch[1];
     $pw    = $catch[2];
     $passwords[$range] = $pw; } 
