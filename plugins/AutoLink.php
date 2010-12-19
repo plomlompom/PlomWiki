@@ -241,7 +241,7 @@ function Action_autolink_admin()
     $button = 'Destroy'; }
 
   # Final HTML.
-  $title_h = 'AutoLink administration.';
+  $title_h = 'AutoLink administration';
   $form    = '<form method="post" action="'.$root_rel.'?action=write&amp;t='.
                                                          'autolink_admin">'.$nl.
              '<p>'.$msg.'<p>'.$nl.
