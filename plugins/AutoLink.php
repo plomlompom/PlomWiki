@@ -1,9 +1,13 @@
 <?php
 
 $AutoLink_dir   = $plugin_dir.'AutoLink/';
+
+# Plugin hooks.
 $actions_meta[] = array('AutoLink administration', '?action=autolink_admin');
 $hook_PrepareWrite_page .= '$x[\'tasks\'] = UpdateAutoLinks($x[\'tasks\'], '.
                                                            '$text, $diff_add);';
+$hook_Action_page_view .= '$text .= AutoLink_Backlinks(); ';
+
 ##########
 # Markup #
 ##########
@@ -50,6 +54,28 @@ function AutoLink_SetLink($string, $titles)
   # Build link.
   return '<a class="autolink" href="'.$root_rel.'?title='.$title.'">'.$string.
                                                                        '</a>'; }
+#############
+# Backlinks #
+#############
+
+function AutoLink_Backlinks()
+{ global $AutoLink_dir, $root_rel, $title;
+
+  # Don't do anything if there's no Autolink file for the page displayed
+  $cur_page_file = $AutoLink_dir.$title;
+  if (!is_file($cur_page_file))
+    return; 
+
+  # Build HTML of linked $links_in.
+  $links_in = AutoLink_GetFromFileLine($cur_page_file, 2, TRUE);
+  foreach ($links_in as $link)
+    $backlinks .= '<a href="'.$root_rel.'?title='.$link.'">'.$link.'</a> ';
+
+  # $backlinks empty message.
+  if (!$links_in)
+    $backlinks = 'No AutoLink backlinks found for this page.';
+  
+  return '<h2>AutoLink Backlinks</h2>'.$nl2.'<p>'.$backlinks.'</p>'; }
 
 ####################
 # Regex generation #
