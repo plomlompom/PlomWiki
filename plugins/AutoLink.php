@@ -6,7 +6,7 @@ $AutoLink_dir   = $plugin_dir.'AutoLink/';
 $actions_meta[] = array('AutoLink administration', '?action=autolink_admin');
 $hook_PrepareWrite_page .= '$x[\'tasks\'] = UpdateAutoLinks($x[\'tasks\'], '.
                                                            '$text, $diff_add);';
-$hook_Action_page_view .= '$text .= AutoLink_Backlinks(); ';
+$hook_Action_page_view  .= '$text .= AutoLink_Backlinks(); ';
 
 ##########
 # Markup #
@@ -59,7 +59,7 @@ function AutoLink_SetLink($string, $titles)
 #############
 
 function AutoLink_Backlinks()
-{ global $AutoLink_dir, $root_rel, $title;
+{ global $AutoLink_dir, $nl2, $root_rel, $title;
 
   # Don't do anything if there's no Autolink file for the page displayed
   $cur_page_file = $AutoLink_dir.$title;
@@ -75,7 +75,7 @@ function AutoLink_Backlinks()
   if (!$links_in)
     $backlinks = 'No AutoLink backlinks found for this page.';
   
-  return '<h2>AutoLink Backlinks</h2>'.$nl2.'<p>'.$backlinks.'</p>'; }
+  return $nl2.'<h2>AutoLink Backlinks</h2>'.$nl2.'<p>'.$backlinks.'</p>'; }
 
 ####################
 # Regex generation #
@@ -245,8 +245,9 @@ function Action_autolink_admin()
   $form    = '<form method="post" action="'.$root_rel.'?action=write&amp;t='.
                                                          'autolink_admin">'.$nl.
              '<p>'.$msg.'<p>'.$nl.
-             'Admin password: <input type="password" name="pw" />'.$nl.
-             '<input type="submit" name="action" value="'.$button.'" />'.$nl.'</form>';
+             '<p>Admin password: <input type="password" name="pw" /><input type'
+                      .'="submit" name="action" value="'.$button.'" /></p>'.$nl.
+             '</form>';
   Output_HTML($title_h, $form); }
 
 function PrepareWrite_autolink_admin()

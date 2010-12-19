@@ -33,17 +33,17 @@ function Comments()
       if ($url)
         $author = '<a href="'.$url.'">'.$author.'</a>';
       $comment_text = '<p>'.$x['text'].'</p>';
-      $comments .= '<p><a name="comment_'.$id.'" href="#comment_'.$id.'">#'.$id.
-                                                                 '</a></p>'.$nl.
+      $comments .= $nl2.'<p><a name="comment_'.$id.'" href="#comment_'.$id.'">#'
+                                                            .$id.'</a></p>'.$nl.
                    $comment_text.$nl.
-                   '<p><em>(Written '.$datetime.' by "'.$author.'".)</em></p>'.
-                                                                       $nl2; } }
+                   '<p><em>(Written '.$datetime.' by "'.$author.
+                                                             '".)</em></p>'; } }
   if (!$comments)
-    $comments = '<p>No one commented on this page.</p>';
+    $comments = $nl2.'<p>No one commented on this page yet.</p>';
 
   # Commenting $form. Allow commenting depending on $captcha.
   $captcha = Comments_GetCurCaptcha();
-  $form = '<h2>Write your own comment</h2>'.$nl;
+  $form = '<h2>Write your own comment</h2>'.$nl2;
   if ($captcha)
     $form .= '<form method="post" action="'.$title_url.'&amp;action=write&amp;'.
                                                               't=comment">'.$nl.
@@ -58,7 +58,7 @@ function Comments()
     $form .= '<p>Comment writing currently not possible: captcha not set by '.
                                                                    'admin.</p>';
 
-  return $nl2.'<h2>Comments</h2>'.$nl2.$comments.$form; }
+  return $nl2.'<h2>Comments</h2>'.$comments.$nl2.$form; }
 
 function Comments_GetComments($comment_file, $escape_html = TRUE)
 # Read $comment_file into more structured, readable array $comments.
@@ -142,24 +142,24 @@ function Action_comments_admin()
                           'checked="checked">Build comments directory.<br>'.$nl.
                  '<input type="radio" name="build_dir" value="no"> Do not '.
                                             'build comments directory.<br>'.$nl.
-                 '</p>'.$nl2;
+                 '</p>'.$nl;
 
   # Captcha setting.
   $cur_captcha = Comments_GetCurCaptcha();
   if ($cur_captcha) $cur_captcha = 'Current captcha is: "'.$cur_captcha.'".';
   else              $cur_captcha = 'No captcha set yet.';
   $captcha = '<p><strong>'.$cur_captcha.'</strong></p>'.$nl.
-             '<p>Set new captcha:'.$nl.
-             '<input name="captcha" />'.$nl.' (Write "delete" to unset captcha.'
-                              .' Commenting won\'t be possible then.)</p>'.$nl2;
+             '<p>Set new captcha: <input name="captcha" /> (Write "delete" to '.
+                  'unset captcha. Commenting won\'t be possible then.)</p>'.$nl;
 
   # Final HTML.
   $title_h = 'Comments administration.';
   $form    = '<form method="post" action="'.$root_rel.'?action=write&amp;t='.
                                                          'comments_admin">'.$nl.
              $build_dir.$captcha.
-             'Admin password: <input type="password" name="pw" />'.$nl.
-             '<input type="submit" value="Update." />'.$nl.'</form>';
+             '<p>Admin password: <input type="password" name="pw" />'.
+                              '<input type="submit" value="Update." /></p>'.$nl.
+             '</form>';
   Output_HTML($title_h, $form); }
 
 function PrepareWrite_comments_admin()
