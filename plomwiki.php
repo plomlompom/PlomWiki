@@ -145,7 +145,7 @@ function Action_page_revert()
   $time        = $_GET['time'];
   $time_string = date('Y-m-d H:i:s', (int) $time);
 
-  # Revert $text back through $diff_array until $time hits $id.
+  # Revert $text back through $diff_list until $time hits $id.
   $diff_list = DiffList($diff_path);
   $text = file_get_contents($page_path);
   foreach ($diff_list as $id => $diff)
