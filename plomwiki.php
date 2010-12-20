@@ -426,7 +426,7 @@ function WorkToDo($path_todo)
     LockOff($work_dir); } }
 
 function NewTempFile($string)
-# Put $string into new $work_temp_dir temp file.
+# Put $string into file in $work_temp_dir, its name: highest int name there + 1.
 { global $work_temp_dir;
 
   LockOn($work_temp_dir);
@@ -443,7 +443,7 @@ function NewTempFile($string)
 
 function LockOn($dir)
 # Check for and create lockfile for $dir. Lockfiling only lasts $lock_duration.
-{ $lock_duration = 60;   # Lockfile duration. Should be > server execution time.
+{ $lock_duration = 60;   # Lockfile duration. Be > server execution time limit.
   $now = time();
   $lock = $dir.'lock';
   if (is_file($lock))
@@ -460,24 +460,19 @@ function LockOff($dir)
 function DeletePage($title)
 # Rename, timestamp page $title and its diff. Move both files to $del_dir.
 { global $del_dir, $diff_dir, $pages_dir;
-
-  $page_path = $pages_dir.$title;
-  $timestamp = time();
-  $diff_path = $diff_dir.$title;
+  $timestamp     = time();
+  $page_path     = $pages_dir.$title;
+  $diff_path     = $diff_dir .$title;
   $path_diff_del = $del_dir.$title.',del-diff-'.$timestamp;
   $path_page_del = $del_dir.$title.',del-page-'.$timestamp;
 
-  if (is_file($diff_path))
-    rename($diff_path, $path_diff_del);
-  if (is_file($page_path))
-    rename($page_path, $path_page_del); }
+  if (is_file($diff_path)) rename($diff_path, $path_diff_del);
+  if (is_file($page_path)) rename($page_path, $path_page_del); }
 
 function SafeWrite($path_original, $path_temp)
 # Avoid data corruption: Exit if no temp file. Rename, don't overwrite directly.
-{ if (!is_file($path_temp)) 
-    return;
-  if (is_file($path_original)) 
-    unlink($path_original); 
+{ if (!is_file($path_temp))    return;
+  if (is_file($path_original)) unlink($path_original); 
   rename($path_temp, $path_original); }
 
 ###############
