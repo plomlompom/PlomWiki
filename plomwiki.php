@@ -110,45 +110,25 @@ function Action_page_history()
   # Fallback if no diff is found.
   $text = '<p>Page "'.$title.'" has no history.</p>';
 
-  # $diff_path must be a file not empty after removing superfluous "%%" and $nl.
+  # Try to build $diff_list from $diff_path. If successful, format into HTML.
   if (is_file($diff_path))
-  { $file_txt = file_get_contents($diff_path);
-    if (substr($file_txt,0,2) == '%%'    ) $file_txt = substr($file_txt,3);
-    if (substr($file_txt, -3) == '%%'.$nl) $file_txt = substr($file_txt,0,-3);
-    if (substr($file_txt, -2) == '%%'    ) $file_txt = substr($file_txt,0,-2);
-    if (substr($file_txt, -1) == $nl     ) $file_txt = substr($file_txt,0,-1); }
-  if ($file_txt != '')
+    $diff_list = DiffList($diff_path);
+  if ($diff_list)
+  { 
+    # Transform key into datetime string and revert link.
+    $diffs = array();
+    foreach ($diff_list as $time => $diff_txt)
+    { $diffs[] =  '<p>'.date('Y-m-d H:i:s', (int) $time).' (<a href="'.
+                           $title_url.'&amp;action=page_revert&amp;time='.$time.
+                                                       '">revert</a>):</p>'.$nl.
+                  '<div class="diff">';
 
-  # Break $file_txt down into separate $diffs. Remove superfluous trailing $nl.
-  { $diffs = explode('%%'.$nl, $file_txt);
-    foreach ($diffs as $diff_n => $diff_txt)
-    { if (substr($diff_txt, -1) == $nl)
-        $diff_txt = substr($diff_txt, 0, -1);
-
-      # Transform diff line by line into HTML and human readibility.
-      $diff_lines = explode($nl, $diff_txt);
-      foreach ($diff_lines as $line_n => $line) 
-      { 
-        # First diff line -> diff head, time display, time-specific revert link.
-        if ($line_n == 0) 
-        { $time = $line;
-          $diff_lines[$line_n] = '<p>'.date('Y-m-d H:i:s', (int) $time).' (<a '.
-                                  'href="'.$title_url.'&amp;action=page_revert'.
-                                    '&amp;time='.$time.'">revert</a>):</p>'.$nl.
-                                 '<div class="diff">'; }
-        
-        # Preformat remaining lines. Translate arrows into less ambiguous +/-.
-        else
-        { if     ($line[0] == '>') 
-            $diff_lines[$line_n] = '+ '.substr($diff_lines[$line_n], 1);
-          elseif ($line[0] == '<') 
-            $diff_lines[$line_n] = '- '.substr($diff_lines[$line_n], 1);
-          $diff_lines[$line_n] = '<pre>'.EscapeHTML($diff_lines[$line_n]).
-                                                                   '</pre>'; } }
-
-    # Concatenate lines into diffs and diffs into HTML string to output.
-      $diff_output = implode($nl, $diff_lines);
-      $diffs[$diff_n] = $diff_output.$nl.'</div>'.$nl; }
+      # Preformat remaining lines. Translate arrows into less ambiguous +/-.
+      foreach (explode($nl, $diff_txt) as $line_n => $line)
+      { if     ($line[0] == '>') $line = '+ '.substr($line, 1);
+        elseif ($line[0] == '<') $line = '- '.substr($line, 1);
+        $diffs[] = '<pre>'.EscapeHTML($line).'</pre>'; } 
+      $diffs[] = '</div>'.$nl; }
     $text = implode($nl, $diffs); }
 
   # Final HTML.
@@ -161,32 +141,18 @@ function Action_page_history()
 
 function Action_page_revert()
 # Prepare version reversion and ask user for confirmation.
-{ global $diff_path, $nl, $nl2, $title, $title_url, $page_path;
+{ global $diff_path, $nl, $title, $title_url, $page_path;
   $time        = $_GET['time'];
   $time_string = date('Y-m-d H:i:s', (int) $time);
 
-  # Build $diff_array from $diff_path to be cycled through, keyed by timestamps.
-  $diffs = explode('%%'.$nl, file_get_contents($diff_path));
-  foreach ($diffs as $diff_n => $diff_txt)
-  { $diff_lines = explode($nl, $diff_txt);
-    $diff = '';
-    $id = 0;
-    foreach ($diff_lines as $line_n => $line) 
-    { if ($line_n == 0 and $line !== '') 
-        $id = $line;
-      else                               
-        $diff .= $line.$nl; }
-    if ($id > 0) 
-      $diff_array[$id] = $diff; }
-
   # Revert $text back through $diff_array until $time hits $id.
+  $diff_list = DiffList($diff_path);
   $text = file_get_contents($page_path);
-  foreach ($diff_array as $id => $diff)
+  foreach ($diff_list as $id => $diff)
   { if ($finished) break;
-    $reversed_diff = ReverseDiff($diff); 
-    $text          = PlomPatch($text, $reversed_diff);
-    if ($time == $id) 
-      $finished = TRUE; }
+    $reversed_diff              = ReverseDiff($diff); 
+    $text                       = PlomPatch($text, $reversed_diff);
+    if ($time == $id) $finished = TRUE; }
   $text = EscapeHTML($text);
 
   # Ask for revert affirmation and password. If reversion date is valid.
@@ -697,6 +663,37 @@ function ReverseDiff($old_diff)
           $line = $right.$reverse.$left; break; } } }
     $new_diff .= $line.$nl; }
   return $new_diff; }
+
+function DiffList($diff_path)
+# Return list of diffs stored at $diff_path, keyed by datetime IDs.
+{ global $nl;
+  $diff_list = array();
+
+  # Remove superfluous "%%" and $nl from start and end of $file_txt.
+  $file_txt = file_get_contents($diff_path);
+  if (substr($file_txt,0,2) == '%%'    ) $file_txt = substr($file_txt,3);
+  if (substr($file_txt, -3) == '%%'.$nl) $file_txt = substr($file_txt,0,-3);
+  if (substr($file_txt, -2) == '%%'    ) $file_txt = substr($file_txt,0,-2);
+  if (substr($file_txt, -1) == $nl     ) $file_txt = substr($file_txt,0,-1);
+
+  if ($file_txt != '')
+  # Break $file_txt into separate $diff_txt's. Remove superfluous trailing $nl.
+  { $diffs = explode('%%'.$nl, $file_txt);
+    foreach ($diffs as $diff_n => $diff_txt)
+    { if (substr($diff_txt, -1) == $nl)
+        $diff_txt = substr($diff_txt, 0, -1);
+
+      # Cut out each $diff_txt's first line as key to the rest in $diff_list.
+      $diff_lines = explode($nl, $diff_txt);
+      $diff_txt_new = '';
+      foreach ($diff_lines as $line_n => $line) 
+        if ($line_n == 0) 
+          $time_id = $line;
+        else
+          $diff_txt_new[] = $line; 
+      $diff_list[$time_id] = implode($nl, $diff_txt_new); } }
+
+  return $diff_list; }
 
 ###################################################
 #                                                 #
