@@ -92,8 +92,9 @@ function BuildRegex($title)
   $gaps_to_allow_hard = array('\'', '/', '\\', '(', ')', '[', ']');
   $gaps_to_allow_long = array();
 
-  # Divide with "!" where digit meets char, where char is followed by uppercase.
-  $regex = preg_replace(   '/([0-9])([A-Za-z])/', '$1!$2', $title);
+  # Divide with "!" over hyphens; at digit vs. char; char followed by uppercase.
+  $regex = preg_replace(        '/(-+)/',           '!',   $title);
+  $regex = preg_replace(   '/([0-9])([A-Za-z])/', '$1!$2', $regex);
   $regex = preg_replace('/([A-Za-z])([0-9])/',    '$1!$2', $regex);
   $regex = preg_replace('/([A-Za-z])(?=[A-Z])/',  '$1!',   $regex);
 
@@ -174,11 +175,13 @@ function BuildRegex($title)
 function UpdateAutoLinks($t, $text, $diff)
 # Add to task list $t AutoLink DB update tasks. $text, $diff determine change.
 { global $AutoLink_dir, $nl, $title;
-  $cur_page_file = $AutoLink_dir.$title;
-  $all_other_titles = array_diff(GetAllPageTitles(), array($title));
 
   # Silently fail if AutoLink DB directory does not exist.
   if (!is_dir($AutoLink_dir)) return $t;
+
+  # Some needed variables.
+  $cur_page_file = $AutoLink_dir.$title;
+  $all_other_titles = array_diff(GetAllPageTitles(), array($title));
 
   # Page creation demands new file, going through all pages for new AutoLinks.
   if (!is_file($cur_page_file))
