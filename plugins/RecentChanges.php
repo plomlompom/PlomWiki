@@ -4,11 +4,11 @@
 $RC_dir                  = $plugin_dir.'RecentChanges/';
 $RC_path                 = $RC_dir.'RecentChanges.txt';
 $actions_meta[]          = array('RecentChanges', '?action=RecentChanges');
-$hook_PrepareWrite_page .= '$x = Add_to_RecentChanges($timestamp, $x); ';
+$hook_PrepareWrite_page .= '$x = Add_to_RecentChanges($title, $timestamp, $x);';
 
-function Add_to_RecentChanges($timestamp, $x)
+function Add_to_RecentChanges($title, $timestamp, $x)
 # Add time stamp of page change to RecentChanges file.
-{ global $nl, $title, $RC_dir, $RC_path;
+{ global $nl, $RC_dir, $RC_path;
 
   if (!is_dir($RC_dir))
     mkdir($RC_dir);

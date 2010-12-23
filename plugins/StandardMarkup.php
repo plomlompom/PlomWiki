@@ -2,15 +2,18 @@
 # PlomWiki StandardMarkup
 
 # Provide help message to be shown in editing window.
-$markup_help = '<h4>PlomWiki markup cheatsheet</h4>'.$nl.'<p>In-line:</p>'.$nl
+$markup_help = '<h4>PlomWiki markup cheatsheet</h4>'.$nl.
+               '<p>In-line:</p>'.$nl
               .'<pre style="white-space: pre-wrap;">[*<strong>strong</strong>*]'
               .' [/<em>emphasis</em>/] [-<del>deleted</del>-] [[<a href="'.
                $title_root.'PagenameOrURL">PagenameOrURL</a>]] [[PagenameOrURL|'
               .'<a href="'.$title_root.'PagenameOrURL">Text displayed instead</'
-              .'a>]] [\Escaped [*markup*]\]</pre>'.$nl.
-               '<p>Multi-line:</p>'.$nl.'<pre>*] list element'.$nl.
-               '  *] indented once'.$nl.'    *] indented twice'."\n\n".
-               '[@'.$nl.'echo "Code, preformatted";'.$nl.'@]</pre>';
+              .'a>]] [=[/unformatted/] [*text*]=]</pre>'.$nl.
+               '<p>Multi-line:</p>'.$nl.'<pre>'.$nl.'!!!!!!] heading 1'.$nl.
+               '!!!!!] heading 1.1'.$nl.
+               '!!!!] heading 1.1.1 etc., down to !]'.$nl2.'*] list element'.$nl
+              .'  *] indented once'.$nl.'    *] indented twice'.$nl2.'[@'.$nl.
+               'preformatted'.$nl.'@]'.$nl.'</pre>';
 
 # Escape marks. Remember $esc is stripped from any page text by plomwiki.php.
 # A line starting with $esc escapes paragraphing by MarkupParagraphs().
@@ -54,9 +57,9 @@ function MarkupDeleted($text)
 { return preg_replace('/\[-(.*?)-]/',   '<del>$1</del>',       $text); }
 
 function MarkupEscape($text)
-# Replace "[\This"\]" with "[\r]", store "This" in array $escaped.
+# Replace "[=This"=]" with $esc_{on,off}-escaped key to "This" in $escaped.
 { global $esc_off, $esc_on, $esc_store;
-  $regex = '/\[\\\(.*?)\\\]/';
+  $regex = '/\[=(.*?)=]/';
 
   # Catch all escaped strings in $store_tmp.
   $store_tmp = array();
@@ -87,6 +90,22 @@ function MarkupUnescape($text)
     $text = str_replace($esc_on.$n.$esc_off, $string, $text);
 
   return $text; }
+
+function MarkupHeadings($text)
+# !] => <h6>...</h6>, !!] => <h5>...</h5>, !!!!!!] => <h1>...</h1>.
+{ global $esc, $nl;
+  $text = preg_replace('/(^|'.$nl.')!!!!!!] (.+)($|'.$nl.')/',
+                                            '$1'.$esc.'<h1>$2</h1>$3', $text);
+  $text = preg_replace('/(^|'.$nl.')!!!!!] (.+)($|'.$nl.')/',
+                                            '$1'.$esc.'<h2>$2</h2>$3', $text);
+  $text = preg_replace('/(^|'.$nl.')!!!!] (.+)($|'.$nl.')/',
+                                            '$1'.$esc.'<h3>$2</h3>$3', $text);
+  $text = preg_replace('/(^|'.$nl.')!!!] (.+)($|'.$nl.')/',
+                                            '$1'.$esc.'<h4>$2</h4>$3', $text);
+  $text = preg_replace('/(^|'.$nl.')!!] (.+)($|'.$nl.')/',     
+                                            '$1'.$esc.'<h5>$2</h5>$3', $text);
+  return  preg_replace('/(^|'.$nl.')!] (.+)($|'.$nl.')/',
+                                            '$1'.$esc.'<h6>$2</h6>$3', $text); }
 
 #####################
 # Multi-line markup #
