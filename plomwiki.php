@@ -35,7 +35,7 @@ foreach (ReadAndTrimLines($plugin_list_path) as $line)
   require($line);
 
 # Get page title. Build dependent variables.
-$legal_title = '[a-zA-Z0-9]+';
+$legal_title = '[a-zA-Z0-9-]+';
 $title       = GetPageTitle($legal_title);
 $page_path   = $pages_dir .$title;
 $diff_path   = $diff_dir  .$title;
@@ -738,11 +738,12 @@ function ActionBarLinks($array_actions, $root)
   return $links; }
 
 function GetPageTitle($legal_title, $fallback = 'Start')
-# Only allow alphanumeric titles. If title is empty, assume $fallback.
+# Only allow alphanumeric titles plus -. If title is empty, assume $fallback.
 { $title = $_GET['title']; 
   if (!$title) $title = $fallback;
   if (!preg_match('/^'.$legal_title.'$/', $title)) 
-    ErrorFail('Illegal page title.', 'Only alphanumeric characters allowed'); 
+    ErrorFail('Illegal page title.', 
+              'Only alphanumeric characters and "-" allowed'); 
  return $title; }
 
 function GetUserAction($fallback = 'Action_page_view')
