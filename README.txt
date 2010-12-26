@@ -48,7 +48,7 @@ as hooks in the flow of certain important functions which eval() them as code.
 Wiki page markup is achieved by running the original page text through page text
 manipulation functions named and put into order in PlomWiki/config/markups.txt.
 PlomWiki's standard markup is built from functions defined in the plugin 
-standard_markup.php.
+StandardMarkup.php.
 
 Writing to PlomWiki's database starts with user input into Action_write(), which
 generates a list of appropriate DB manipulation tasks and writes them into a
