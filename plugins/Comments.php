@@ -43,22 +43,21 @@ function Comments()
 
   # Commenting $form. Allow commenting depending on $captcha.
   $captcha = Comments_GetCurCaptcha();
-  $form = '<h2>Write your own comment</h2>'.$nl2;
+  $write   = '<h2>Write your own comment</h2>'.$nl2;
   if ($captcha)
-    $form .= '<form method="post" action="'.$title_url.'&amp;action=write&amp;'.
-                                                              't=comment">'.$nl.
-             'Your name: <input name="author" /><br />'.$nl.
+  { $input = 'Your name: <input name="author" /><br />'.$nl.
              'Your URL: <input name="URL" />'.$nl.
              '<pre><textarea name="text" rows="10" cols="40">'.$nl.$text.
-                                                        '</textarea></pre>'.$nl.
-             'Captcha password needed! Write "'.$captcha.'": <input name="pw" '.
-                      'size="5" /><input type="submit" value="Comment!" />'.$nl.
-             '</form>'.$nl2;
+                                                            '</textarea></pre>';
+    $form  = BuildPostForm($title_url.'&amp;action=write&amp;t=comment', $input, 
+                           'Captcha password needed! Write "'.$captcha.
+                                             '": <input name="pw" size="5" />');
+    $write .= $form; }
   else
-    $form .= '<p>Comment writing currently not possible: captcha not set by '.
-                                                                   'admin.</p>';
+    $write .= '<p>Comment writing currently not possible: captcha not set.</p>';
 
-  return $nl2.'<h2>Comments</h2>'.$comments.$nl2.$form; }
+
+  return $nl2.'<h2>Comments</h2>'.$comments.$nl2.$write; }
 
 function Comments_GetComments($comment_file, $escape_html = TRUE)
 # Read $comment_file into more structured, readable array $comments.
@@ -150,12 +149,8 @@ function Action_comments_admin()
 
   # Final HTML.
   $title_h = 'Comments administration';
-  $form    = '<form method="post" action="'.$root_rel.'?action=write&amp;t='.
-                                                         'comments_admin">'.$nl.
-             $build_dir.$captcha.
-             '<p>Admin password: <input type="password" name="pw" />'.
-                              '<input type="submit" value="Update." /></p>'.$nl.
-             '</form>';
+  $input   = $build_dir.$captcha;
+  $form = BuildPostForm($root_rel.'?action=write&amp;t=comments_admin', $input);
   Output_HTML($title_h, $form); }
 
 function PrepareWrite_comments_admin()

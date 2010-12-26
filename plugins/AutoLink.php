@@ -236,26 +236,19 @@ function Action_autolink_admin()
 { global $AutoLink_dir, $nl;
 
   # Offer building or purging of DB, dependant on existence of $AutoLink_dir.
-  if (!is_dir($AutoLink_dir))
-  { $msg   = 'Build AutoLink database?';
-    $button = 'Build'; }
-  else
-  { $msg   = 'Destroy AutoLink database?';
-    $button = 'Destroy'; }
+  if (!is_dir($AutoLink_dir)) $do_what = 'Build';
+  else                        $do_what = 'Destroy';
 
   # Final HTML.
   $title_h = 'AutoLink administration';
-  $form    = '<form method="post" action="'.$root_rel.'?action=write&amp;t='.
-                                                         'autolink_admin">'.$nl.
-             '<p>'.$msg.'<p>'.$nl.
-             '<p>Admin password: <input type="password" name="pw" /><input type'
-                      .'="submit" name="action" value="'.$button.'" /></p>'.$nl.
-             '</form>';
+  $input = '<p>'.$do_what.' AutoLink DB?</p>'.$nl.
+           '<input type="hidden" name="do_what" value="'.$do_what.'" />';
+  $form = BuildPostForm($root_rel.'?action=write&amp;t=autolink_admin', $input);
   Output_HTML($title_h, $form); }
 
 function PrepareWrite_autolink_admin()
 { global $AutoLink_dir, $nl, $root_rel, $todo_urgent;
-  $action = $_POST['action'];
+  $action = $_POST['do_what'];
 
   if ('Build' == $action)
   { 

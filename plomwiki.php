@@ -88,21 +88,18 @@ function Action_page_edit()
 
   # Final HTML of edit form and JavaScript to localStorage-store password.
   $title_h = 'Editing: '.$title;
-  $form = '<form method="post" action="'.$title_url.
-                                           '&amp;action=write&amp;t=page">'.$nl.
-          '<pre><textarea name="text" rows="20" style="width:100%">'.$nl.
-          $text.'</textarea></pre>'.$nl.
-          'Password: <input id="password" type="password" name="pw" /> '.
-                                  '<input type="submit" value="Update!" />'.$nl.
-          '</form>'.$nl2.$markup_help.$nl2.'<script>'.$nl.
-          'if (window.localStorage)'.$nl.
-          '{ var pw_input = document.getElementById(\'password\');'.$nl2.
-          '  if (localStorage.pw != null)'.$nl.
-          '  { pw_input.value = localStorage.pw; }'.$nl2.
-          '  pw_input.addEventListener('.$nl.'    \'keyup\', '.$nl.
-          '    function() { localStorage.pw = pw_input.value; },'.$nl.
-          '    false); }'.$nl.'</script>';
-   Output_HTML($title_h, $form); }
+  $input = '<pre><textarea name="text" rows="20" style="width:100%">'.$nl.
+          $text.'</textarea></pre>';
+  $form = BuildPostForm($title_url.'&amp;action=write&amp;t=page', $input);
+  $script   = '<script>'.$nl.'if (window.localStorage)'.$nl.
+              '{ var pw_input = document.getElementById(\'admin_pw\');'.$nl2.
+              '  if (localStorage.pw != null)'.$nl.
+              '  { pw_input.value = localStorage.pw; }'.$nl2.
+              '  pw_input.addEventListener('.$nl.'    \'keyup\', '.$nl.
+              '    function() { localStorage.pw = pw_input.value; },'.$nl.
+              '    false); }'.$nl.'</script>';
+   $content = $form.$nl2.$markup_help.$nl2.$script;
+   Output_HTML($title_h, $content); }
 
 function Action_page_history()
 # Show version history of page (based on its diff file), offer reverting.
@@ -158,12 +155,9 @@ function Action_page_revert()
 
   # Ask for revert affirmation and password. If reversion date is valid.
   if ($finished)
-  { $content = '<p>Revert page to before '.$time_string.'?</p>'.$nl.
-               '<form method="post" action="'.$title_url.
-                                           '&amp;action=write&amp;t=page">'.$nl.
-               '<input type="hidden" name="text" value="'.$text.'">'.$nl.
-               'Password: <input type="password" name="pw" />'.$nl.
-               '<input type="submit" value="Revert!" />'.$nl.'</form>'; }
+  { $input   = '<input type="hidden" name="text" value="'.$text.'">';
+    $form    = BuildPostForm($title_url.'&amp;action=write&amp;t=page', $input);
+    $content = '<p>Revert page to before '.$time_string.'?</p>'.$nl.$form; }
   else 
     ErrorFail('No valid reversion date given.');
 
@@ -304,6 +298,7 @@ function PrepareWrite_pw()
   # Check password key and new password for validity.
   $pw_key = $_POST['pw_key'];
   $new_pw = $_POST['new_pw'];
+
   if (!$new_pw)
     ErrorFail('Empty password not allowed.');
   elseif (!$pw_key)
@@ -338,15 +333,10 @@ function BuildPageChangePW($desc, $pw_key)
 # Build HTML output for $desc password change form.
 { global $nl, $nl2, $title_url;
   $title_h = 'Set '.$desc.' password';
-  $form = '<form method="post" action="'.$title_url.
-                                             '&amp;action=write&amp;t=pw">'.$nl.
-          '<input type="hidden" name="pw_key" value="'.$pw_key.'">'.$nl.
-          'New '.$desc.' password:<br />'.$nl.
-          '<input type="password" name="new_pw" /><br />'.$nl.
-          'Current admin password:<br />'.$nl.
-          '<input type="password" name="pw" />'.$nl.
-          '<input type="submit" value="Update!" />'.$nl.
-          '</form>';
+  $input = '<input type="hidden" name="pw_key" value="'.$pw_key.'">'.$nl.
+           'New '.$desc.' password:'.$nl.
+           '<input type="password" name="new_pw" /><br />';
+  $form = BuildPostForm($title_url.'&amp;action=write&amp;t=pw', $input);
   Output_HTML($title_h, $form); }
 
 function CheckPW($pw_posted, $t = '')
@@ -363,7 +353,7 @@ function CheckPW($pw_posted, $t = '')
 
   # Return with success of checking $pw_posted against admin or $title password.
   if ($pw_posted === $passwords['*']
-      or ($t == 'page'    and $pw_posted === $passwords[$title]))
+      or ($t == 'page' and $pw_posted === $passwords[$title]))
     $return = TRUE;
 
   return $return; }
@@ -745,6 +735,10 @@ function DiffList($diff_path)
 #                                                 #
 ###################################################
 
+#########
+# Input #
+#########
+
 function ReadAndTrimLines($path)
 # Read file $path into a list of all lines sans comments and ending whitespaces.
 { global $nl;
@@ -759,6 +753,34 @@ function ReadAndTrimLines($path)
     if ($line)
       $list[] = $line; } 
   return $list; }
+
+function GetPageTitle($legal_title, $fallback = 'Start')
+# Only allow alphanumeric titles plus -. If title is empty, assume $fallback.
+{ $title = $_GET['title']; 
+  if (!$title) $title = $fallback;
+  if (!preg_match('/^'.$legal_title.'$/', $title)) 
+    ErrorFail('Illegal page title.', 
+              'Only alphanumeric characters and "-" allowed'); 
+ return $title; }
+
+function GetUserAction($fallback = 'Action_page_view')
+# Find appropriate code for user's '?action='. Assume $fallback if not found.
+{ $action          = $_GET['action'];
+  $action_function = 'Action_'.$action;
+  if (!function_exists($action_function)) 
+    $action_function = $fallback;
+  return $action_function; }
+
+##########
+# Output #
+##########
+
+function ErrorFail($msg, $help = '')
+# Fail and output error $msg. $help may provide additional helpful advice.
+{ global $nl;
+  $text = '<p><strong>'.$msg.'</strong></p>'.$nl.'<p>'.$help.'</p>';
+  Output_HTML('Error', $text); 
+  exit(); }
 
 function Output_HTML($title_h, $content, $head = '')
 # Generate final HTML output from given parameters and global variables.
@@ -786,30 +808,6 @@ function ActionBarLinks($array_actions, $root)
     $links .= '<a href="'.$root.$action[1].'">'.$action[0].'</a> '.$nl;
   return $links; }
 
-function GetPageTitle($legal_title, $fallback = 'Start')
-# Only allow alphanumeric titles plus -. If title is empty, assume $fallback.
-{ $title = $_GET['title']; 
-  if (!$title) $title = $fallback;
-  if (!preg_match('/^'.$legal_title.'$/', $title)) 
-    ErrorFail('Illegal page title.', 
-              'Only alphanumeric characters and "-" allowed'); 
- return $title; }
-
-function GetUserAction($fallback = 'Action_page_view')
-# Find appropriate code for user's '?action='. Assume $fallback if not found.
-{ $action          = $_GET['action'];
-  $action_function = 'Action_'.$action;
-  if (!function_exists($action_function)) 
-    $action_function = $fallback;
-  return $action_function; }
-
-function ErrorFail($msg, $help = '')
-# Fail and output error $msg. $help may provide additional helpful advice.
-{ global $nl;
-  $text = '<p><strong>'.$msg.'</strong></p>'.$nl.'<p>'.$help.'</p>';
-  Output_HTML('Error', $text); 
-  exit(); }
-
 function WorkScreenReload($redir = '')
 # Just output the HTML of a work message and instantly redirect to $redirect.
 { global $nl;
@@ -820,3 +818,10 @@ function WorkScreenReload($redir = '')
        '<meta http-equiv="refresh" content="0'.$redir.'" />'.$nl.
        '<p>Working.</p>'; 
   exit(); }
+
+function BuildPostForm($URL, $input, 
+    $ask_pw = 'Admin password: <input id="admin_pw" type="password" name="pw">')
+# HTML form. $URL = action, $input = code between, $ask_pw = PW input element.
+{ global $nl;
+  return '<form method="post" action="'.$URL.'">'.$nl.$input.$nl.$ask_pw.$nl.
+         '<input type="submit" value="OK" />'.$nl.'</form>'; }
