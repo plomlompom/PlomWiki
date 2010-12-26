@@ -92,10 +92,6 @@ function PrepareWrite_comment()
 { global $Comments_dir, $esc, $nl, $title, $title_url, $todo_urgent;
   $author = $_POST['author']; $url = $_POST['URL']; $text = $_POST['text'];
 
-  # Variables easily produced.
-  $x['todo'] = $todo_urgent;
-  $x['msg']  = '<p>Comment submitted.</p>';
-
   # Repair problems in submitted text. Undo possible PHP magical_quotes horrors.
   foreach (array('author', 'url', 'text') as $variable_name)
   { if (get_magic_quotes_gpc()) 
@@ -116,13 +112,13 @@ function PrepareWrite_comment()
       if ($id > $highest_id)
         $highest_id = $id; }
   $new_id = $highest_id + 1;
-  $x['redir'] = '<meta http-equiv="refresh" content="0; URL='.$title_url.
-                                                     '#comment_'.$new_id.'" />';
+  $x['redir'] = $title_url.'#comment_'.$new_id;
 
   # Put all strings together into $add, set writing task for it added to $old.
   $timestamp = time();
   $add = $new_id.$nl.$timestamp.$nl.$author.$nl.$url.$nl.$text.$nl.$esc.$nl;
-  $x['tasks'][] = array('SafeWrite', $cur_page_file, $old.$add);
+  $x['tasks'][$todo_urgent][] = array('SafeWrite',
+                                      array($cur_page_file), array($old.$add));
   return $x; }
 
 ###########################
@@ -169,10 +165,6 @@ function PrepareWrite_comments_admin()
   $build_dir = $_POST['build_dir'];
   $x['tasks'] = array();
 
-  # Variables easily produced.
-  $x['todo'] = $todo_urgent;
-  $x['msg']  = '<p>Done nothing.</p>'; # Allowed default.
-
   # Directory building.
   if ($build_dir == 'yes')
   { if (is_dir($Comments_dir))
@@ -180,8 +172,7 @@ function PrepareWrite_comments_admin()
                                                                    'directory.',
                 'Comments directory already exists.');
     else
-    { $x['tasks'][] = array('mkdir', $Comments_dir); 
-      $success_dir = $x['msg'] = '<p>Building comments directory.</p>'; } }
+      $x['tasks'][$todo_urgent][] = array('mkdir', array($Comments_dir)); }
 
   # If $new_pw is "delete", unset captcha. Else, $new_pw becomes new captcha.
   if ($new_pw)
@@ -195,9 +186,8 @@ function PrepareWrite_comments_admin()
     $pw_file_text = '';
     foreach ($passwords as $key => $pw)
       $pw_file_text .= $key.':'.$pw.$nl;
-    $x['tasks'][] = array('SafeWrite', $pw_path, $pw_file_text); 
-    $x['msg'] = $success_dir.$success_captcha; }
-
+    $x['tasks'][$todo_urgent][] = array('SafeWrite', 
+                                        array($pw_path), array($pw_file_text));}
   return $x; }
 
 ##########################

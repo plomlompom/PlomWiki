@@ -4,8 +4,8 @@ $AutoLink_dir   = $plugin_dir.'AutoLink/';
 
 # Plugin hooks.
 $actions_meta[] = array('AutoLink administration', '?action=autolink_admin');
-$hook_PrepareWrite_page .= '$x[\'tasks\'] = UpdateAutoLinks($x[\'tasks\'], '.
-                                                           '$text, $diff_add);';
+$hook_PrepareWrite_page .= '$x[$todo_urgent][\'tasks\'] = '.
+                            'UpdateAutoLinks($x[\'tasks\'], $text, $diff_add);';
 $hook_Action_page_view  .= '$text .= AutoLink_Backlinks(); ';
 
 ##########
@@ -185,10 +185,10 @@ function UpdateAutoLinks($t, $text, $diff)
 
   # Page creation demands new file, going through all pages for new AutoLinks.
   if (!is_file($cur_page_file))
-  { $t[] = array('AutoLink_CreateFile', $title);
+  { $t[] = array('AutoLink_CreateFile', array($title));
     foreach ($all_other_titles as $linkable)
-    { $t[] = array('AutoLink_TryLinking', $title.'_'.$linkable);
-      $t[] = array('AutoLink_TryLinking', $linkable.'_'.$title); } }
+    { $t[] = array('AutoLink_TryLinking', array($title, $linkable));
+      $t[] = array('AutoLink_TryLinking', array($linkable, $title)); } }
 
   else
   { $links_out  = AutoLink_GetFromFileLine($cur_page_file, 1, TRUE);
@@ -196,11 +196,11 @@ function UpdateAutoLinks($t, $text, $diff)
     # Page deletion severs links between files before $cur_page_file deletion.
     if ($text == 'delete')
     { foreach ($links_out as $pagename)
-        $t[] = array('AutoLink_ChangeLine', $pagename.'_2_out_'.$title);
+        $t[] = array('AutoLink_ChangeLine', array($pagename, 2, 'out', $title));
       $links_in = AutoLink_GetFromFileLine($cur_page_file, 2, TRUE);
       foreach ($links_in as $pagename)
-        $t[] = array('AutoLink_ChangeLine', $pagename.'_1_out_'.$title);
-      $t[] = array('unlink', $cur_page_file); }
+        $t[] = array('AutoLink_ChangeLine', array($pagename, 1, 'out', $title));
+      $t[] = array('unlink', array($cur_page_file)); }
 
     # For mere page change, determine tasks comparing $diff against $links_out.
     else
@@ -256,8 +256,6 @@ function Action_autolink_admin()
 function PrepareWrite_autolink_admin()
 { global $AutoLink_dir, $nl, $root_rel, $todo_urgent;
   $action = $_POST['action'];
-  $x['todo'] = $todo_urgent;
-  $x['msg']  = '<p>'.$action.'ing AutoLink database.</p>';
 
   if ('Build' == $action)
   { 
@@ -266,16 +264,15 @@ function PrepareWrite_autolink_admin()
       ErrorFail('Not building AutoLink DB.', 
                 'Directory already exists. <a href="'.$root_rel.
                                      '?action=autolink_destroy_db">Purge?</a>');
-    $x['tasks'][] = array('mkdir', $AutoLink_dir);
+    $x['tasks'][$todo_urgent][] = array('mkdir', array($AutoLink_dir));
 
     # Build page file creation, linking tasks.
     $titles = GetAllPageTitles();
+    $string = '';
     foreach ($titles as $title)
-      $x['tasks'][] = array('AutoLink_CreateFile', $title);
-    foreach ($titles as $title)
-      foreach ($titles as $linkable)
-        if ($linkable != $title)
-          $x['tasks'][] = array('AutoLink_TryLinking', $title.'_'.$linkable); }
+    { $x['tasks'][$todo_urgent][] = array('AutoLink_CreateFile', array($title));
+      $x['tasks'][$todo_urgent][] = array('AutoLink_TryLinkingAll', 
+                                          array($title)); } }
 
   elseif ('Destroy' == $action)
   {
@@ -287,9 +284,9 @@ function PrepareWrite_autolink_admin()
     $p_dir = opendir($AutoLink_dir);
     while (FALSE !== ($fn = readdir($p_dir)))
       if (is_file($AutoLink_dir.$fn))
-        $x['tasks'][] = array('unlink', $AutoLink_dir.$fn);
+        $x['tasks'][$todo_urgent][] = array('unlink', array($AutoLink_dir.$fn));
     closedir($p_dir); 
-    $x['tasks'][] = array('rmdir', $AutoLink_dir); }
+    $x['tasks'][$todo_urgent][] = array('rmdir', array($AutoLink_dir)); }
 
   else
     ErrorFail('Invalid AutoLink DB action.');
@@ -307,25 +304,34 @@ function AutoLink_CreateFile($title)
   $content = BuildRegex($title).$nl2;
   AutoLink_SendToSafeWrite($path, $content); }
 
-function AutoLink_TryLinking($input_string)
+function AutoLink_TryLinking($title, $linkable)
 # $titles = $title_$linkable. Try auto-linking both pages, write to their files.
 { global $AutoLink_dir, $nl, $pages_dir;
-
-  # Get $title, $linkable from $input_string. (Hack around WriteTasks().)
-  list($title, $linkable) = explode('_', $input_string);
 
   $page_txt       = file_get_contents($pages_dir.$title);
   $regex_linkable = AutoLink_RetrieveRegexForTitle($linkable);
   if (preg_match('/'.$regex_linkable.'/iu', $page_txt))
-  { AutoLink_ChangeLine($title.'_1_in_'.$linkable);
-    AutoLink_ChangeLine($linkable.'_2_in_'.$title); } }
+  { AutoLink_ChangeLine($title, 1, 'in', $linkable);
+    AutoLink_ChangeLine($linkable, 2, 'in', $title); } }
 
-function AutoLink_ChangeLine($input_string)
+function AutoLink_TryLinkingAll($title)
+{ global $legal_title, $AutoLink_dir; 
+
+  $titles = array();
+  $p_dir = opendir($AutoLink_dir);
+  while (FALSE !== ($fn = readdir($p_dir)))
+    if (is_file($AutoLink_dir.$fn) and preg_match('/^'.$legal_title.'$/', $fn))
+      $titles[] = $fn;
+  closedir($p_dir); 
+
+  foreach ($titles as $linkable)
+    if ($linkable != $title)
+    { AutoLink_TryLinking($title, $linkable); 
+      AutoLink_TryLinking($linkable, $title); } }
+
+function AutoLink_ChangeLine($title, $line_n, $action, $diff)
 # On $title's AutoLink file, on $line_n, move $diff in/out according to $action.
 { global $AutoLink_dir, $nl;
-
-  # Get variables from exploded input string. (Hack around WriteTasks().)
-  list($title, $line_n, $action, $diff) = explode('_', $input_string);
   $path = $AutoLink_dir.$title;
 
   # Do $action with $diff on $title's file $line_n. Re-sort line for "in".
@@ -392,11 +398,11 @@ function AutoLink_TasksLinksInOrOut($tasks, $dir, $title, $titles)
 # Add $tasks of moving $titles $dir ('in'/'out') of line 1 in $title's AutoLink
 # file and $title $dir ('in'/'out')of line 2 in $titles' AutoLink files.
 { foreach ($titles as $pagename)
-  { $tasks[] = array('AutoLink_ChangeLine', $title.'_1_'.$dir.'_'.$pagename);
-    $tasks[] = array('AutoLink_ChangeLine', $pagename.'_2_'.$dir.'_'.$title); }
+  { $tasks[] = array('AutoLink_ChangeLine', $title, 1, $dir, $pagename);
+    $tasks[] = array('AutoLink_ChangeLine', $pagename, 2, $dir, $title); }
   return $tasks; }
 
 function AutoLink_SendToSafeWrite($path, $content)
 # Call SafeWrite() not on $content directly, but on newly built temp file of it.
-{ $path_temp= NewTempFile($content);
+{ $path_temp= NewTemp($content);
   SafeWrite($path, $path_temp); }

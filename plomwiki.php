@@ -42,7 +42,8 @@ $diff_path   = $diff_dir  .$title;
 $title_url   = $title_root.$title;
 
 # Before executing user's action, do urgent work if urgent todo file is found.
-WorkToDo($todo_urgent);
+if (is_file($todo_urgent))
+  WorkTodo($todo_urgent);
 $action = GetUserAction();
 $action();
 
@@ -209,7 +210,7 @@ function EscapeHTML($text)
 function Action_write()
 # User writing to DB. Expects password $_POST['pw'] and target type $_GET['t'],
 # which determines the function shaping the details (like what to write where).
-{ global $nl, $nl2, $todo_urgent; 
+{ global $nl, $nl2, $root_rel, $todo_urgent; 
   $pw = $_POST['pw']; $t = $_GET['t'];
 
   # Target type chooses writing preparation function, gets variables from it.
@@ -218,50 +219,43 @@ function Action_write()
     $x = $prep_func();
   else 
     ErrorFail('No known target type specified.');
-  $msg=$x['msg']; $todo=$x['todo']; $redir = $x['redir']; $tasks=$x['tasks'];
+  $redir = $x['redir']; $task_write_list=$x['tasks'];
+
+  # Give a redir URL more harmless than a write action page if $redir is empty.
+  if (empty($redir))
+    $redir = $root_rel;
 
   # Password check.
   if (!CheckPW($pw, $t))
     ErrorFail('Wrong password.');
 
-  # Write tasks into todo. And if todo is urgent, why not start right away?
-  WriteTasks($tasks, $todo);
-  if ($todo == $todo_urgent)
-    WorkToDo($todo_urgent);
+  # From $task_write_list, add tasks to temp versions of todo lists.
+  $temps = array();
+  foreach ($task_write_list as $todo => $tasks)
+  { $old_todo = '';
+    if (is_file($todo))
+      $old_todo = file_get_contents($todo);
+    $temps[$todo] = NewTemp($old_todo);
+    foreach ($tasks as $task)
+      WriteTask($temps[$todo], $task[0], $task[1], $task[2]); }
+
+  # Write from temp files to todo files. Make sure any $todo_urgent comes first.
+  if ($temps[$todo_urgent])
+    rename($temps[$todo_urgent], $todo_urgent);
+  foreach ($temps as $todo => $content)
+    if ($todo != $todo_urgent)
+      rename($content, $todo);
 
   # Final HTML.
-  Output_HTML('Writing', $msg, $redir); }
-
-function WriteTasks($tasks, $todo)
-# Write $tasks (form: array($function, $value_direct, $value_temp)) into $todo.
-{ global $nl;
-  $p_todo = fopen($todo, 'a+');
-  foreach ($tasks as $task)
-  { $function     = $task[0];
-    $value_direct = $task[1];
-    $value_temp   = $task[2];
-
-    # $value_temp will be stored in temp file. Tell $todo to look there for it.
-    if (!$value_temp)
-      $line = $function.'(\''.$value_direct.'\');';
-    else
-    { $temp_path = NewTempFile($value_temp);
-      $line = $function.'(\''.$value_direct.'\', \''.$temp_path.'\');'; }
-    fwrite($p_todo, $line.$nl); }
-
-  fclose($p_todo); }
+  WorkScreenReload($redir); }
 
 function PrepareWrite_page()
 # Deliver to Action_write() all information needed for page writing process.
 { global $diff_path, $esc, $hook_PrepareWrite_page, $nl, $page_path, $title,
          $title_url, $todo_urgent;
   $text = $_POST['text'];
-
-  # All the variables easily filled.
-  $x['redir'] = '<meta http-equiv="refresh" content="0; URL='.$title_url.'" />';
-  $x['todo']  = $todo_urgent;
-  $x['msg']   = '<p><strong>Page updated.</strong></p>';
-  $x['hook']  = $hook_page_write;
+  $x['redir'] = $title_url;                 # Redirect to page written.
+  $timestamp = time();                      # For dating diffs, and for plugins.
 
   # Repair problems in submitted text. Undo possible PHP magical_quotes horrors.
   if (get_magic_quotes_gpc()) $text = stripslashes($text); 
@@ -279,13 +273,10 @@ function PrepareWrite_page()
   elseif ($text == $old_text)            
     ErrorFail('You changed nothing!');
 
-  # Collect a $timestamp, to date diffs, and for plugins.
-  $timestamp = time();
-
   # In case of page deletion question, add DeletePage() task to todo file.
   if ($text == 'delete')
   { if (is_file($page_path)) 
-    $x['tasks'][] = array('DeletePage', $title);
+    $x['tasks'][$todo_urgent][] = array('DeletePage', array($title));
     $msg = '<p><strong>Page "'.$title.'" is deleted</strong> (if it ever '.
                                                               'existed).</p>'; }
   else
@@ -296,8 +287,10 @@ function PrepareWrite_page()
     $diff_new = $timestamp.$nl.$diff_add.'%%'.$nl.$diff_old;
     
     # Actual writing tasks for Action_write().
-    $x['tasks'][] = array('SafeWrite', $diff_path, $diff_new);
-    $x['tasks'][] = array('SafeWrite', $page_path, $text); }
+    $x['tasks'][$todo_urgent][] = array('SafeWrite', 
+                                         array($diff_path), array($diff_new));
+    $x['tasks'][$todo_urgent][] = array('SafeWrite', 
+                                         array($page_path), array($text)); }
 
   # Plugin hook.
   eval($hook_PrepareWrite_page);
@@ -308,10 +301,6 @@ function PrepareWrite_pw()
 # Deliver to Action_write() all information needed for pw writing process.
 { global $nl, $pw_path, $todo_urgent;
 
-  # All the variables easily filled.
-  $x['msg']  = '<p><strong>Password updated.</strong></p>';
-  $x['todo'] = $todo_urgent;
-  
   # Check password key and new password for validity.
   $pw_key = $_POST['pw_key'];
   $new_pw = $_POST['new_pw'];
@@ -328,8 +317,8 @@ function PrepareWrite_pw()
     $pw_file_text .= $key.':'.$pw.$nl;
 
   # Actual writing tasks for Action_write().
-  $x['tasks'][] = array('SafeWrite', $pw_path, $pw_file_text);
-
+  $x['tasks'][$todo_urgent][] = array('SafeWrite',
+                                      array($pw_path), array($pw_file_text));
   return $x; }
 
 #############
@@ -401,48 +390,112 @@ function ReadPasswordList($path)
 
   return $passwords; }
 
-######################################
-# Internal DB manipulation functions #
-######################################
+############################
+# Internal DB manipulation #
+############################
 
-function WorkToDo($path_todo)
-# Work through todo file. Comment-out finished lines. Delete file when finished.
-{ global $work_dir; 
+function WriteTask($todo, $func, $values_easy = array(), $values_hard = array())
+# Write call to function $func into new $todo line, with $values_easy (use for
+# short, sans-dangerous-chars strings) passed as parameters directly, strings of
+# $values_hard only passed as paths to newly created temp files storing them. 
+{ global $nl;
+  $p_todo = fopen($todo, 'a+');
 
-  if (file_exists($path_todo))
-  { LockOn($work_dir); 
-    $p_todo = fopen($path_todo, 'r+');
-    while (!feof($p_todo))
-    { $position = ftell($p_todo);             
-      $line     = fgets($p_todo);
-      if ($line[0] !== '#')
-      { $call = substr($line, 0, -1);
-        eval($call);
-        fseek($p_todo, $position);
-        fwrite($p_todo, '#');
-        fgets($p_todo); } }
-    fclose($p_todo);
-    unlink($path_todo);
-    LockOff($work_dir); } }
+  # Write $values_hard into temp files, add their paths to $values_easy.
+  if (!empty($values_hard))
+    foreach ($values_hard as $value_hard)
+      $values_easy[] = NewTemp($value_hard);
 
-function NewTempFile($string)
-# Put $string into file in $work_temp_dir, its name: highest int name there + 1.
+  # Write eval()-executable function call with $func and $values_easy.
+  if (!empty($values_easy))
+    $values_easy = '\''.implode('\', \'', $values_easy).'\'';
+  $line = $func.'('.$values_easy.');'.$nl;
+  fwrite($p_todo, $line);
+  fclose($p_todo); }
+
+function NewTemp($string)
+# Put $string into new temp file in $work_temp_dir, return its path.
 { global $work_temp_dir;
 
-  LockOn($work_temp_dir);
+  # Lock dir so its filename list won't change via something else during this.
+  Lock($work_temp_dir);
+
   $p_dir = opendir($work_temp_dir);
-  $temps = array(0);
+
+  # Collect numerical filenames of temp files in $tempfiles.
+  $tempfiles = array(0);
   while (FALSE !== ($fn = readdir($p_dir))) 
-    if (preg_match('/^[0-9]*$/', $fn)) $temps[] = $fn;
-  $int = max($temps) + 1; 
-  $temp_path = $work_temp_dir.$int;
+    if (preg_match('/^[0-9]*$/', $fn))
+      $tempfiles[] = $fn;
+
+  # Build new highest-number $temp_path, write $string into it.
+  $new_max_int = max($tempfiles) + 1;
+  $temp_path = $work_temp_dir.$new_max_int;
   file_put_contents($temp_path, $string);
+
+  # As our change to $work_temp_dir's filename list is finished, unlock dir.
   closedir($p_dir);
-  LockOff($work_temp_dir); 
+  UnLock($work_temp_dir);
   return $temp_path; }
 
+function Lock($path)
+# Check for and create lockfile for $path. Locks block $lock_dur seconds max.
+{ $lock_dur = 60;             # Must be larger than server execution time limit.
+  $now      = time();
+  $lock     = $path.'_lock';
+
+  # Fail if $lock file exists already and is too young. Else, write new $lock.
+  if (is_file($lock))
+  { $time = file_get_contents($lock);
+    if ($time + $lock_dur > $now)
+      ErrorFail('Stuck by a lockfile of too recent a timestamp.',
+                'Lock effective for '.$lock_dur.' seconds. Try a bit later.'); }
+  file_put_contents($lock, $now); }
+
+function UnLock($path)
+# Unlock $path.
+{ $lock = $path.'_lock';
+  unlink($lock); }
+
+function WorkTodo($todo)
+# Work through todo file. Comment out finished lines. Delete file when finished.
+{ global $nl;
+
+  # Lock todo file while working on it.
+  Lock($todo);
+  $p_todo = fopen($todo, 'r+');
+
+  # Work through todo file until stopped by EOF or time limit.
+  $limit_dur = 15;
+  $now       = time();
+  $limit_pos = $now + $limit_dur;
+  $stop_by_time = FALSE;
+  while (!feof($p_todo))
+  { if (time() >= $limit_pos)
+    { $stop_by_time = TRUE;
+      break; }
+
+    # Eval lines not commented out. Comment out lines worked through.
+    $pos  = ftell($p_todo);
+    $line = fgets($p_todo);
+    if ($line[0] !== '#')
+    { $call = substr($line, 0, -1);
+      eval($call);
+      fseek($p_todo, $pos);
+      fwrite($p_todo, '#');
+      fgets($p_todo); } }
+
+  # Delete file if stopped by EOF. In any case, unlock it.
+  fclose($p_todo);
+  if (!$stop_by_time) 
+    unlink($todo);
+  UnLock($todo); 
+
+  # Reload.
+  WorkScreenReload(); }
+
 function LockOn($dir)
-# Check for and create lockfile for $dir. Lockfiling only lasts $lock_duration.
+# Check for and create lockfile for $dir. Lockfiling blocks $lock_duration max.
 { $lock_duration = 60;   # Lockfile duration. Be > server execution time limit.
   $now = time();
   $lock = $dir.'lock';
@@ -452,10 +505,6 @@ function LockOn($dir)
       ErrorFail('Stuck by a lockfile of too recent a timestamp.',
                 'Lock effective '.$lock_duration.' seconds. Try a bit later.');}
   file_put_contents($lock, $now); }
-
-function LockOff($dir)
-# Unlock $dir.
-{ unlink($dir.'lock'); }
 
 function DeletePage($title)
 # Rename, timestamp page $title and its diff. Move both files to $del_dir.
@@ -759,4 +808,15 @@ function ErrorFail($msg, $help = '')
 { global $nl;
   $text = '<p><strong>'.$msg.'</strong></p>'.$nl.'<p>'.$help.'</p>';
   Output_HTML('Error', $text); 
+  exit(); }
+
+function WorkScreenReload($redir = '')
+# Just output the HTML of a work message and instantly redirect to $redirect.
+{ global $nl;
+  if (!empty($redir))
+    $redir = '; URL='.$redir;
+  echo '<!DOCTYPE html>'.$nl.'<meta charset="UTF-8">'.$nl.
+       '<title>Working</title>'.$nl.
+       '<meta http-equiv="refresh" content="0'.$redir.'" />'.$nl.
+       '<p>Working.</p>'; 
   exit(); }

@@ -8,7 +8,7 @@ $hook_PrepareWrite_page .= '$x = Add_to_RecentChanges($title, $timestamp, $x);';
 
 function Add_to_RecentChanges($title, $timestamp, $x)
 # Add time stamp of page change to RecentChanges file.
-{ global $nl, $RC_dir, $RC_path;
+{ global $nl, $RC_dir, $RC_path, $todo_urgent;
 
   if (!is_dir($RC_dir))
     mkdir($RC_dir);
@@ -18,7 +18,8 @@ function Add_to_RecentChanges($title, $timestamp, $x)
     $RC_txt = file_get_contents($RC_path);
   $RC_txt = $timestamp.':'.$title.$nl.$RC_txt;
 
-  $x['tasks'][] = array('SafeWrite', $RC_path, $RC_txt);
+  $x['tasks'][$todo_urgent][] = array('SafeWrite',
+                                      array($RC_path), array($RC_txt));
   return $x; }
 
 function Action_RecentChanges()
