@@ -765,7 +765,7 @@ function Output_HTML($title_h, $content, $head = '')
 { global $action, $actions_meta, $actions_page, $nl, $nl2, $root_rel, $title, 
                                                                      $title_url;
 
-  # If we have more $head lines, append a newline for better readability.
+  # If we have more $head lines, append a newline for better code readability.
   if ($head) $head .= $nl;
 
   # Generate header / action bars.
