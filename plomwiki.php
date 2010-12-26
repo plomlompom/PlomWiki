@@ -167,7 +167,6 @@ function Action_page_revert()
 function Markup($text)
 # Applying markup functions in the order described by markups.txt to $text.
 { global $markup_list_path; 
-
   $lines = ReadAndTrimLines($markup_list_path);
   foreach ($lines as $line)
     $text = $line($text);
