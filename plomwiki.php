@@ -24,6 +24,9 @@ if (is_file($setup_file))
 # URL generation information.
 $root_rel = 'plomwiki.php';      $title_root = $root_rel.'?title=';
 
+# Get maximum execution time before script stops working.
+$max_exec_time = ini_get('max_execution_time');
+
 # Default action bar links data, read by ActionBarLinks() for Output_HTML().
 $actions_meta = array(array('Jump to Start page', '?title=Start'),
                       array('Set admin password', '?action=set_pw_admin'));
@@ -420,7 +423,8 @@ function NewTemp($string)
 
 function Lock($path)
 # Check for and create lockfile for $path. Locks block $lock_dur seconds max.
-{ $lock_dur = 60;             # Must be larger than server execution time limit.
+{ global $max_exec_time;
+  $lock_dur = 2 * $max_exec_time;
   $now      = time();
   $lock     = $path.'_lock';
 
@@ -439,14 +443,14 @@ function UnLock($path)
 
 function WorkTodo($todo)
 # Work through todo file. Comment out finished lines. Delete file when finished.
-{ global $nl;
+{ global $max_exec_time, $nl;
 
   # Lock todo file while working on it.
   Lock($todo);
   $p_todo = fopen($todo, 'r+');
 
   # Work through todo file until stopped by EOF or time limit.
-  $limit_dur = 15;
+  $limit_dur = $max_exec_time / 2;
   $now       = time();
   $limit_pos = $now + $limit_dur;
   $stop_by_time = FALSE;
