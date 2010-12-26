@@ -482,18 +482,6 @@ function WorkTodo($todo)
   # Reload.
   WorkScreenReload(); }
 
-function LockOn($dir)
-# Check for and create lockfile for $dir. Lockfiling blocks $lock_duration max.
-{ $lock_duration = 60;   # Lockfile duration. Be > server execution time limit.
-  $now = time();
-  $lock = $dir.'lock';
-  if (is_file($lock))
-  { $time = file_get_contents($lock);
-    if ($time + $lock_duration > $now)
-      ErrorFail('Stuck by a lockfile of too recent a timestamp.',
-                'Lock effective '.$lock_duration.' seconds. Try a bit later.');}
-  file_put_contents($lock, $now); }
-
 function DeletePage($title)
 # Rename, timestamp page $title and its diff. Move both files to $del_dir.
 { global $del_dir, $diff_dir, $pages_dir;
