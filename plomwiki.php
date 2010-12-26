@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
 <?php
 
 ##################
@@ -793,8 +795,7 @@ function Output_HTML($title_h, $content, $head = '')
     $header_page = $nl.'<p>'.$nl.ActionBarLinks($actions_page, $title_url).
                                                                      '</p>'.$nl;
   # Final HTML.
-  echo '<!DOCTYPE html>'.$nl.'<meta charset="UTF-8">'.$nl.
-       '<title>'.$title_h.'</title>'.$nl.$head.$nl.
+  echo '<title>'.$title_h.'</title>'.$nl.$head.$nl.
        $header_wiki.'<h1>'.$title_h.'</h1>'.$nl.$header_page.$nl.$content; }
 
 function ActionBarLinks($array_actions, $root)
@@ -809,8 +810,7 @@ function WorkScreenReload($redir = '')
 { global $nl;
   if (!empty($redir))
     $redir = '; URL='.$redir;
-  echo '<!DOCTYPE html>'.$nl.'<meta charset="UTF-8">'.$nl.
-       '<title>Working</title>'.$nl.
+  echo '<title>Working</title>'.$nl.
        '<meta http-equiv="refresh" content="0'.$redir.'" />'.$nl.
        '<p>Working.</p>'; 
   exit(); }
