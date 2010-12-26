@@ -407,7 +407,6 @@ function NewTemp($string)
 
   # Lock dir so its filename list won't change via something else during this.
   Lock($work_temp_dir);
-
   $p_dir = opendir($work_temp_dir);
 
   # Collect numerical filenames of temp files in $tempfiles.
