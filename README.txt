@@ -62,11 +62,10 @@ new user actions; such details of Action_write()'s behavior depend on the "t="
 GET parameter delivered to it. The function "PrepareWrite_$t()", if found, is
 called to fill Action_write() with all it needs to know.
 
-As the single bottleneck for DB writing, Action_write() also is the point where
-all password checks are called. It delivers the POST "password=" and GET "t="
-parameters to CheckPW() and waits for its OK. CheckPW reads config/password.txt
-and decides whether its "t="-determined rules/expectations (to be extended by
-plugins via $hook_CheckPW) provide a satisfying harmony between "password=" and
-the file's contents.
+As single bottleneck for DB writing, Action_write() also is the point where all
+password checks are called. It delivers POST "password=" and GET "t=" parameters
+to CheckPW() and waits for its OK. CheckPW reads config/password.txt and decides
+whether its "t="-determined rules (to be extended by plugins via $hook_CheckPW)
+provide a satisfying harmony between "password=" and the file's contents.
 
 For more details on PlomWiki's inner workings, read the source code's comments.
