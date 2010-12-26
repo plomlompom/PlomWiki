@@ -1,8 +1,14 @@
 <?php
 
 $actions_page[] = array('Set page password', '&amp;action=page_set_pw');
-$hook_CheckPW  .= 'if ($t == \'page\')'.
-                  '  $return = PwPage_Check($pw_posted, $passwords, $title); ';
+$hook_CheckPW  .= 
+'if ($t == \'page\' and \'Page\' == $_POST[\'pw_type\'])
+ { $return_at_once = TRUE; 
+   $return = PwPage_Check($pw_posted, $passwords, $title); }';
+$hook_Action_page_edit = 
+'$form = BuildPostForm($title_url.\'&amp;action=write&amp;t=page\', $input, 
+\'<select name="pw_type"><option>Page</option><option>Admin</option></select> '.
+'password: <input id="admin_pw" type="password" name="pw">\');';
 
 function Action_page_set_pw()
 # Display page for setting new page password.

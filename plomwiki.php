@@ -80,7 +80,8 @@ function Action_page_view()
 
 function Action_page_edit()
 # Edit form on a page source text. Send results to ?action=write.
-{ global $markup_help, $nl, $nl2, $page_path, $title, $title_url;
+{ global $hook_Action_page_edit, $markup_help, $nl, $nl2, $page_path, $title,
+         $title_url;
 
   # If no page file is found, start with an empty $text.
   if (is_file($page_path)) 
@@ -99,6 +100,7 @@ function Action_page_edit()
               '  pw_input.addEventListener('.$nl.'    \'keyup\', '.$nl.
               '    function() { localStorage.pw = pw_input.value; },'.$nl.
               '    false); }'.$nl.'</script>';
+   eval($hook_Action_page_edit);
    $content = $form.$nl2.$markup_help.$nl2.$script;
    Output_HTML('Editing: '.$title, $content); }
 
