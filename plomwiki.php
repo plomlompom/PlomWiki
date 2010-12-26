@@ -103,9 +103,7 @@ function Action_page_edit()
 function Action_page_history()
 # Show version history of page (based on its diff file), offer reverting.
 { global $diff_path, $nl, $nl2, $title, $title_url;
-
-  # Fallback if no diff is found.
-  $text = '<p>Page "'.$title.'" has no history.</p>';
+  $text = '<p>Page "'.$title.'" has no history.</p>';           # Fallback text.
 
   # Try to build $diff_list from $diff_path. If successful, format into HTML.
   if (is_file($diff_path))
