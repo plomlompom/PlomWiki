@@ -291,7 +291,6 @@ function PrepareWrite_pw()
   # Check password key and new password for validity.
   $pw_key = $_POST['pw_key'];
   $new_pw = $_POST['new_pw'];
-
   if (!$new_pw)
     ErrorFail('Empty password not allowed.');
   elseif (!$pw_key)
