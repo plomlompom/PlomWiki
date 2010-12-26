@@ -32,8 +32,7 @@ $actions_meta = array(array('Jump to Start page', '?title=Start'),
                       array('Set admin password', '?action=set_pw_admin'));
 $actions_page = array(array('View',               '&amp;action=page_view'),
                       array('Edit',               '&amp;action=page_edit'),
-                      array('History',            '&amp;action=page_history'),
-                      array('Set page password',  '&amp;action=page_set_pw'));
+                      array('History',            '&amp;action=page_history'));
 
 # Insert plugins' code.
 foreach (ReadAndTrimLines($plugin_list_path) as $line)
@@ -317,21 +316,14 @@ function PrepareWrite_pw()
 
 function Action_set_pw_admin()
 # Display page for setting new admin password.
-{ BuildPageChangePW('admin', '*'); }
-
-function Action_page_set_pw()
-# Display page for setting new page password.
-{ global $title;
-  BuildPageChangePW('page "'.$title.'"', $title, TRUE); }
-
-function BuildPageChangePW($desc, $pw_key)
-# Build HTML output for $desc password change form.
 { global $nl, $nl2, $title_url;
-  $input = '<input type="hidden" name="pw_key" value="'.$pw_key.'">'.$nl.
-           'New '.$desc.' password:'.$nl.
-           '<input type="password" name="new_pw" /><br />';
-  $form = BuildPostForm($title_url.'&amp;action=write&amp;t=pw', $input);
-  Output_HTML('Set '.$desc.' password', $form); }
+  $input = '<input type="hidden" name="pw_key" value="*">'.$nl.
+           'Old admin password:<br />'.$nl.
+           '<input id="admin_pw" type="password" name="pw"><br />'.$nl.
+           'New admin password:<br />'.$nl.
+           '<input type="password" name="new_pw" />';
+  $form = BuildPostForm($title_url.'&amp;action=write&amp;t=pw', $input, '');
+  Output_HTML('Changing admin password', $form); }
 
 function CheckPW($pw_posted, $t = '')
 # Compare $pw_posted to admin password stored in $pw_path.
@@ -345,12 +337,11 @@ function CheckPW($pw_posted, $t = '')
   if ($return_at_once)
     return $return;
 
-  # Return with success of checking $pw_posted against admin or $title password.
-  if ($pw_posted === $passwords['*']
-      or ($t == 'page' and $pw_posted === $passwords[$title]))
-    $return = TRUE;
-
-  return $return; }
+  # Anything else demands a check for the admin password.
+  if ($pw_posted === $passwords['*'])
+    return TRUE;
+  else
+    return FALSE; }
 
 function ReadPasswordList($path)
 # Read password list from $path into array.

@@ -5,3 +5,4 @@ plugins/Search.php
 plugins/RecentChanges.php
 plugins/AutoLink.php
 plugins/Comments.php
+plugins/PwPages.php
