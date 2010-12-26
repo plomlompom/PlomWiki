@@ -148,10 +148,9 @@ function Action_comments_admin()
                   'unset captcha. Commenting won\'t be possible then.)</p>'.$nl;
 
   # Final HTML.
-  $title_h = 'Comments administration';
   $input   = $build_dir.$captcha;
   $form = BuildPostForm($root_rel.'?action=write&amp;t=comments_admin', $input);
-  Output_HTML($title_h, $form); }
+  Output_HTML('Comments administration', $form); }
 
 function PrepareWrite_comments_admin()
 # Return to Action_write() all information needed for comments administration.

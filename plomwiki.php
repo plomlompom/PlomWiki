@@ -87,7 +87,6 @@ function Action_page_edit()
   else $text = '';
 
   # Final HTML of edit form and JavaScript to localStorage-store password.
-  $title_h = 'Editing: '.$title;
   $input = '<pre><textarea name="text" rows="20" style="width:100%">'.$nl.
           $text.'</textarea></pre>';
   $form = BuildPostForm($title_url.'&amp;action=write&amp;t=page', $input);
@@ -99,7 +98,7 @@ function Action_page_edit()
               '    function() { localStorage.pw = pw_input.value; },'.$nl.
               '    false); }'.$nl.'</script>';
    $content = $form.$nl2.$markup_help.$nl2.$script;
-   Output_HTML($title_h, $content); }
+   Output_HTML('Editing: '.$title, $content); }
 
 function Action_page_history()
 # Show version history of page (based on its diff file), offer reverting.
@@ -130,12 +129,11 @@ function Action_page_history()
     $text = implode($nl, $diffs); }
 
   # Final HTML.
-  $title_h = 'Diff history of: '.$title;
   $css = '<style type="text/css">'.$nl.
          'pre'.$nl.'{ white-space: pre-wrap;'.$nl.'  text-indent:-12pt;'.$nl.
          '  margin-top:0px;'.$nl.'  margin-bottom:0px; }'.$nl2.'.diff '.$nl.
          '{ margin-left:12pt; }'.$nl.'</style>';
-  Output_HTML($title_h, $text, $css); }
+  Output_HTML('Diff history of: '.$title, $text, $css); }
 
 function Action_page_revert()
 # Prepare version reversion and ask user for confirmation.
@@ -162,8 +160,7 @@ function Action_page_revert()
     ErrorFail('No valid reversion date given.');
 
   # Final HTML.
-  $title_h = 'Reverting: '.$title; 
-  Output_HTML($title_h, $content); }
+  Output_HTML('Reverting: '.$title, $content); }
 
 ####################################
 # Page text manipulation functions #
@@ -332,12 +329,11 @@ function Action_page_set_pw()
 function BuildPageChangePW($desc, $pw_key)
 # Build HTML output for $desc password change form.
 { global $nl, $nl2, $title_url;
-  $title_h = 'Set '.$desc.' password';
   $input = '<input type="hidden" name="pw_key" value="'.$pw_key.'">'.$nl.
            'New '.$desc.' password:'.$nl.
            '<input type="password" name="new_pw" /><br />';
   $form = BuildPostForm($title_url.'&amp;action=write&amp;t=pw', $input);
-  Output_HTML($title_h, $form); }
+  Output_HTML('Set '.$desc.' password', $form); }
 
 function CheckPW($pw_posted, $t = '')
 # Compare $pw_posted to admin password stored in $pw_path.

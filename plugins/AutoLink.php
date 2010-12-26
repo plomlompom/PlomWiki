@@ -240,11 +240,10 @@ function Action_autolink_admin()
   else                        $do_what = 'Destroy';
 
   # Final HTML.
-  $title_h = 'AutoLink administration';
   $input = '<p>'.$do_what.' AutoLink DB?</p>'.$nl.
            '<input type="hidden" name="do_what" value="'.$do_what.'" />';
   $form = BuildPostForm($root_rel.'?action=write&amp;t=autolink_admin', $input);
-  Output_HTML($title_h, $form); }
+  Output_HTML('AutoLink administration', $form); }
 
 function PrepareWrite_autolink_admin()
 { global $AutoLink_dir, $nl, $root_rel, $todo_urgent;
