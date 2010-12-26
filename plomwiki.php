@@ -72,10 +72,8 @@ function Action_page_view()
     $text = '<p>Page does not exist. <a href="'.$title_url.
                                        '&amp;action=page_edit">Create?</a></p>';
 
-  # Plugin hook.
+  # Before leaving, execute plugin hook.
   eval($hook_Action_page_view);
-
-  # Final HTML.
   Output_HTML($title, $text); }
 
 function Action_page_edit()
@@ -285,9 +283,8 @@ function PrepareWrite_page()
     $x['tasks'][$todo_urgent][] = array('SafeWrite', 
                                          array($page_path), array($text)); }
 
-  # Plugin hook.
+  # Before leaving, execute plugin hook.
   eval($hook_PrepareWrite_page);
-
   return $x; }
 
 function PrepareWrite_pw()
