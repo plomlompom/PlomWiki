@@ -241,6 +241,7 @@ function Action_autolink_admin()
 
   # Final HTML.
   $input = '<p>'.$do_what.' AutoLink DB?</p>'.$nl.
+           '<input name="auth" type="hidden" value="*" />'.$nl.
            '<input type="hidden" name="do_what" value="'.$do_what.'" />';
   $form = BuildPostForm($root_rel.'?action=write&amp;t=autolink_admin', $input);
   Output_HTML('AutoLink administration', $form); }

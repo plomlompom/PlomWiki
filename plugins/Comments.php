@@ -2,13 +2,8 @@
 
 $Comments_dir   = $plugin_dir.'Comments/';
 $actions_meta[] = array('Comments administration', '?action=comments_admin');
-
-# Hooking plugin code into Action_page_view() and CheckPW().
 $hook_Action_page_view .= '$text .= Comments(); ';
-$hook_CheckPW          .= 'if ($t == \'comment\')'.$nl.
-                          '{ $return_at_once = TRUE;'.$nl.
-                          '  $return = Comments_CheckCaptcha($pw_posted, '.
-                                                           '$passwords); }'.$nl;
+$permissions['comment'][] = '_comment_captcha';
 
 #########################
 # Most commonly called. #
@@ -51,7 +46,8 @@ function Comments()
                                                             '</textarea></pre>';
     $form  = BuildPostForm($title_url.'&amp;action=write&amp;t=comment', $input, 
                            'Captcha password needed! Write "'.$captcha.
-                                             '": <input name="pw" size="5" />');
+                           '": <input name="pw" size="5" /><input name="auth" '.
+                                   'type="hidden" value="_comment_captcha" />');
     $write .= $form; }
   else
     $write .= '<p>Comment writing currently not possible: captcha not set.</p>';

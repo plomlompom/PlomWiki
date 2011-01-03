@@ -34,16 +34,16 @@ $actions_page = array(array('View',               '&amp;action=page_view'),
                       array('Edit',               '&amp;action=page_edit'),
                       array('History',            '&amp;action=page_history'));
 
-# Insert plugins' code.
-foreach (ReadAndTrimLines($plugin_list_path) as $line)
-  require($line);
-
 # Get page title. Build dependent variables.
 $legal_title = '[a-zA-Z0-9-]+';
 $title       = GetPageTitle($legal_title);
 $page_path   = $pages_dir .$title;
 $diff_path   = $diff_dir  .$title;
 $title_url   = $title_root.$title;
+
+# Insert plugins' code.
+foreach (ReadAndTrimLines($plugin_list_path) as $line)
+  require($line);
 
 # Before executing user's action, do urgent work if urgent todo file is found.
 if (is_file($todo_urgent))
@@ -93,16 +93,9 @@ function Action_page_edit()
   $input = '<pre><textarea name="text" rows="20" style="width:100%">'.$nl.
           $text.'</textarea></pre>';
   $form = BuildPostForm($title_url.'&amp;action=write&amp;t=page', $input);
-  $script   = '<script>'.$nl.'if (window.localStorage)'.$nl.
-              '{ var pw_input = document.getElementById(\'admin_pw\');'.$nl2.
-              '  if (localStorage.pw != null)'.$nl.
-              '  { pw_input.value = localStorage.pw; }'.$nl2.
-              '  pw_input.addEventListener('.$nl.'    \'keyup\', '.$nl.
-              '    function() { localStorage.pw = pw_input.value; },'.$nl.
-              '    false); }'.$nl.'</script>';
-   eval($hook_Action_page_edit);
-   $content = $form.$nl2.$markup_help.$nl2.$script;
-   Output_HTML('Editing: '.$title, $content); }
+  eval($hook_Action_page_edit);
+  $content = $form.$nl2.$markup_help;
+  Output_HTML('Editing: '.$title, $content); }
 
 function Action_page_history()
 # Show version history of page (based on its diff file), offer reverting.
@@ -203,7 +196,7 @@ function Action_write()
 # User writing to DB. Expects password $_POST['pw'] and target type $_GET['t'],
 # which determines the function shaping the details (like what to write where).
 { global $nl, $nl2, $root_rel, $todo_urgent; 
-  $pw = $_POST['pw']; $t = $_GET['t'];
+  $pw = $_POST['pw']; $auth = $_POST['auth']; $t = $_GET['t'];
 
   # Target type chooses writing preparation function, gets variables from it.
   $prep_func = 'PrepareWrite_'.$t;
@@ -211,15 +204,15 @@ function Action_write()
     $x = $prep_func();
   else 
     ErrorFail('No known target type specified.');
-  $redir = $x['redir']; $task_write_list=$x['tasks'];
+  $redir = $x['redir']; $task_write_list = $x['tasks'];
 
   # Give a redir URL more harmless than a write action page if $redir is empty.
   if (empty($redir))
     $redir = $root_rel;
 
   # Password check.
-  if (!CheckPW($pw, $t))
-    ErrorFail('Wrong password.');
+  if (!CheckPW($auth, $pw, $t))
+    ErrorFail('Authentication failure.');
 
   # From $task_write_list, add tasks to temp versions of todo lists.
   $temps = array();
@@ -245,12 +238,11 @@ function PrepareWrite_page()
 # Deliver to Action_write() all information needed for page writing process.
 { global $diff_path, $esc, $hook_PrepareWrite_page, $nl, $page_path, $title,
          $title_url, $todo_urgent;
-  $text = $_POST['text'];
-  $x['redir'] = $title_url;                 # Redirect to page written.
-  $timestamp = time();                      # For dating diffs, and for plugins.
 
   # Repair problems in submitted text. Undo possible PHP magical_quotes horrors.
-  if (get_magic_quotes_gpc()) $text = stripslashes($text); 
+  $text = $_POST['text'];
+  if (get_magic_quotes_gpc())
+    $text = stripslashes($text); 
   $text = NormalizeNewlines($text);
 
   # $old_text is for comparison and diff generation.
@@ -265,10 +257,12 @@ function PrepareWrite_page()
   elseif ($text == $old_text)            
     ErrorFail('You changed nothing!');
 
+  $timestamp = time();
+
   # In case of page deletion question, add DeletePage() task to todo file.
   if ($text == 'delete')
   { if (is_file($page_path)) 
-    $x['tasks'][$todo_urgent][] = array('DeletePage', array($title));
+    $x['tasks'][$todo_urgent][] = array('DeletePage', array($title,$timestamp));
     $msg = '<p><strong>Page "'.$title.'" is deleted</strong> (if it ever '.
                                                               'existed).</p>'; }
   else
@@ -285,31 +279,32 @@ function PrepareWrite_page()
                                          array($page_path), array($text)); }
 
   # Before leaving, execute plugin hook.
+  $x['redir'] = $title_url;
   eval($hook_PrepareWrite_page);
   return $x; }
 
-function PrepareWrite_pw()
+function PrepareWrite_admin_sets_pw()
 # Deliver to Action_write() all information needed for pw writing process.
 { global $nl, $pw_path, $todo_urgent;
 
   # Check password key and new password for validity.
-  $pw_key = $_POST['pw_key'];
-  $new_pw = $_POST['new_pw'];
+  $new_pw   = $_POST['new_pw'];
+  $new_auth = $_POST['new_auth'];
   if (!$new_pw)
     ErrorFail('Empty password not allowed.');
-  elseif (!$pw_key)
+  if (!$new_auth)
     ErrorFail('Not told what to set password for.');
 
   # Splice new password into text of password file at $pw_path.
-  $passwords = ReadPasswordList($pw_path);
-  $passwords[$pw_key] = $new_pw;
-  $pw_file_text = '';
+  $passwords            = ReadPasswordList($pw_path);
+  $passwords[$new_auth] = $new_pw;
+  $pw_file_text         = '';
   foreach ($passwords as $key => $pw)
     $pw_file_text .= $key.':'.$pw.$nl;
 
   # Actual writing tasks for Action_write().
   $x['tasks'][$todo_urgent][] = array('SafeWrite',
-                                      array($pw_path), array($pw_file_text));
+                                         array($pw_path), array($pw_file_text));
   return $x; }
 
 #############
@@ -318,32 +313,41 @@ function PrepareWrite_pw()
 
 function Action_set_pw_admin()
 # Display page for setting new admin password.
-{ global $nl, $nl2, $title_url;
-  $input = '<input type="hidden" name="pw_key" value="*">'.$nl.
-           'Old admin password:<br />'.$nl.
-           '<input id="admin_pw" type="password" name="pw"><br />'.$nl.
-           'New admin password:<br />'.$nl.
-           '<input type="password" name="new_pw" />';
-  $form = BuildPostForm($title_url.'&amp;action=write&amp;t=pw', $input, '');
-  Output_HTML('Changing admin password', $form); }
+{ ChangePW_form('admin', '*', 'Old admin'); }
 
-function CheckPW($pw_posted, $t = '')
-# Compare $pw_posted to admin password stored in $pw_path.
-{ global $hook_CheckPW, $pw_path, $title;
+function ChangePW_form($desc_new_pw, $new_auth, $desc_pw = 'Admin', 
+                       $auth = '*', $t = 'admin_sets_pw')
+# Output page for changing password keyed to $auth and described by $desc.
+{ global $nl, $nl2, $title_url;
+  $input = 'New password for '.$desc_new_pw.':<br />'.$nl.
+           '<input type="hidden" name="new_auth" value="'.$new_auth.'">'.$nl
+          .'<input type="password" name="new_pw" /><br />'.$nl.
+           '<input type="hidden" name="auth" value="'.$auth.'">'.$nl.
+           $desc_pw.' password :<br />'.$nl.
+           '<input type="password" name="pw">';
+  $form = BuildPostForm($title_url.'&amp;action=write&amp;t='.$t, $input, '');
+  Output_HTML('Changing password for '.$desc_new_pw, $form); }
+
+function CheckPW($key, $pw_posted, $target)
+# Check if password $pw_posted fits $key in internal password list.
+{ global $permissions, $pw_path;
   $passwords = ReadPasswordList($pw_path);
   $return = FALSE;
 
-  # Plugin hook. Set $return_at_once to TRUE to end right after eval().
-  $return_at_once = FALSE;
-  eval($hook_CheckPW);
-  if ($return_at_once)
+  # Fail if empty $key provided.
+  if (!$key)
     return $return;
 
-  # Anything else demands a check for the admin password.
-  if ($pw_posted === $passwords['*'])
-    return TRUE;
-  else
-    return FALSE; }
+  # Fail if $key is not authorized for target. Assume admin always authorized.
+  if ($key != '*' and !in_array($key, $permissions[$target]))
+      return $return;
+
+  # Try for admin authentication.
+  if (isset($passwords[$key])
+      and $pw_posted == $passwords[$key])
+    $return = TRUE;
+
+  return $return; }
 
 function ReadPasswordList($path)
 # Read password list from $path into array.
@@ -471,10 +475,9 @@ function WorkTodo($todo)
   # Reload.
   WorkScreenReload(); }
 
-function DeletePage($title)
+function DeletePage($title, $timestamp)
 # Rename, timestamp page $title and its diff. Move both files to $del_dir.
 { global $del_dir, $diff_dir, $pages_dir;
-  $timestamp     = time();
   $page_path     = $pages_dir.$title;
   $diff_path     = $diff_dir .$title;
   $path_diff_del = $del_dir.$title.',del-diff-'.$timestamp;
@@ -792,9 +795,11 @@ function WorkScreenReload($redir = '')
        '<p>Working.</p>'; 
   exit(); }
 
-function BuildPostForm($URL, $input, 
-    $ask_pw = 'Admin password: <input id="admin_pw" type="password" name="pw">')
+function BuildPostForm($URL, $input, $ask_pw = NULL)
 # HTML form. $URL = action, $input = code between, $ask_pw = PW input element.
 { global $nl;
+  if ($ask_pw === NULL)
+    $ask_pw = 'Admin password: <input name="pw" type="password" />'.
+                              '<input name="auth" type="hidden" value="*" />';
   return '<form method="post" action="'.$URL.'">'.$nl.$input.$nl.$ask_pw.$nl.
          '<input type="submit" value="OK" />'.$nl.'</form>'; }
