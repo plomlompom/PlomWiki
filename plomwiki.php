@@ -500,103 +500,123 @@ function SafeWrite($path_original, $path_temp)
 
 function PlomDiff($text_A, $text_B)
 # Output diff $text_A -> $text_B.
-{ global $esc, $nl;
+{ global $nl;
 
-  # Pad $lines_A and $lines_B to same length, add one empty line at end. Start
-  # line counting in $lines_A and $lines_B at 1, not 0 -- just like diff does.
-  $lines_A_tmp   = explode($nl, $text_A);  
-  $lines_B_tmp   = explode($nl, $text_B);
-  $original_ln_A = count($lines_A_tmp);     # Will be needed further below, too.
-  if ($text_A == $esc)        # $text = $esc is our code for $text containing no
-    $original_ln_A = 0;       # lines at all (instead of one single empty line).
-  $new_ln        = max($original_ln_A, count($lines_B_tmp)) + 1;
-  $lines_A_tmp   = array_pad($lines_A_tmp, $new_ln, $esc);
-  $lines_B_tmp   = array_pad($lines_B_tmp, $new_ln, $esc);
-  foreach ($lines_A_tmp as $k => $line) $lines_A[$k + 1] = $line;
-  foreach ($lines_B_tmp as $k => $line) $lines_B[$k + 1] = $line;
+  # Transform $text_{A,B} into arrays of lines with empty line 0 appended.
+  $lines_A = explode($nl, $text_A);     $lines_B = explode($nl, $text_B); 
+  array_unshift($lines_A, "\r");          array_unshift($lines_B, "\r");
+  $lines_A[] = "\r";                      $lines_B[] = "\r";
 
-  # Collect adds / dels from line mismatches between $lines_{A,B} into $diff.
-  # add pattern: $diff[$before_in]['a'] = array($in_first, $in_last)
-  # del pattern: $diff[$out_first]['d'] = array($before_out, $out_last)
-  $diff = array(); 
-  $offset = 0;
-  foreach ($lines_A as $key_A => $line_A)
-  { 
-    # $offset in $lines_B grows/shrinks for each line added/deleted.
-    $key_B = $key_A + $offset; $line_B = $lines_B[$key_B];
-   
-    if ($line_A !== $line_B)
-    { # Find matching line in later lines of $lines_B. If successful, mark lines
-      # range in-between as lines added and add its length $range to $offset.
-      $lines_B_later = array_slice($lines_B, $key_B, NULL, TRUE);
-      $range = 0; 
-      foreach ($lines_B_later as $key_B_sub => $line_B_sub)
-      { $range++;
-        if ($line_A == $line_B_sub)
-        { $diff[$key_A - 1]['a'] = array($key_B, $key_B + $range - 1);
-          $offset += $range;
-          break; } }
-      
-      # If mismatch is unredeemed by matching later lines, mark line as deleted
-      # -- except for (temporarily added $esc) lines beyond $original_ln_A.
-      if (!$diff[$key_A - 1]['a'] and $key_A <= $original_ln_A)
-      { $diff[$key_A]['d'] = array($key_B - 1, $key_A);
-        $offset--; } } }
-  
-  # Combine subsequent single line dels to line del blocks by, for each del,
-  # checking if $old_del's $out_last is just one line before new $out_first.
-  $old_del = array(NULL, NULL, -1);  # = array($out_first,$before_out,$out_last)
-  foreach ($diff as $line_n => $info)
-  { foreach ($info as $char => $limits) if ($char == 'd')
-    { $new_out_last = $limits [1]; 
-      $old_out_last = $old_del[2];
-      if ($line_n - 1 == $old_out_last)
-      { $old_out_first  = $old_del[0]; 
-        $old_before_out = $old_del[1];
-        $diff[$old_out_first]['d'] = array($old_before_out, $new_out_last);
-        unset($diff[$line_n]['d']);
-        $old_del = array($old_out_first, $old_before_out, $new_out_last); }
-      else 
-      { $new_start_in_B = $limits[0]; 
-        $old_del = array($line_n, $new_start_in_B, $new_out_last); } } }
-  
-  # Combine 'a' and 'd' to 'c' in cases where they meet.
-  # 'c' pattern: $diff[$out_first] = array($out_last, $in_first, $in_last);
-  foreach ($diff as $line_n => $info)
-  { if ($diff[$line_n]['d'])
-    { $out_last = $diff[$line_n]['d'][1];
-      if ($diff[$out_last]['a'])
-      { $in_first = $diff[$out_last]['a'][0]; 
-        $in_last  = $diff[$out_last]['a'][1];
-        $diff[$line_n]['c'] = array($out_last, $in_first, $in_last);
-        unset($diff[$line_n]['d']); unset($diff[$out_last]['a']); } } }
+  # Fill $equals with *all* possible equalities between blocks of lines.
+  $equals = array();
+  foreach ($lines_A as $n_A => $line_A)
+    foreach ($lines_B as $n_B => $line_B)
+      if ($line_A === $line_B)
+      { $ln = 1;
+        $equals[] = array($n_A, $n_B, $ln);
+        for ($i = $n_A + 1; $i < count($lines_A); $i++)
+          if ($lines_A[$n_A + $ln] === $lines_B[$n_B + $ln])
+          { $ln++;
+            $equals[] = array($n_A, $n_B, $ln); } }
 
-  # Output diff into $string and return.
-  $string = '';
-  foreach ($diff as $line_n => $info)
-  { foreach ($info as $char => $limits)
-    { if ($char == 'a') 
-      { if ($limits[0] == $limits[1]) $string .= $line_n.$char.$limits[0].$nl;
-        else                          $string .= $line_n.$char.$limits[0].','.
-                                                                $limits[1].$nl;
-        for ($i = $limits[0]; $i <= $limits[1]; $i++)
-          $string .= '>'.$lines_B[$i].$nl; }
-      elseif ($char == 'd')
-      { if ($line_n    == $limits[1]) $string .= $line_n.$char.$limits[0].$nl;
-        else                          $string .= $line_n.','.$limits[1].$char.
-                                                                $limits[0].$nl;
-        for ($i = $line_n; $i <= $limits[1]; $i++)
-          $string .= '<'.$lines_A[$i].$nl; }
-      elseif ($char == 'c')
-      { if ($line_n    == $limits[0]) $string .= $line_n.$char;
-        else                          $string .= $line_n.','.$limits[0].$char;
-        if ($limits[1] == $limits[2]) $string .= $limits[1].$nl;
-        else                          $string .= $limits[1].','.$limits[2].$nl;
-        for ($i = $line_n; $i <= $limits[0]; $i++)
-          $string .= '<'.$lines_A[$i].$nl;
-        for ($i = $limits[1]; $i <= $limits[2]; $i++)
-          $string .= '>'.$lines_B[$i].$nl; } } }
-  return $string; }
+  # Fill $equal with largest-possible line-block equalities.
+  $equal = array();
+  while (!empty($equals))
+  { $max_equal = PlomDiff_LargestThirdElement($equals);
+    $equal[] = $max_equal;
+
+    # Eliminate from $equals blocks that intersect with current $max_equal.
+    foreach ($equals as $n_equal => $arr)
+    { $n_A = $arr[0]; $n_B = $arr[1]; $ln = $arr[2]; 
+      $is_unset = FALSE;
+      for ($i = $n_A; $i < $n_A + $ln; $i++)
+        if ($max_equal[0] <= $i and $i < $max_equal[0] + $max_equal[2])
+        { unset($equals[$n_equal]);
+          $is_unset = TRUE;
+          break; }
+      if (!$is_unset)
+        for ($i = $n_B; $i < $n_B + $ln; $i++)
+          if ($max_equal[1] <= $i and $i < $max_equal[1] + $max_equal[2])
+          { unset($equals[$n_equal]);
+            break; } } }
+
+  # Rid $equal of out-of-order blocks. Prefer keeping large blocks. Sort $equal.
+  $equal_unsorted = PlomDiff_PutIntoOrderByLargest($equal);
+  $n_As = array();
+  foreach ($equal_unsorted as $arr)
+    $n_As[] = $arr[0];
+  sort($n_As);
+  foreach ($n_As as $n_A)
+  { foreach ($equal_unsorted as $arr)
+      if ($arr[0] == $n_A)
+      { $equal_sorted[] = $arr; 
+        break; } }
+
+  # Build diff by inverting $equal.
+  foreach ($equal_sorted as $n => $arr)
+  { if ($n == count($equal_sorted) - 1)
+      break;
+    $n_A = $arr[0]; $n_B = $arr[1]; $ln = $arr[2];
+    $offset_A = $n_A + $ln; 
+    $offset_B = $n_B + $ln;
+    $arr_next = $equal_sorted[$n + 1];
+    $n_A_next = $arr_next[0] - 1;
+    $n_B_next = $arr_next[1] - 1;
+    if ($offset_A == $n_A_next + 1)
+    { $char = 'a';
+      $A = $offset_A - 1;
+      list($B, $txt_A) = PlomDiff_RangeLines($lines_B,$offset_B,$n_B_next,'>');}
+    elseif ($offset_B == $n_B_next + 1)
+    { $char = 'd';
+      $B = $offset_B - 1;
+      list($A, $txt_B) = PlomDiff_RangeLines($lines_A,$offset_A,$n_A_next,'<');}
+    else
+    { $char = 'c'; 
+      list($A, $txt_A) = PlomDiff_RangeLines($lines_A,$offset_A,$n_A_next,'<');
+      list($B, $txt_B) = PlomDiff_RangeLines($lines_B,$offset_B,$n_B_next,'>');}
+    $diffs .= $A.$char.$B.$txt_A.$txt_B.$nl; }
+
+  return $diffs; }
+
+function PlomDiff_RangeLines($lines, $offset, $n_next, $prefix)
+# Output list of diff $range string and diff lines $txt.
+{ global $nl;
+  if ($offset == $n_next) $range = $offset;
+  else                    $range = $offset.','.$n_next;
+  foreach ($lines as $n => $line)
+    if ($offset <= $n and $n <= $n_next)
+      $txt .= $nl.$prefix.$line;
+  return array($range, $txt); }
+
+function PlomDiff_PutIntoOrderByLargest($arr, $return = FALSE)
+# Reduce lines-blocks list $arr to one-way direction, try to keep large blocks.
+{ $loc_max  = PlomDiff_LargestThirdElement($arr);
+  $return[] = $loc_max;
+  $before   = PlomDiff_ReturnOrderedBeforeOrAfter($arr, $loc_max, TRUE);
+  $after    = PlomDiff_ReturnOrderedBeforeOrAfter($arr, $loc_max, FALSE); 
+  if ($before) $return = array_merge($before, $return);
+  if ($after ) $return = array_merge($after,  $return);
+  return $return; }
+
+function PlomDiff_ReturnOrderedBeforeOrAfter($arr_arr, $arr_max, $before = TRUE)
+# Return $arr_arr arrays left/right of $arr_max, directed in one way only.
+{ $return = FALSE;
+  foreach ($arr_arr as $arr)
+  { if (   ( $before and $arr[0] < $arr_max[0] and $arr[1] < $arr_max[1])
+        or (!$before and $arr[0] > $arr_max[0] and $arr[1] > $arr_max[1]))  
+      $legit[] = $arr; }
+  if (!empty($legit))
+    $return = PlomDiff_PutIntoOrderByLargest($legit, $return);
+  return $return; }
+
+function PlomDiff_LargestThirdElement($arr_arr)
+# Return of array $arr_arr array with the largest value in its third field.
+{ $max = array(NULL, NULL, 0);
+  foreach ($arr_arr as $arr)
+  { $a = $arr[0]; $b = $arr[1]; $c = $arr[2];
+    if ($c > $max[2])
+      $max = array($a, $b, $c); }
+  return $max; }
 
 function PlomPatch($text_A, $diff)
 # Patch $text_A to $text_B via $diff.
