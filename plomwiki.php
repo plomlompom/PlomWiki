@@ -500,45 +500,50 @@ function SafeWrite($path_original, $path_temp)
 
 function PlomDiff($text_A, $text_B)
 # Output diff $text_A -> $text_B.
-{ global $nl;
+{ global $esc, $nl;
 
   # Transform $text_{A,B} into arrays of lines with empty line 0 appended.
   $lines_A = explode($nl, $text_A);     $lines_B = explode($nl, $text_B); 
-  array_unshift($lines_A, "\r");          array_unshift($lines_B, "\r");
-  $lines_A[] = "\r";                      $lines_B[] = "\r";
+  array_unshift($lines_A, $esc);        array_unshift($lines_B, $esc);
+  $lines_A[] = $esc;                    $lines_B[] = $esc;
 
-  # Fill $equals with *all* possible equalities between blocks of lines.
+  # Fill $equals with all possible equalities between blocks of lines.
   $equals = array();
   foreach ($lines_A as $n_A => $line_A)
     foreach ($lines_B as $n_B => $line_B)
       if ($line_A === $line_B)
       { $ln = 1;
-        $equals[] = array($n_A, $n_B, $ln);
         for ($i = $n_A + 1; $i < count($lines_A); $i++)
-          if ($lines_A[$n_A + $ln] === $lines_B[$n_B + $ln])
-          { $ln++;
-            $equals[] = array($n_A, $n_B, $ln); } }
+          if ($lines_A[$n_A + $ln] === $lines_B[$n_B + $ln]) $ln++;
+          else                                               break;
+        $equals[] = array($n_A, $n_B, $ln); }
 
   # Fill $equal with largest-possible line-block equalities.
   $equal = array();
   while (!empty($equals))
   { $max_equal = PlomDiff_LargestThirdElement($equals);
+    $max_n_A = $max_equal[0]; $max_n_B = $max_equal[1]; $max_ln = $max_equal[2];
     $equal[] = $max_equal;
 
-    # Eliminate from $equals blocks that intersect with current $max_equal.
+    # Eliminate from / trunacate $equals blocks intersecting current $max_equal.
     foreach ($equals as $n_equal => $arr)
     { $n_A = $arr[0]; $n_B = $arr[1]; $ln = $arr[2]; 
-      $is_unset = FALSE;
-      for ($i = $n_A; $i < $n_A + $ln; $i++)
-        if ($max_equal[0] <= $i and $i < $max_equal[0] + $max_equal[2])
-        { unset($equals[$n_equal]);
-          $is_unset = TRUE;
-          break; }
-      if (!$is_unset)
-        for ($i = $n_B; $i < $n_B + $ln; $i++)
-          if ($max_equal[1] <= $i and $i < $max_equal[1] + $max_equal[2])
-          { unset($equals[$n_equal]);
-            break; } } }
+
+      # Unset $equals block if it starts inside $max_equal block.
+      if (   $max_n_A <= $n_A and $n_A < $max_n_A + $max_ln
+          or $max_n_B <= $n_B and $n_B < $max_n_B + $max_ln)
+        unset($equals[$n_equal]);
+
+      # Else, truncate $equals block to end where $max_equal block starts.
+      else
+      { for ($i = $n_A + 1; $i < $n_A + $ln; $i++)
+          if ($i == $max_n_A)
+          { $equals[$n_equal][2] = $i - $n_A;
+            break; }
+        for ($i = $n_B + 1; $i < $n_B + $ln; $i++)
+          if ($i == $max_n_B)
+          { $equals[$n_equal][2] = $i - $n_B;
+            break; } } } }
 
   # Rid $equal of out-of-order blocks. Prefer keeping large blocks. Sort $equal.
   $equal_unsorted = PlomDiff_PutIntoOrderByLargest($equal);
@@ -554,14 +559,13 @@ function PlomDiff($text_A, $text_B)
 
   # Build diff by inverting $equal.
   foreach ($equal_sorted as $n => $arr)
-  { if ($n == count($equal_sorted) - 1)
-      break;
+  { if ($n == count($equal_sorted) - 1)                # Last diff element would
+      break;                                           # be garbage, ignore.
     $n_A = $arr[0]; $n_B = $arr[1]; $ln = $arr[2];
-    $offset_A = $n_A + $ln; 
-    $offset_B = $n_B + $ln;
     $arr_next = $equal_sorted[$n + 1];
-    $n_A_next = $arr_next[0] - 1;
-    $n_B_next = $arr_next[1] - 1;
+    $offset_A = $n_A + $ln;           $offset_B = $n_B + $ln;
+    $n_A_next = $arr_next[0] - 1;     $n_B_next = $arr_next[1] - 1;
+    $txt_A = $txt_B = '';
     if ($offset_A == $n_A_next + 1)
     { $char = 'a';
       $A = $offset_A - 1;
