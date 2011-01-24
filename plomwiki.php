@@ -93,7 +93,7 @@ function Action_page_edit()
   $input = '<pre><textarea name="text" rows="20" style="width:100%">'.$nl.
            $text.'</textarea></pre>'.$nl.
            'Author: <input name="author" type="text" />'.$nl.
-           'Summary: <input name="summary" type="text" /><br />';
+           'Summary: <input name="summary" type="text" />';
   $form = BuildPostForm($title_url.'&amp;action=write&amp;t=page', $input);
   eval($hook_Action_page_edit);
   $content = $form.$nl2.$markup_help;
@@ -284,7 +284,8 @@ function PrepareWrite_page()
         if ($id > $old_diff_id)
           $old_diff_id = $id;
       $new_diff_id = $old_diff_id + 1; }
-    else                     $diff_old = '';
+    else
+      $diff_old = '';
     $diff_new = $new_diff_id.$nl.$timestamp.$nl.$author.$nl.$summary.$nl.
                 $diff_add.'%%'.$nl.$diff_old;
     

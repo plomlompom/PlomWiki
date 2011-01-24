@@ -2,7 +2,7 @@
 # PlomWiki StandardMarkup
 
 # Provide help message to be shown in editing window.
-$markup_help = '<h4>PlomWiki markup cheatsheet</h4>'.$nl.
+$markup_help = '<h3>PlomWiki markup cheatsheet</h3>'.$nl.
                '<p>In-line:</p>'.$nl
               .'<pre style="white-space: pre-wrap;">[*<strong>strong</strong>*]'
               .' [/<em>emphasis</em>/] [-<del>deleted</del>-] [[<a href="'.
