@@ -265,9 +265,7 @@ function PrepareWrite_page()
   # In case of page deletion question, add DeletePage() task to todo file.
   if ($text == 'delete')
   { if (is_file($page_path)) 
-    $x['tasks'][$todo_urgent][] = array('DeletePage', array($title,$timestamp));
-    $msg = '<p><strong>Page "'.$title.'" is deleted</strong> (if it ever '.
-                                                              'existed).</p>'; }
+    $x['tasks'][$todo_urgent][] = array('DeletePage',array($title,$timestamp));}
   else
   { # Diff to previous version, add to diff file.
     $new_diff_id = 0;
