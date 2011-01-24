@@ -1,19 +1,31 @@
+3
 1293372334
+Anonymous
+?
 15c15
 <The default page editing password is "Password". Change it in PlomWiki/config/password.txt.
 >The default admin password is "Password". Change it [[http://www.plomlompom.de/PlomWiki/plomwiki.php?action=set_pw_admin|here]].
 %%
+2
 1293372282
+Anonymous
+?
 1c1
 <Welcome to PlomWiki!
 >!!!!] Welcome to PlomWiki!
 %%
+1
 1292284459
+Anonymous
+?
 5c5
 <Per default, only little markup is possible on pages, though more could be added as plugins (see Technical Details section in README.txt). For examples of usable markups, see the markup cheatcodes below the page text editing window.
 >Per default, [-only-] [/little/] [*markup*] is possible on pages, though more could be added as plugins (see Technical Details section in README.txt). For examples of usable markups, see the markup cheatcodes below the page text editing window.
 %%
+0
 1292127918
+Anonymous
+?
 0a1,15
 >Welcome to PlomWiki!
 >

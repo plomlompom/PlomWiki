@@ -4,9 +4,10 @@
 $RC_dir                  = $plugin_dir.'RecentChanges/';
 $RC_path                 = $RC_dir.'RecentChanges.txt';
 $actions_meta[]          = array('RecentChanges', '?action=RecentChanges');
-$hook_PrepareWrite_page .= '$x = Add_to_RecentChanges($title, $timestamp, $x);';
+$hook_PrepareWrite_page .= 
+             'Add_to_RecentChanges($x, $title, $timestamp, $author, $summary);';
 
-function Add_to_RecentChanges($title, $timestamp, $x)
+function Add_to_RecentChanges(&$x, $title, $timestamp, $author, $summary)
 # Add time stamp of page change to RecentChanges file.
 { global $nl, $RC_dir, $RC_path, $todo_urgent;
 
@@ -16,11 +17,10 @@ function Add_to_RecentChanges($title, $timestamp, $x)
   $RC_txt = '';
   if (is_file($RC_path))
     $RC_txt = file_get_contents($RC_path);
-  $RC_txt = $timestamp.':'.$title.$nl.$RC_txt;
+  $RC_txt = $timestamp.':'.$title.$nl.$RC_txt.' / '.$summary.' ('.$author.')';
 
   $x['tasks'][$todo_urgent][] = array('SafeWrite',
-                                      array($RC_path), array($RC_txt));
-  return $x; }
+                                             array($RC_path), array($RC_txt)); }
 
 function Action_RecentChanges()
 # Provide HTML output of RecentChanges file.

@@ -87,11 +87,9 @@ function PrepareWrite_comment()
 { global $Comments_dir, $esc, $nl, $title, $title_url, $todo_urgent;
   $author = $_POST['author']; $url = $_POST['URL']; $text = $_POST['text'];
 
-  # Repair problems in submitted text. Undo possible PHP magical_quotes horrors.
+  # Repair problematical characters in submitted texts.
   foreach (array('author', 'url', 'text') as $variable_name)
-  { if (get_magic_quotes_gpc()) 
-       $$variable_name = stripslashes($$variable_name); 
-    $$variable_name = NormalizeNewlines($$variable_name); }
+    $$variable_name = Sanitize($$variable_name);
 
   # Check for failure conditions: empty variables.
   if (!$author) ErrorFail('Author field empty.');

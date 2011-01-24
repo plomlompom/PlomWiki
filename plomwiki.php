@@ -91,7 +91,9 @@ function Action_page_edit()
 
   # Final HTML of edit form and JavaScript to localStorage-store password.
   $input = '<pre><textarea name="text" rows="20" style="width:100%">'.$nl.
-          $text.'</textarea></pre>';
+           $text.'</textarea></pre>'.$nl.
+           'Author: <input name="author" type="text" />'.$nl.
+           'Summary: <input name="summary" type="text" /><br />';
   $form = BuildPostForm($title_url.'&amp;action=write&amp;t=page', $input);
   eval($hook_Action_page_edit);
   $content = $form.$nl2.$markup_help;
@@ -103,20 +105,22 @@ function Action_page_history()
   $text = '<p>Page "'.$title.'" has no history.</p>';           # Fallback text.
 
   # Try to build $diff_list from $diff_path. If successful, format into HTML.
-  if (is_file($diff_path))
+  if (is_file($diff_path)) 
     $diff_list = DiffList($diff_path);
   if ($diff_list)
   { 
     # Transform key into datetime string and revert link.
     $diffs = array();
-    foreach ($diff_list as $time => $diff_txt)
-    { $diffs[] =  '<p>'.date('Y-m-d H:i:s', (int) $time).' (<a href="'.
-                           $title_url.'&amp;action=page_revert&amp;time='.$time.
-                                                       '">revert</a>):</p>'.$nl.
-                  '<div class="diff">';
+    foreach ($diff_list as $id => $diff_data)
+    { $time_string = date('Y-m-d H:i:s', (int) $diff_data['time']);
+      $author      = EscapeHTML($diff_data['author']);
+      $summary     = EscapeHTML($diff_data['summary']);
+      $desc        = $time_string.': '.$summary.' ('.$author.')';
+      $diffs[] =  '<p>'.$desc.' (<a href="'.$title_url.'&amp;action=page_revert'
+                  .'&amp;id='.$id.'">revert</a>):</p>'.$nl.'<div class="diff">';
 
       # Preformat remaining lines. Translate arrows into less ambiguous +/-.
-      foreach (explode($nl, $diff_txt) as $line_n => $line)
+      foreach (explode($nl, $diff_data['text']) as $line_n => $line)
       { if     ($line[0] == '>') $line = '+ '.substr($line, 1);
         elseif ($line[0] == '<') $line = '- '.substr($line, 1);
         $diffs[] = '<pre>'.EscapeHTML($line).'</pre>'; } 
@@ -133,17 +137,17 @@ function Action_page_history()
 function Action_page_revert()
 # Prepare version reversion and ask user for confirmation.
 { global $diff_path, $nl, $title, $title_url, $page_path;
-  $time        = $_GET['time'];
-  $time_string = date('Y-m-d H:i:s', (int) $time);
+  $id          = $_GET['id'];
+  $diff_list   = DiffList($diff_path);
+  $time_string = date('Y-m-d H:i:s', (int) $diff_list[$id]['time']);
 
   # Revert $text back through $diff_list until $time hits $id.
-  $diff_list = DiffList($diff_path);
   $text = file_get_contents($page_path);
-  foreach ($diff_list as $id => $diff)
+  foreach ($diff_list as $i => $diff_data)
   { if ($finished) break;
-    $reversed_diff              = ReverseDiff($diff); 
-    $text                       = PlomPatch($text, $reversed_diff);
-    if ($time == $id) $finished = TRUE; }
+    $reversed_diff           = ReverseDiff($diff_data['text']); 
+    $text                    = PlomPatch($text, $reversed_diff);
+    if ($id == $i) $finished = TRUE; }
   $text = EscapeHTML($text);
 
   # Ask for revert affirmation and password. If reversion date is valid.
@@ -169,10 +173,13 @@ function Markup($text)
     $text = $line($text);
   return $text; }
 
-function NormalizeNewlines($text)
-# Allow $nl newline only. $esc stripped from user input is free for other uses.
+function Sanitize($text)
+# Remove $esc from text and magical_quotes horrors.
 { global $esc;
-  return str_replace($esc, '', $text); }
+  if (get_magic_quotes_gpc())
+    $text = stripslashes($text);
+  $text = str_replace($esc, '', $text);
+  return $text; }
 
 function EscapeHTML($text)
 # Replace symbols that might be confused for HTML markup with HTML entities.
@@ -238,12 +245,7 @@ function PrepareWrite_page()
 # Deliver to Action_write() all information needed for page writing process.
 { global $diff_path, $esc, $hook_PrepareWrite_page, $nl, $page_path, $title,
          $title_url, $todo_urgent;
-
-  # Repair problems in submitted text. Undo possible PHP magical_quotes horrors.
-  $text = $_POST['text'];
-  if (get_magic_quotes_gpc())
-    $text = stripslashes($text); 
-  $text = NormalizeNewlines($text);
+  $text = Sanitize($_POST['text']);
 
   # $old_text is for comparison and diff generation.
   $old_text = $esc;    # Code to PlomDiff() of $old_text having no lines at all.
@@ -267,10 +269,23 @@ function PrepareWrite_page()
                                                               'existed).</p>'; }
   else
   { # Diff to previous version, add to diff file.
+    $new_diff_id = 0;
+    $author      = str_replace($nl, '', Sanitize($_POST['author'] ));
+    $summary     = str_replace($nl, '', Sanitize($_POST['summary']));
+    if (!$author)  $author  = 'Anonymous';
+    if (!$summary) $summary = '?';
     $diff_add = PlomDiff($old_text, $text);
-    if (is_file($diff_path)) $diff_old = file_get_contents($diff_path);
+    if (is_file($diff_path))
+    { $diff_old    = file_get_contents($diff_path);
+      $diff_list   = DiffList($diff_path); 
+      $old_diff_id = 0;
+      foreach ($diff_list as $id => $diff_data)
+        if ($id > $old_diff_id)
+          $old_diff_id = $id;
+      $new_diff_id = $old_diff_id + 1; }
     else                     $diff_old = '';
-    $diff_new = $timestamp.$nl.$diff_add.'%%'.$nl.$diff_old;
+    $diff_new = $new_diff_id.$nl.$timestamp.$nl.$author.$nl.$summary.$nl.
+                $diff_add.'%%'.$nl.$diff_old;
     
     # Actual writing tasks for Action_write().
     $x['tasks'][$todo_urgent][] = array('SafeWrite', 
@@ -701,7 +716,7 @@ function ReverseDiff($old_diff)
   return $new_diff; }
 
 function DiffList($diff_path)
-# Return list of diffs stored at $diff_path, keyed by datetime IDs.
+# Build, return page-specific diff list from file text at $diff_path.
 { global $nl;
   $diff_list = array();
 
@@ -719,15 +734,16 @@ function DiffList($diff_path)
     { if (substr($diff_txt, -1) == $nl)
         $diff_txt = substr($diff_txt, 0, -1);
 
-      # Cut out each $diff_txt's first line as key to the rest in $diff_list.
+      # Harvest diff data / metadata from $diff_txt into $diff_list[$id].
       $diff_lines = explode($nl, $diff_txt);
-      $diff_txt_new = '';
+      $diff_txt_new = array();
       foreach ($diff_lines as $line_n => $line) 
-        if ($line_n == 0) 
-          $time_id = $line;
-        else
-          $diff_txt_new[] = $line; 
-      $diff_list[$time_id] = implode($nl, $diff_txt_new); } }
+        if     ($line_n == 0) $id                        = $line;
+        elseif ($line_n == 1) $diff_list[$id]['time']    = $line;
+        elseif ($line_n == 2) $diff_list[$id]['author']  = $line;
+        elseif ($line_n == 3) $diff_list[$id]['summary'] = $line;
+        else                  $diff_txt_new[] = $line;
+      $diff_list[$id]['text'] = implode($nl, $diff_txt_new); } }
 
   return $diff_list; }
 
