@@ -17,7 +17,8 @@ function Add_to_RecentChanges(&$x, $title, $timestamp, $author, $summary)
   $RC_txt = '';
   if (is_file($RC_path))
     $RC_txt = file_get_contents($RC_path);
-  $RC_txt = $timestamp.':'.$title.$nl.$RC_txt.' / '.$summary.' ('.$author.')';
+
+  $RC_txt = $timestamp.$nl.$title.$nl.$author.$nl.$summary.$nl.'%%'.$nl.$RC_txt;
 
   $x['tasks'][$todo_urgent][] = array('SafeWrite',
                                              array($RC_path), array($RC_txt)); }
@@ -30,21 +31,32 @@ function Action_RecentChanges()
   $output = '';
   if (is_file($RC_path)) 
   { $txt = file_get_contents($RC_path);
-    $lines = explode($nl, $txt, -1);
-    $date_str_old = '';
-    foreach ($lines as $n => $line)
-    { list($datetime_int, $pagename) = explode(':', $line);
-      $datetime_str = date('Y-m-d H:i:s', (int) $datetime_int);
-      list($date_str, $time_str) = explode(' ', $datetime_str);
-      $lines[$n] = '  <li>'.$time_str.' <a href="'.$title_root.$pagename.'">'.
-                                                          $pagename.'</a></li>'; 
-      if ($date_str != $date_str_old) 
-        $lines[$n] = '  </ul>'.$nl.'</li>'.$nl.'<li>'.$date_str.$nl.
-                                                       '  <ul>'.$nl.$lines[$n];
-      $date_str_old = $date_str; }
-    $lines[0] = substr($lines[0], 14);
-    $output = '<ul>'.$nl.implode($nl, $lines).$nl.'  </ul>'.$nl.'</li>'.$nl
-                                                                     .'</ul>'; }
+    $lines    = explode($nl, $txt);
+    $date_old = '';
+    $i        = 0;
+    foreach ($lines as $line)
+    { $i++;
+      if ('%%' == $line)
+        $i = 0;
+      if     (1 == $i) 
+      { $datetime   = date('Y-m-d H:i:s', (int) $line);
+        list($date, $time) = explode(' ', $datetime); }
+      elseif (2 == $i)
+        $title  = $line;
+      elseif (3 == $i)
+        $author = $line;
+      elseif (4 == $i) 
+      { $string = '               <li>'.$time.' <a href="'.$title_root.$title.
+                               '">'.$title.'</a>: '.$line.' ('.$author.')</li>';
+        if ($date != $date_old)
+        { $string = substr($string, 15);
+          $string = '          </ul>'.$nl.'     </li>'.$nl.'     <li>'.$date.$nl
+                                                     .'          <ul> '.$string;
+          $date_old = $date; }
+        $list[] = $string; } }
+    $list[0] = substr($list[0], 15);
+    $output = '<ul>'.implode($nl, $list).$nl.'          </ul>'.$nl.'     </li>'.
+                                                                  $nl.'</ul>'; }
   else 
     $output = '<p>No RecentChanges file found.</p>';
   
