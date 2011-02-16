@@ -6,6 +6,9 @@
 # Initialization #
 ##################
 
+# Password hash salt. Change if you like, but update passwords.txt hashes, too.
+$salt = '2RoNFIrcRa7WjWVUE8d2JYnTzK8lma4mFVpJPpWlGWdUnqavEKYVoHXfYmPWy1dT';
+
 # Filesystem information.
 $config_dir = 'config/';         $markup_list_path = $config_dir.'markups.txt';
 $plugin_dir = 'plugins/';        $pw_path          = $config_dir.'password.txt';
@@ -300,7 +303,7 @@ function PrepareWrite_page()
 
 function PrepareWrite_admin_sets_pw()
 # Deliver to Action_write() all information needed for pw writing process.
-{ global $nl, $pw_path, $todo_urgent;
+{ global $nl, $pw_path, $salt, $todo_urgent;
 
   # Check password key and new password for validity.
   $new_pw   = $_POST['new_pw'];
@@ -310,9 +313,9 @@ function PrepareWrite_admin_sets_pw()
   if (!$new_auth)
     ErrorFail('Not told what to set password for.');
 
-  # Splice new password into text of password file at $pw_path.
+  # Splice new password hash into text of password file at $pw_path.
   $passwords            = ReadPasswordList($pw_path);
-  $passwords[$new_auth] = $new_pw;
+  $passwords[$new_auth] = hash('sha512', $salt.$new_pw);
   $pw_file_text         = '';
   foreach ($passwords as $key => $pw)
     $pw_file_text .= $key.':'.$pw.$nl;
@@ -344,10 +347,11 @@ function ChangePW_form($desc_new_pw, $new_auth, $desc_pw = 'Admin',
   Output_HTML('Changing password for '.$desc_new_pw, $form); }
 
 function CheckPW($key, $pw_posted, $target)
-# Check if password $pw_posted fits $key in internal password list.
-{ global $permissions, $pw_path;
-  $passwords = ReadPasswordList($pw_path);
-  $return = FALSE;
+# Check if hash of $pw_posted fits $key password hash in internal password list.
+{ global $permissions, $pw_path, $salt;
+  $passwords   = ReadPasswordList($pw_path);
+  $salted_hash = hash('sha512', $salt.$pw_posted);
+  $return      = FALSE;
 
   # Fail if empty $key provided.
   if (!$key)
@@ -359,7 +363,7 @@ function CheckPW($key, $pw_posted, $target)
 
   # Try for admin authentication.
   if (isset($passwords[$key])
-      and $pw_posted == $passwords[$key])
+      and $salted_hash == $passwords[$key])
     $return = TRUE;
 
   return $return; }
