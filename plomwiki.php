@@ -24,8 +24,8 @@ if (is_file($setup_file))
 # URL generation information.
 $root_rel = 'plomwiki.php';      $title_root = $root_rel.'?title=';
 
-# Get maximum execution time before script stops working.
-$max_exec_time = ini_get('max_execution_time');
+# Get $max_exec_time and $now to know until when orderly stopping is possible.
+$max_exec_time = ini_get('max_execution_time');                   $now = time();
 
 # Default action bar links data, read by ActionBarLinks() for Output_HTML().
 $actions_meta = array(array('Jump to Start page', '?title=Start'),
@@ -47,7 +47,7 @@ foreach (ReadAndTrimLines($plugin_list_path) as $line)
 
 # Before executing user's action, do urgent work if urgent todo file is found.
 if (is_file($todo_urgent))
-  WorkTodo($todo_urgent);
+  WorkTodo($todo_urgent, TRUE);
 $action = GetUserAction();
 $action();
 
@@ -453,42 +453,44 @@ function UnLock($path)
 { $lock = $path.'_lock';
   unlink($lock); }
 
-function WorkTodo($todo)
+function WorkTodo($todo, $do_reload = FALSE)
 # Work through todo file. Comment out finished lines. Delete file when finished.
-{ global $max_exec_time, $nl;
+{ global $max_exec_time, $nl, $now;
 
-  # Lock todo file while working on it.
-  Lock($todo);
-  $p_todo = fopen($todo, 'r+');
+  if (is_file($todo))
+  { 
+    # Lock todo file while working on it.
+    Lock($todo);
+    $p_todo = fopen($todo, 'r+');
 
-  # Work through todo file until stopped by EOF or time limit.
-  $limit_dur = $max_exec_time / 2;
-  $now       = time();
-  $limit_pos = $now + $limit_dur;
-  $stop_by_time = FALSE;
-  while (!feof($p_todo))
-  { if (time() >= $limit_pos)
-    { $stop_by_time = TRUE;
-      break; }
+    # Work through todo file until stopped by EOF or time limit.
+    $limit_dur = $max_exec_time / 2;
+    $limit_pos = $now + $limit_dur;
+    $stop_by_time = FALSE;
+    while (!feof($p_todo))
+    { if (time() >= $limit_pos)
+      { $stop_by_time = TRUE;
+        break; }
+    
+      # Eval lines not commented out. Comment out lines worked through.
+      $pos  = ftell($p_todo);
+      $line = fgets($p_todo);
+      if ($line[0] !== '#')
+      { $call = substr($line, 0, -1);
+        eval($call);
+        fseek($p_todo, $pos);
+        fwrite($p_todo, '#');
+        fgets($p_todo); } }
 
-    # Eval lines not commented out. Comment out lines worked through.
-    $pos  = ftell($p_todo);
-    $line = fgets($p_todo);
-    if ($line[0] !== '#')
-    { $call = substr($line, 0, -1);
-      eval($call);
-      fseek($p_todo, $pos);
-      fwrite($p_todo, '#');
-      fgets($p_todo); } }
-
-  # Delete file if stopped by EOF. In any case, unlock it.
-  fclose($p_todo);
-  if (!$stop_by_time) 
-    unlink($todo);
-  UnLock($todo); 
+    # Delete file if stopped by EOF. In any case, unlock it.
+    fclose($p_todo);
+    if (!$stop_by_time) 
+      unlink($todo);
+    UnLock($todo); }
 
   # Reload.
-  WorkScreenReload(); }
+  if ($do_reload)
+    WorkScreenReload(); }
 
 function DeletePage($title, $timestamp)
 # Rename, timestamp page $title and its diff. Move both files to $del_dir.
