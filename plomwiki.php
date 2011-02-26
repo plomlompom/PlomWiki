@@ -358,7 +358,7 @@ function CheckPW($key, $pw_posted, $target)
   $salt        = $passwords['$salt'];
   $salted_hash = hash('sha512', $salt.$pw_posted);
   $return      = FALSE;
-  $ip_file      = $work_failed_logins_dir.$_SERVER['REMOTE_ADDR'];
+  $ip_file     = $work_failed_logins_dir.$_SERVER['REMOTE_ADDR'];
  
   # Let IPs that recently failed a login wait $delay seconds before next try.
   $delay = 10;
