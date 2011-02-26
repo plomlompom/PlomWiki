@@ -64,8 +64,12 @@ called to fill Action_write() with all it needs to know.
 
 As single bottleneck for DB writing, Action_write() also is the point where all
 password checks are called. It delivers POST "password=" and GET "t=" parameters
-to CheckPW() and waits for its OK. CheckPW reads config/password.txt and decides
-whether its "t="-determined rules (to be extended by plugins via $hook_CheckPW)
-provide a satisfying harmony between "password=" and the file's contents.
+to CheckPW() and waits for its OK. CheckPW() reads from config/password.txt a
+list of keys (could be the names of pages, users, whatever) mapped to password
+hashes; looks up (plugin-extendable) $permissions if the user-provided key is
+allowed to open targets of type "t=" (i.e. a password for page editing should
+not be usable for editing users); and if so, compares the hash of "password="
+with the appropriate one in the password file. CheckPW() will also delay for 10
+seconds after a failed authentication attempt any further one from the same IP.
 
 For more details on PlomWiki's inner workings, read the source code's comments.

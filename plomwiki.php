@@ -6,9 +6,6 @@
 # Initialization #
 ##################
 
-# Password hash salt. Change if you like, but update passwords.txt hashes, too.
-$salt = '2RoNFIrcRa7WjWVUE8d2JYnTzK8lma4mFVpJPpWlGWdUnqavEKYVoHXfYmPWy1dT';
-
 # Filesystem information.
 $config_dir = 'config/';         $markup_list_path = $config_dir.'markups.txt';
 $plugin_dir = 'plugins/';        $pw_path          = $config_dir.'password.txt';
@@ -44,6 +41,9 @@ $title       = GetPageTitle($legal_title);
 $page_path   = $pages_dir .$title;
 $diff_path   = $diff_dir  .$title;
 $title_url   = $title_root.$title;
+
+# Allowed password keys: '*', pagenames and any "_"-preceded [a-z_] chars
+$legal_pw_key = '\*|_[a-z_]+|'.$legal_title;
 
 # Insert plugins' code.
 foreach (ReadAndTrimLines($plugin_list_path) as $line)
@@ -304,7 +304,7 @@ function PrepareWrite_page()
 
 function PrepareWrite_admin_sets_pw()
 # Deliver to Action_write() all information needed for pw writing process.
-{ global $nl, $pw_path, $salt, $todo_urgent;
+{ global $legal_pw_key, $nl, $pw_path, $todo_urgent;
 
   # Check password key and new password for validity.
   $new_pw   = $_POST['new_pw'];
@@ -313,11 +313,15 @@ function PrepareWrite_admin_sets_pw()
     ErrorFail('Empty password not allowed.');
   if (!$new_auth)
     ErrorFail('Not told what to set password for.');
+  if (!preg_match('/^('.$legal_pw_key.')$/', $new_auth))
+    ErrorFail('Invalid password key.');
 
   # Splice new password hash into text of password file at $pw_path.
   $passwords            = ReadPasswordList($pw_path);
+  $salt                 = $passwords['$salt'];
+  $pw_file_text         = $salt.$nl;
   $passwords[$new_auth] = hash('sha512', $salt.$new_pw);
-  $pw_file_text         = '';
+  unset($passwords['$salt']);
   foreach ($passwords as $key => $pw)
     $pw_file_text .= $key.':'.$pw.$nl;
 
@@ -349,8 +353,9 @@ function ChangePW_form($desc_new_pw, $new_auth, $desc_pw = 'Admin',
 
 function CheckPW($key, $pw_posted, $target)
 # Check if hash of $pw_posted fits $key password hash in internal password list.
-{ global $permissions, $pw_path, $salt, $work_failed_logins_dir;
+{ global $permissions, $pw_path, $work_failed_logins_dir;
   $passwords   = ReadPasswordList($pw_path);
+  $salt        = $passwords['$salt'];
   $salted_hash = hash('sha512', $salt.$pw_posted);
   $return      = FALSE;
   $ip_file      = $work_failed_logins_dir.$_SERVER['REMOTE_ADDR'];
@@ -381,23 +386,29 @@ function CheckPW($key, $pw_posted, $target)
 
 function ReadPasswordList($path)
 # Read password list from $path into array.
-{ global $legal_title, $nl;
+{ global $legal_pw_key, $nl;
   $content = substr(file_get_contents($path), 0, -1);
 
   # Trigger error if password file is not found / empty.
   if (!$content)
     ErrorFail('No valid password file found.');
-
+  
   # Build $passwords list from file's $content.
   $passwords = array();
   $lines = explode($nl, $content);
+  $salt = $lines[0];
+  unset($lines[0]);
   foreach ($lines as $line)
   { 
-    # Allowed password keys: '*', pagenames and any "_"-preceded [a-z_] chars.
-    preg_match('/^(\*|_[a-z_]+|'.$legal_title.'):(.+)$/', $line, $catch);
-    $range = $catch[1];
-    $pw    = $catch[2];
-    $passwords[$range] = $pw; } 
+    # Only read in allowed password keys according to $legal_pw_key.
+    preg_match('/^('.$legal_pw_key.'):(.+)$/', $line, $catch);
+    if ($catch)
+    { $range = $catch[1];
+      $pw    = $catch[2];
+      $passwords[$range] = $pw; } }
+
+  # Can't hurt to overwrite any '$salt' key smuggled in DESPITE $legal_pw_key.
+  $passwords['$salt'] = $salt; 
 
   return $passwords; }
 
