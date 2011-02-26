@@ -16,6 +16,7 @@ $pages_dir  = 'pages/';          $plugin_list_path = $config_dir.'plugins.txt';
 $diff_dir   = $pages_dir.'diffs/';     $work_dir      = 'work/';
 $del_dir    = $pages_dir.'deleted/';   $work_temp_dir = $work_dir.'temp/';
 $setup_file = 'setup.php';             $todo_urgent   = $work_dir.'todo_urgent';
+$work_failed_logins_dir = $work_dir.'failed_logins/';
 
 # Newline information. PlomWiki likes "\n", dislikes "\r".
 $nl = "\n";                      $nl2 = $nl.$nl;                    $esc = "\r";
@@ -348,10 +349,19 @@ function ChangePW_form($desc_new_pw, $new_auth, $desc_pw = 'Admin',
 
 function CheckPW($key, $pw_posted, $target)
 # Check if hash of $pw_posted fits $key password hash in internal password list.
-{ global $permissions, $pw_path, $salt;
+{ global $permissions, $pw_path, $salt, $work_failed_logins_dir;
   $passwords   = ReadPasswordList($pw_path);
   $salted_hash = hash('sha512', $salt.$pw_posted);
   $return      = FALSE;
+  $ip_file      = $work_failed_logins_dir.$_SERVER['REMOTE_ADDR'];
+ 
+  # Let IPs that recently failed a login wait $delay seconds before next try.
+  $delay = 10;
+  if (is_file($ip_file))
+  { $birth = file_get_contents($ip_file);
+    while ($birth + $delay > time())
+      sleep(1); }
+  file_put_contents($ip_file, time());
 
   # Fail if empty $key provided.
   if (!$key)
@@ -361,10 +371,11 @@ function CheckPW($key, $pw_posted, $target)
   if ($key != '*' and !in_array($key, $permissions[$target]))
       return $return;
 
-  # Try for admin authentication.
+  # Try positive authentication. If successful, delete IP form failed logins.
   if (isset($passwords[$key])
       and $salted_hash == $passwords[$key])
-    $return = TRUE;
+  { $return = TRUE;
+    unlink($ip_file); }
 
   return $return; }
 
