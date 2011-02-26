@@ -356,7 +356,7 @@ function CheckPW($key, $pw_posted, $target)
 { global $permissions, $pw_path, $work_failed_logins_dir;
   $return = FALSE;
  
-  # Let IPs that recently failed a login wait $delay seconds before next try.
+  # Let IPs that recently failed a login wait $delay seconds before next chance.
   $ip_file = $work_failed_logins_dir.$_SERVER['REMOTE_ADDR'];
   $delay   = 10;
   if (is_file($ip_file))
