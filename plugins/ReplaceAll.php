@@ -1,5 +1,5 @@
 <?php
-$actions_meta[]          = array('GlobalRegexReplace', '?action=ReplaceAll');
+$actions_meta[] = array('GlobalRegexReplace', '?action=ReplaceAll');
 
 function ReplaceAll_RegexError($errno, $errstr)
 # Return PHP preg_replace() error message to explain regex mistake.
