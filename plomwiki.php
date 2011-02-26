@@ -354,14 +354,11 @@ function ChangePW_form($desc_new_pw, $new_auth, $desc_pw = 'Admin',
 function CheckPW($key, $pw_posted, $target)
 # Check if hash of $pw_posted fits $key password hash in internal password list.
 { global $permissions, $pw_path, $work_failed_logins_dir;
-  $passwords   = ReadPasswordList($pw_path);
-  $salt        = $passwords['$salt'];
-  $salted_hash = hash('sha512', $salt.$pw_posted);
-  $return      = FALSE;
-  $ip_file     = $work_failed_logins_dir.$_SERVER['REMOTE_ADDR'];
+  $return = FALSE;
  
   # Let IPs that recently failed a login wait $delay seconds before next try.
-  $delay = 10;
+  $ip_file = $work_failed_logins_dir.$_SERVER['REMOTE_ADDR'];
+  $delay   = 10;
   if (is_file($ip_file))
   { $birth = file_get_contents($ip_file);
     while ($birth + $delay > time())
@@ -377,6 +374,9 @@ function CheckPW($key, $pw_posted, $target)
       return $return;
 
   # Try positive authentication. If successful, delete IP form failed logins.
+  $passwords   = ReadPasswordList($pw_path);
+  $salt        = $passwords['$salt'];
+  $salted_hash = hash('sha512', $salt.$pw_posted);
   if (isset($passwords[$key])
       and $salted_hash == $passwords[$key])
   { $return = TRUE;
