@@ -42,7 +42,7 @@ $page_path   = $pages_dir .$title;
 $diff_path   = $diff_dir  .$title;
 $title_url   = $title_root.$title;
 
-# Allowed password keys: '*', pagenames and any "_"-preceded [a-z_] chars
+# Allowed password keys: '*', pagenames and any "_"-preceded [a-z_] chars.
 $legal_pw_key = '\*|_[a-z_]+|'.$legal_title;
 
 # Insert plugins' code.
