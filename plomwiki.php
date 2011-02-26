@@ -568,7 +568,7 @@ function PlomDiff($text_A, $text_B)
     $max_n_A = $max_equal[0]; $max_n_B = $max_equal[1]; $max_ln = $max_equal[2];
     $equal[] = $max_equal;
 
-    # Eliminate from / trunacate $equals blocks intersecting current $max_equal.
+    # Eliminate from / truncate $equals blocks intersecting current $max_equal.
     foreach ($equals as $n_equal => $arr)
     { $n_A = $arr[0]; $n_B = $arr[1]; $ln = $arr[2]; 
 
