@@ -1,4 +1,6 @@
 <?php
+# ISSUES: Doesn't currently apply $hook_PrepareWrite_page.
+
 $actions_meta[] = array('GlobalRegexReplace', '?action=ReplaceAll');
 
 function ReplaceAll_RegexError($errno, $errstr)
