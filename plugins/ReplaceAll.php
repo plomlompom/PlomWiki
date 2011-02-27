@@ -23,12 +23,12 @@ function Action_ReplaceAll()
            '<p><input type="radio" name="del_rule_0" value="0" />Delete pages '.
                                        'that become empty as a result.<br>'.$nl.
            '<input type="radio" name="del_rule_0" value="1" checked />Fill said'
-          .'pages with this text: <input type="text" name="del_rule_0_alt" '.
+          .' pages with this text: <input type="text" name="del_rule_0_alt" '.
                  'size="30" value="Emptied by GlobalRegexReplace" /><p />'.$nl.
            '<p><input type="radio" name="del_rule_1" value="0" />Delete pages '.
                        'whose text is reduced to "delete" as a result.<br>'.$nl.
            '<input type="radio" name="del_rule_1" value="1" checked />Fill said'
-          .'pages with this text: <input type="text" name="del_rule_1_alt" '.
+          .' pages with this text: <input type="text" name="del_rule_1_alt" '.
                  'size="30" value="Emptied by GlobalRegexReplace" /><p />'.$nl.
            '<h3>Affirm</h3>';
 
