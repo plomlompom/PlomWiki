@@ -34,32 +34,36 @@ function MarkupLinks($text)
   $regex = '/\[\[([^'.$nl.']+?)]]/';
 
   # Go through each potential linking markup and decide with what to replace it.
-  preg_match_all($regex, $text, $store_tmp);
-  $store_tmp = $store_tmp[1];
-  foreach ($store_tmp as $string)
-  { $old  = '[['.$string.']]'; $link  = TRUE; $style = FALSE; $page  = FALSE;
+  preg_match_all($regex, $text, $store);
+  $store = $store[1];
+  foreach ($store as $string)
+  { $old  = '[['.$string.']]';
 
-    # Try to force links that seem to name wiki pages into legal title format.
+    # Try to force linked text into $legal_title format.
+    $gaps    = array('&apos;','&quot;','&amp;',';',':','\\','/',',','.',' ');
+    $umlauts = array(array('Ä','Ae'), array('Ö','Oe'), array('Ü','ue'),
+                     array('ä','ae'), array('ö','oe'), array('ü','ue'), 
+                     array('ß','ss'));
     if (!strpos($string, '|') and !preg_match('/^'.$legal_url.'$/', $string))
     { $temp = $string;
-      if (FALSE !== strpos($temp, ' ' ))   $temp = str_replace(' ',  '', $temp);
-      if (FALSE !== strpos($temp, '.' ))   $temp = str_replace('.',  '', $temp);
-      if (FALSE !== strpos($temp, ':' ))   $temp = str_replace(':',  '', $temp);
-      if (FALSE !== strpos($temp, '/' ))   $temp = str_replace('/',  '', $temp);
-      if (FALSE !== strpos($temp, '\\'))   $temp = str_replace('\\', '', $temp);
-      if (FALSE !== strpos($temp,'&apos;'))$temp=str_replace('&apos;','',$temp);
-      if (FALSE !== strpos($temp,'&quot;'))$temp=str_replace('&quot;','',$temp);
+      foreach ($umlauts as $umlaut) 
+        $temp = str_replace($umlaut[0], $umlaut[1], $temp);
+      foreach ($gaps as $gap)
+        $temp = str_replace($gap, ' ', $temp);
+      $temp = preg_replace('/ ([a-z])/e', 'strtoupper("$1")', $temp);
+      $temp = str_replace(' ', '', $temp);
       $string = $temp.'|'.$string; }
 
     # Try collecting from potential linking markup code HTML link parameters.
-    if (preg_match('/^'.$legal_title.'$/', $string))
-      $desc = $page = $string;
-    elseif (preg_match('/^'.$legal_url.'$/', $string))
+    $link  = TRUE; 
+    $style = FALSE;
+    $page  = FALSE;
+    if (preg_match('/^'.$legal_url.'$/', $string))
       $desc = $url  = $string;
-    elseif (preg_match('/^('.$legal_title.')\|(.*)$/', $string, $catch))
-    { $page = $catch[1]; $desc = $catch[2]; }
     elseif (preg_match('/^('.$legal_url.')\|(.*)$/', $string, $catch))
     { $url  = $catch[1]; $desc = $catch[6]; }
+    elseif (preg_match('/^('.$legal_title.')\|(.*)$/', $string, $catch))
+    { $page = $catch[1]; $desc = $catch[2]; }
     else
       $link = FALSE;
 
