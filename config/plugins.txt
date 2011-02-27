@@ -1,9 +1,9 @@
 # Insert relative paths to plugin files here. Comment out with #.
-#plugins/StandardLib.php
+plugins/StandardLib.php
 plugins/StandardMarkup.php
-#plugins/Search.php
-#plugins/RecentChanges.php
-#plugins/AutoLink.php
-#plugins/Comments.php
-#plugins/PwPages.php
-#plugins/ReplaceAll.php
+plugins/Search.php
+plugins/RecentChanges.php
+plugins/AutoLink.php
+plugins/Comments.php
+plugins/PwPages.php
+plugins/ReplaceAll.php
