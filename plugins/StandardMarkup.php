@@ -29,20 +29,54 @@ $esc_store = array();
 
 function MarkupLinks($text)
 # [[LinkedPagename]], [[Linked|Text displayed]], [[http://linked-url.com]].
-{ global $nl, $title_root, $legal_title;
-
-  # [[Title]] and [[Title|Text]]
-  $text = preg_replace('/\[\[('.$legal_title.')]]/',
-                       '<a href="'.$title_root.'$1">$1</a>', $text);
-  $text = preg_replace('/\[\[('.$legal_title.')\|([^'.$nl.']+?)]]/',
-                       '<a href="'.$title_root.'$1">$2</a>', $text);
-
-  # [[URL|Text]] and [[URL]]
+{ global $nl, $title_root, $legal_title, $pages_dir;
   $legal_url = '((http)|(https)|(ftp)):\/\/[^ '.$nl.'|]+?';
-  $text = preg_replace('/\[\[('.$legal_url.')\|([^'.$nl.']+?)]]/',
-                       '<a href="$1">$6</a>', $text);
-  return  preg_replace('/\[\[('.$legal_url.')]]/',
-                       '<a href="$1">$1</a>', $text); }
+  $regex = '/\[\[([^'.$nl.']+?)]]/';
+
+  # Go through each potential linking markup and decide with what to replace it.
+  preg_match_all($regex, $text, $store_tmp);
+  $store_tmp = $store_tmp[1];
+  foreach ($store_tmp as $string)
+  { $old  = '[['.$string.']]'; $link  = TRUE; $style = FALSE; $page  = FALSE;
+
+    # Try to force links that seem to name wiki pages into legal title format.
+    if (!strpos($string, '|') and !preg_match('/^'.$legal_url.'$/', $string))
+    { $temp = $string;
+      if (FALSE !== strpos($temp, ' ')) $temp = str_replace(' ', '', $temp);
+      if (FALSE !== strpos($temp, '.')) $temp = str_replace('.', '', $temp);
+      if (FALSE !== strpos($temp, ':')) $temp = str_replace(':', '', $temp);
+      if (FALSE !== strpos($temp, '/')) $temp = str_replace('/', '', $temp);
+      if (FALSE !== strpos($temp, '\\')) $temp = str_replace('\\', '', $temp);
+      if (FALSE !== strpos($temp, '&apos;'))
+        $temp = str_replace('&apos;', '', $temp);
+      if (FALSE !== strpos($temp, '&quot;'))
+        $temp = str_replace('&quot;', '', $temp);
+      $string = $temp.'|'.$string; }
+
+    # Try collecting from potential linking markup code HTML link parameters.
+    if (preg_match('/^'.$legal_title.'$/', $string))
+      $desc = $page = $string;
+    elseif (preg_match('/^'.$legal_url.'$/', $string))
+      $desc = $url  = $string;
+    elseif (preg_match('/^('.$legal_title.')\|(.*)$/', $string, $catch))
+    { $page = $catch[1]; $desc = $catch[2]; }
+    elseif (preg_match('/^('.$legal_url.')\|(.*)$/', $string, $catch))
+    { $url  = $catch[1]; $desc = $catch[6]; }
+    else
+      $link = FALSE;
+
+    # If $link, build HTML link to replace markup; else, leave text unchanged.
+    if ($link)
+    { if ($page)
+      { if (!is_file($pages_dir.$page)) 
+          $style = 'style="color: red;"';
+        $url = $title_root.$page; }
+      $repl = '<a '.$style.' href="'.$url.'">'.$desc.'</a>'; }
+    else
+      $repl = $old;
+
+    $text = str_replace($old, $repl, $text); }
+  return $text; }
 
 function MarkupStrong($text)
 # "[*This*]" becomes "<strong>This</strong>", if not broken by newlines.
