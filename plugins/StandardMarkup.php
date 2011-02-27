@@ -42,11 +42,11 @@ function MarkupLinks($text)
     # Try to force links that seem to name wiki pages into legal title format.
     if (!strpos($string, '|') and !preg_match('/^'.$legal_url.'$/', $string))
     { $temp = $string;
-      if (FALSE !== strpos($temp, ' ' )) $temp = str_replace(' ',  '', $temp);
-      if (FALSE !== strpos($temp, '.' )) $temp = str_replace('.',  '', $temp);
-      if (FALSE !== strpos($temp, ':' )) $temp = str_replace(':',  '', $temp);
-      if (FALSE !== strpos($temp, '/' )) $temp = str_replace('/',  '', $temp);
-      if (FALSE !== strpos($temp, '\\')) $temp = str_replace('\\', '', $temp);
+      if (FALSE !== strpos($temp, ' ' ))   $temp = str_replace(' ',  '', $temp);
+      if (FALSE !== strpos($temp, '.' ))   $temp = str_replace('.',  '', $temp);
+      if (FALSE !== strpos($temp, ':' ))   $temp = str_replace(':',  '', $temp);
+      if (FALSE !== strpos($temp, '/' ))   $temp = str_replace('/',  '', $temp);
+      if (FALSE !== strpos($temp, '\\'))   $temp = str_replace('\\', '', $temp);
       if (FALSE !== strpos($temp,'&apos;'))$temp=str_replace('&apos;','',$temp);
       if (FALSE !== strpos($temp,'&quot;'))$temp=str_replace('&quot;','',$temp);
       $string = $temp.'|'.$string; }
