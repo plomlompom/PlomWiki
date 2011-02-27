@@ -18,7 +18,7 @@ $markup_help = '<h3>PlomWiki markup cheatsheet</h3>'.$nl.
 # Escape marks. Remember $esc is stripped from any page text by plomwiki.php.
 # A line starting with $esc escapes paragraphing by MarkupParagraphs().
 # $esc_{on,off,store} are used by MarkupEscape() and MarkupUnescape()
-# for the user-defined markup escaping via "[\...\]".
+# for the user-defined markup escaping via "[=...=]".
 $esc_on    = '['.$esc;
 $esc_off   = $esc.']';
 $esc_store = array();
