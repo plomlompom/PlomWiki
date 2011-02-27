@@ -1,6 +1,7 @@
 <?php
 
 $Comments_dir   = $plugin_dir.'Comments/';
+$captcha_path   = $Comments_dir.'captcha';
 $actions_meta[] = array('Comments administration', '?action=comments_admin');
 $hook_Action_page_view .= '$text .= Comments(); ';
 $permissions['comment'][] = '_comment_captcha';
@@ -11,7 +12,7 @@ $permissions['comment'][] = '_comment_captcha';
 
 function Comments()
 # Return display of page comments and commenting form.
-{ global $Comments_dir, $nl, $nl2, $pages_dir, $title, $title_url;
+{ global $captcha_path, $Comments_dir, $nl, $nl2, $pages_dir, $title,$title_url;
 
   # Silently fail if $Comments_dir or page do not exist.
   if (!is_dir($Comments_dir) or !is_file($pages_dir.$title))
@@ -36,14 +37,14 @@ function Comments()
   if (!$comments)
     $comments = $nl2.'<p>No one commented on this page yet.</p>';
 
-  # Commenting $form. Allow commenting depending on $captcha.
-  $captcha = Comments_GetCurCaptcha();
+  # Commenting $form. Allow commenting depending on $captcha_path's existence.
   $write   = '<h2>Write your own comment</h2>'.$nl2;
-  if ($captcha)
+  if (is_file($captcha_path))
   { $input = 'Your name: <input name="author" /><br />'.$nl.
              'Your URL: <input name="URL" />'.$nl.
              '<pre><textarea name="text" rows="10" cols="40">'.$nl.$text.
                                                             '</textarea></pre>';
+    $captcha = file_get_contents($captcha_path);
     $form  = BuildPostForm($title_url.'&amp;action=write&amp;t=comment', $input, 
                            'Captcha password needed! Write "'.$captcha.
                            '": <input name="pw" size="5" /><input name="auth" '.
@@ -120,7 +121,7 @@ function PrepareWrite_comment()
 
 function Action_comments_admin()
 # Administration menu for comments.
-{ global $Comments_dir, $nl, $nl2, $root_rel;
+{ global $captcha_path, $Comments_dir, $nl, $nl2, $root_rel;
 
   # If no $Comments_dir, offer creating it.
   $build_dir = '';
@@ -134,9 +135,10 @@ function Action_comments_admin()
                  '</p>'.$nl;
 
   # Captcha setting.
-  $cur_captcha = Comments_GetCurCaptcha();
-  if ($cur_captcha) $cur_captcha = 'Current captcha is: "'.$cur_captcha.'".';
-  else              $cur_captcha = 'No captcha set yet.';
+  if (is_file($captcha_path))
+    $cur_captcha = 'Current captcha: "'.file_get_contents($captcha_path).'".';
+  else
+    $cur_captcha = 'No captcha set yet.';
   $captcha = '<p><strong>'.$cur_captcha.'</strong></p>'.$nl.
              '<p>Set new captcha: <input name="captcha" /> (Write "delete" to '.
                   'unset captcha. Commenting won\'t be possible then.)</p>'.$nl;
@@ -148,7 +150,8 @@ function Action_comments_admin()
 
 function PrepareWrite_comments_admin()
 # Return to Action_write() all information needed for comments administration.
-{ global $Comments_dir, $nl, $pw_path, $root_rel, $title_url, $todo_urgent;
+{ global $captcha_path, $Comments_dir, $nl, $pw_path, $root_rel, $title_url,
+         $todo_urgent;
   $new_pw    = $_POST['captcha'];
   $build_dir = $_POST['build_dir'];
   $x['tasks'] = array();
@@ -164,31 +167,21 @@ function PrepareWrite_comments_admin()
 
   # If $new_pw is "delete", unset captcha. Else, $new_pw becomes new captcha.
   if ($new_pw)
-  { $passwords = ReadPasswordList($pw_path);
+  { $passwords    = ReadPasswordList($pw_path);
+    $salt         = $passwords['$salt'];
+    $pw_file_text = $salt.$nl;
     if ('delete' == $new_pw) 
     { unset($passwords['_comment_captcha']);
-      $success_captcha = '<p>Unsetting captcha.</p>'; }
+      $success_captcha = '<p>Unsetting captcha.</p>'; 
+      if (is_file($captcha_path))
+        $x['tasks'][$todo_urgent][] = array('unlink', array($captcha_path)); }
     else
-    { $passwords['_comment_captcha'] = $new_pw;
-      $success_captcha = '<p>Setting new captcha</p>'; }
-    $pw_file_text = '';
+    { $passwords['_comment_captcha'] = hash('sha512', $salt.$new_pw);
+      $success_captcha = '<p>Setting new captcha</p>'; 
+      $x['tasks'][$todo_urgent][] = array('SafeWrite', 
+                                        array($captcha_path), array($new_pw)); }
     foreach ($passwords as $key => $pw)
       $pw_file_text .= $key.':'.$pw.$nl;
     $x['tasks'][$todo_urgent][] = array('SafeWrite', 
                                         array($pw_path), array($pw_file_text));}
   return $x; }
-
-##########################
-# Minor helper functions #
-##########################
-
-function Comments_GetCurCaptcha()
-# Get current comment captcha from password list.
-{ global $pw_path;
-  $password_list = ReadPasswordList($pw_path);
-  return $password_list['_comment_captcha']; }
-
-function Comments_CheckCaptcha($pw_posted, $passwords)
-# Return whether $pw_posted is $passwords['_comment_captcha'].
-{ if ($pw_posted === $passwords['_comment_captcha']) return TRUE;
-  else                                               return FALSE; }
