@@ -3,8 +3,8 @@
 $actions_page[] = array('Set page password', '&amp;action=page_set_pw');
 $hook_Action_page_edit = '$form = BuildPostForm($title_url.\'&amp;action=write'
                         .'&amp;t=page\', $input, \'<select name="auth"><option '
-                        .'value="\'.$title.\'">Page</option><option value="*">'.
-                               'Admin</option></select> password: <input type='.
+                        .'value="*">Admin</option><option value="\'.$title.\'">'
+                              .'Page</option></select> password: <input type='.
                                                     '"password" name="pw">\');';
 
 $permissions['page'][] = $title;
