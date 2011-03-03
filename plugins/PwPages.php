@@ -7,9 +7,6 @@ $hook_Action_page_edit = '$form = BuildPostForm($title_url.\'&amp;action=write'
                                'Admin</option></select> password: <input type='.
                                                     '"password" name="pw">\');';
 
-$hook_PrepareWrite_page .= 'if ($auth_posted == $title)'.$nl.
-                          '  $x[\'auth\'] = $auth_posted; ';
-
 $permissions['page'][] = $title;
 
 function Action_page_set_pw()
