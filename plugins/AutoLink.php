@@ -4,8 +4,14 @@ $AutoLink_dir   = $plugin_dir.'AutoLink/';
 
 # Plugin hooks.
 $actions_meta[] = array('AutoLink administration', '?action=autolink_admin');
-$hook_PrepareWrite_page .= '$x[$todo_urgent][\'tasks\'] = '.
-                            'UpdateAutoLinks($x[\'tasks\'], $text, $diff_add);';
+$hook_WritePage .= '
+$x = NewTemp($txt_PluginsTodo);
+$y = array();
+$y = UpdateAutoLinks($y, $title, $text, $diff_add);
+foreach ($y as $task)
+  WriteTask($x, $task[0], $task[1]);
+$txt_PluginsTodo = file_get_contents($x);
+unlink($x);';
 $hook_Action_page_view  .= '$text .= AutoLink_Backlinks(); ';
 
 ##########
@@ -172,9 +178,9 @@ function BuildRegex($title)
 # DB updating / building / purging #
 ####################################
 
-function UpdateAutoLinks($t, $text, $diff)
+function UpdateAutoLinks($t, $title, $text, $diff)
 # Add to task list $t AutoLink DB update tasks. $text, $diff determine change.
-{ global $AutoLink_dir, $nl, $title;
+{ global $AutoLink_dir, $nl;
 
   # Silently fail if AutoLink DB directory does not exist.
   if (!is_dir($AutoLink_dir)) return $t;
@@ -293,9 +299,13 @@ function PrepareWrite_autolink_admin()
 function AutoLink_CreateFile($title)
 # Start AutoLink file of page $title, empty but for title regex.
 { global $AutoLink_dir, $nl2;
+
   $path    = $AutoLink_dir.$title;
   $content = BuildRegex($title).$nl2;
-  AutoLink_SendToSafeWrite($path, $content); }
+  $temp    = NewTemp();
+  if (!is_file($path))
+  { file_put_contents($temp, $content);
+    rename($temp, $path); } }
 
 function AutoLink_TryLinking($title, $linkable)
 # $titles = $title_$linkable. Try auto-linking both pages, write to their files.
@@ -331,7 +341,8 @@ function AutoLink_ChangeLine($title, $line_n, $action, $diff)
   $lines          = explode($nl, file_get_contents($path));
   $strings        = explode(' ', $lines[$line_n]);
   if     ($action == 'in')
-  { $strings[]    = $diff;
+  { if (!in_array($diff, $strings))
+      $strings[]  = $diff;
     usort($strings, 'AutoLink_SortByLengthAlphabetCase'); }
   elseif ($action == 'out')
     $strings      = array_diff($strings, array($diff));  
@@ -339,7 +350,8 @@ function AutoLink_ChangeLine($title, $line_n, $action, $diff)
   $lines[$line_n] = rtrim($new_line);
   $content        = implode($nl, $lines);
 
-  AutoLink_SendToSafeWrite($path, $content); }
+  $path_temp = NewTemp($content);
+  SafeWrite($path, $path_temp); }
 
 ##########################
 # Minor helper functions #
@@ -391,11 +403,6 @@ function AutoLink_TasksLinksInOrOut($tasks, $dir, $title, $titles)
 # Add $tasks of moving $titles $dir ('in'/'out') of line 1 in $title's AutoLink
 # file and $title $dir ('in'/'out')of line 2 in $titles' AutoLink files.
 { foreach ($titles as $pagename)
-  { $tasks[] = array('AutoLink_ChangeLine', $title, 1, $dir, $pagename);
-    $tasks[] = array('AutoLink_ChangeLine', $pagename, 2, $dir, $title); }
+  { $tasks[] = array('AutoLink_ChangeLine', array($title, 1, $dir, $pagename));
+    $tasks[] = array('AutoLink_ChangeLine', array($pagename, 2, $dir, $title)); }
   return $tasks; }
-
-function AutoLink_SendToSafeWrite($path, $content)
-# Call SafeWrite() not on $content directly, but on newly built temp file of it.
-{ $path_temp= NewTemp($content);
-  SafeWrite($path, $path_temp); }

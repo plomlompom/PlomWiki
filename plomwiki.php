@@ -248,58 +248,34 @@ function Action_write()
 
 function PrepareWrite_page()
 # Deliver to Action_write() all information needed for page writing process.
-{ global $diff_path, $esc, $hook_PrepareWrite_page, $nl, $page_path, $title,
-         $title_url, $todo_urgent;
+{ global $page_path, $title, $title_url, $todo_urgent, $work_dir;
   $text = Sanitize($_POST['text']);
 
-  # $old_text is for comparison and diff generation.
-  $old_text = $esc;    # Code to PlomDiff() of $old_text having no lines at all.
+  # Check for error conditions: $text empty or unchanged.
   if (is_file($page_path))
     $old_text = file_get_contents($page_path);
-
-  # Check for error conditions: $text empty or unchanged.
   if (!$text)         
     ErrorFail('Empty pages not allowed.', 
               'Replace text with "delete" if you want to delete the page.');
   elseif ($text == $old_text)            
     ErrorFail('You changed nothing!');
 
-  $timestamp = time();
+  # Fill in "author" and "summary" fields, with default values if necessary.
+  $author      = str_replace($nl, '', Sanitize($_POST['author'] ));
+  $summary     = str_replace($nl, '', Sanitize($_POST['summary']));
+  if (!$author)  $author  = 'Anonymous';
+  if (!$summary) $summary = '?';
 
-  # In case of page deletion question, add DeletePage() task to todo file.
-  if ($text == 'delete')
-  { if (is_file($page_path)) 
-    $x['tasks'][$todo_urgent][] = array('DeletePage',array($title,$timestamp));}
-  else
-  { # Diff to previous version, add to diff file.
-    $new_diff_id = 0;
-    $author      = str_replace($nl, '', Sanitize($_POST['author'] ));
-    $summary     = str_replace($nl, '', Sanitize($_POST['summary']));
-    if (!$author)  $author  = 'Anonymous';
-    if (!$summary) $summary = '?';
-    $diff_add = PlomDiff($old_text, $text);
-    if (is_file($diff_path))
-    { $diff_old    = file_get_contents($diff_path);
-      $diff_list   = DiffList($diff_path); 
-      $old_diff_id = 0;
-      foreach ($diff_list as $id => $diff_data)
-        if ($id > $old_diff_id)
-          $old_diff_id = $id;
-      $new_diff_id = $old_diff_id + 1; }
-    else
-      $diff_old = '';
-    $diff_new = $new_diff_id.$nl.$timestamp.$nl.$author.$nl.$summary.$nl.
-                $diff_add.'%%'.$nl.$diff_old;
-    
-    # Actual writing tasks for Action_write().
-    $x['tasks'][$todo_urgent][] = array('SafeWrite', 
-                                         array($diff_path), array($diff_new));
-    $x['tasks'][$todo_urgent][] = array('SafeWrite', 
-                                         array($page_path), array($text)); }
+  # Reserve empty temporary files for WritePage().
+  $tmp_0 = NewTemp(); $tmp_1 = NewTemp(); $tmp_2 = NewTemp();
 
-  # Before leaving, execute plugin hook.
+  # $todo_plugin is for tasks added in WritePage() by plugins via hook.
+  $todo_plugin = $work_dir.'todo_bonus';
+  $x['tasks'][$todo_urgent][] = 
+             array('WritePage',array($title, $todo_plugin,$tmp_0,$tmp_1,$tmp_2),
+                   array($text, $author, $summary));
+  $x['tasks'][$todo_urgent][] = array('WorkTodo', array($todo_plugin));
   $x['redir'] = $title_url;
-  eval($hook_PrepareWrite_page);
   return $x; }
 
 function PrepareWrite_admin_sets_pw()
@@ -416,69 +392,6 @@ function ReadPasswordList($path)
 # Internal DB manipulation #
 ############################
 
-function WriteTask($todo, $func, $values_easy = array(), $values_hard = array())
-# Write call to function $func into new $todo line, with $values_easy (use for
-# short, sans-dangerous-chars strings) passed as parameters directly, strings of
-# $values_hard only passed as paths to newly created temp files storing them. 
-{ global $nl;
-  $p_todo = fopen($todo, 'a+');
-
-  # Write $values_hard into temp files, add their paths to $values_easy.
-  if (!empty($values_hard))
-    foreach ($values_hard as $value_hard)
-      $values_easy[] = NewTemp($value_hard);
-
-  # Write eval()-executable function call with $func and $values_easy.
-  if (!empty($values_easy))
-    $values_easy = '\''.implode('\', \'', $values_easy).'\'';
-  $line = $func.'('.$values_easy.');'.$nl;
-  fwrite($p_todo, $line);
-  fclose($p_todo); }
-
-function NewTemp($string)
-# Put $string into new temp file in $work_temp_dir, return its path.
-{ global $work_temp_dir;
-
-  # Lock dir so its filename list won't change via something else during this.
-  Lock($work_temp_dir);
-  $p_dir = opendir($work_temp_dir);
-
-  # Collect numerical filenames of temp files in $tempfiles.
-  $tempfiles = array(0);
-  while (FALSE !== ($fn = readdir($p_dir))) 
-    if (preg_match('/^[0-9]*$/', $fn))
-      $tempfiles[] = $fn;
-
-  # Build new highest-number $temp_path, write $string into it.
-  $new_max_int = max($tempfiles) + 1;
-  $temp_path = $work_temp_dir.$new_max_int;
-  file_put_contents($temp_path, $string);
-
-  # As our change to $work_temp_dir's filename list is finished, unlock dir.
-  closedir($p_dir);
-  UnLock($work_temp_dir);
-  return $temp_path; }
-
-function Lock($path)
-# Check for and create lockfile for $path. Locks block $lock_dur seconds max.
-{ global $max_exec_time;
-  $lock_dur = 2 * $max_exec_time;
-  $now      = time();
-  $lock     = $path.'_lock';
-
-  # Fail if $lock file exists already and is too young. Else, write new $lock.
-  if (is_file($lock))
-  { $time = file_get_contents($lock);
-    if ($time + $lock_dur > $now)
-      ErrorFail('Stuck by a lockfile of too recent a timestamp.',
-                'Lock effective for '.$lock_dur.' seconds. Try a bit later.'); }
-  file_put_contents($lock, $now); }
-
-function UnLock($path)
-# Unlock $path.
-{ $lock = $path.'_lock';
-  unlink($lock); }
-
 function WorkTodo($todo, $do_reload = FALSE)
 # Work through todo file. Comment out finished lines. Delete file when finished.
 { global $max_exec_time, $nl, $now;
@@ -518,22 +431,139 @@ function WorkTodo($todo, $do_reload = FALSE)
   if ($do_reload)
     WorkScreenReload(); }
 
-function DeletePage($title, $timestamp)
-# Rename, timestamp page $title and its diff. Move both files to $del_dir.
-{ global $del_dir, $diff_dir, $pages_dir;
-  $page_path     = $pages_dir.$title;
-  $diff_path     = $diff_dir .$title;
-  $path_diff_del = $del_dir.$title.',del-diff-'.$timestamp;
-  $path_page_del = $del_dir.$title.',del-page-'.$timestamp;
+function WriteTask($todo, $func, $values_easy = array(), $values_hard = array())
+# Write call to function $func into new $todo line, with $values_easy (use for
+# short, sans-dangerous-chars strings) passed as parameters directly, strings of
+# $values_hard only passed as paths to newly created temp files storing them. 
+{ global $nl;
+  $p_todo = fopen($todo, 'a+');
 
-  if (is_file($diff_path)) rename($diff_path, $path_diff_del);
-  if (is_file($page_path)) rename($page_path, $path_page_del); }
+  # Write $values_hard into temp files, add their paths to $values_easy.
+  if (!empty($values_hard))
+    foreach ($values_hard as $value_hard)
+      $values_easy[] = NewTemp($value_hard);
+
+  # Write eval()-executable function call with $func and $values_easy.
+  if (!empty($values_easy))
+    $values_easy = '\''.implode('\', \'', $values_easy).'\'';
+  $line = $func.'('.$values_easy.');'.$nl;
+  fwrite($p_todo, $line);
+  fclose($p_todo); }
+
+function Lock($path)
+# Check for and create lockfile for $path. Locks block $lock_dur seconds max.
+{ global $max_exec_time;
+  $lock_dur = 2 * $max_exec_time;
+  $now      = time();
+  $lock     = $path.'_lock';
+
+  # Fail if $lock file exists already and is too young. Else, write new $lock.
+  if (is_file($lock))
+  { $time = file_get_contents($lock);
+    if ($time + $lock_dur > $now)
+      ErrorFail('Stuck by a lockfile of too recent a timestamp.',
+                'Lock effective for '.$lock_dur.' seconds. Try a bit later.'); }
+  file_put_contents($lock, $now); }
+
+function UnLock($path)
+# Unlock $path.
+{ $lock = $path.'_lock';
+  unlink($lock); }
+
+function NewTemp($string = '')
+# Put $string into new temp file in $work_temp_dir, return its path.
+{ global $work_temp_dir;
+
+  # Lock dir so its filename list won't change via something else during this.
+  Lock($work_temp_dir);
+  $p_dir = opendir($work_temp_dir);
+
+  # Collect numerical filenames of temp files in $tempfiles.
+  $tempfiles = array(0);
+  while (FALSE !== ($fn = readdir($p_dir))) 
+    if (preg_match('/^[0-9]*$/', $fn))
+      $tempfiles[] = $fn;
+
+  # Build new highest-number $temp_path, write $string into it.
+  $new_max_int = max($tempfiles) + 1;
+  $temp_path = $work_temp_dir.$new_max_int;
+  file_put_contents($temp_path, $string);
+
+  # As our change to $work_temp_dir's filename list is finished, unlock dir.
+  closedir($p_dir);
+  UnLock($work_temp_dir);
+  return $temp_path; }
 
 function SafeWrite($path_original, $path_temp)
 # Avoid data corruption: Exit if no temp file. Rename, don't overwrite directly.
 { if (!is_file($path_temp))    return;
   if (is_file($path_original)) unlink($path_original); 
   rename($path_temp, $path_original); }
+
+function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo, 
+                   $path_tmp_text, $path_text, $path_author, $path_summary)
+# Write text found at $path_text to page $title. Safely trigger individual file
+# writing actions only according to (non-)existence of $path_tmp_[...] files.
+# Use texts found at $path_author and $path_summary as change descriptions. 
+# $todo_plugins catches actions added via plugin hook $hook_WritePage to its
+# $txt_PluginTodo; WorkTodo() on $todo_plugin needs to be called externally.
+{ global $del_dir, $diff_dir, $esc, $hook_WritePage, $nl, $pages_dir;
+  $page_path = $pages_dir.$title; 
+  $diff_path = $diff_dir .$title;
+  $text      = file_get_contents($path_text);
+  $author    = file_get_contents($path_author);
+  $summary   = file_get_contents($path_summary);
+  $timestamp = time();
+
+  # If 'delete', rename and timestamp page and its diff, move both to $del_dir.
+  if ($text == 'delete')
+  { if (is_file($page_path)) 
+      $path_diff_del = $del_dir.$title.',del-diff-'.$timestamp;
+      $path_page_del = $del_dir.$title.',del-page-'.$timestamp;
+      if (is_file($diff_path)) rename($diff_path, $path_diff_del);
+      if (is_file($page_path)) rename($page_path, $path_page_del); 
+      unlink($path_tmp_diff); unlink($path_tmp_text); } # Clean up the unneeded.
+
+  else
+  { # Collect $old_text for diff generation. Abort if identical to $text.
+    $old_text = $esc;  # Code to PlomDiff() of $old_text having no lines at all.
+    if (is_file($page_path))
+      $old_text = file_get_contents($page_path);
+    if ($old_text == $text)
+      return;
+
+    # Diff to previous version, add to diff file.
+    $new_diff_id = 0;
+    $diff_add    = PlomDiff($old_text, $text);
+    if (is_file($diff_path))
+    { $diff_old    = file_get_contents($diff_path);
+      $diff_list   = DiffList($diff_path); 
+      $old_diff_id = 0;
+      foreach ($diff_list as $id => $diff_data)
+        if ($id > $old_diff_id)
+          $old_diff_id = $id;
+      $new_diff_id = $old_diff_id + 1; }
+    else
+      $diff_old = '';
+    $diff_new = $new_diff_id.$nl.$timestamp.$nl.$author.$nl.$summary.$nl.
+                $diff_add.'%%'.$nl.$diff_old;
+
+    # Safe overwriting of page and diff file.
+    if (is_file($path_tmp_diff))
+    { file_put_contents($path_tmp_diff, $diff_new);
+      rename($path_tmp_diff, $diff_path); }
+    if (is_file($path_tmp_text))
+    { file_put_contents($path_tmp_text, $text);
+      rename($path_tmp_text, $page_path); } }
+
+  # Add $txt_PluginTodo to $todo_plugin for plugin actions added via hook.
+  eval($hook_WritePage);
+  if (is_file($path_tmp_PluginsTodo))
+    file_put_contents($path_tmp_PluginsTodo, $txt_PluginsTodo);
+    rename($path_tmp_PluginsTodo, $todo_plugins); 
+
+  # Clean up.
+  unlink($path_author); unlink($path_summary); unlink($path_text); }
 
 ###############
 #             #

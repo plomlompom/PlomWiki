@@ -9,4 +9,4 @@ MarkupCode
 MarkupLists
 MarkupParagraphs
 MarkupUnescape
-#MarkupAutolink
+MarkupAutolink

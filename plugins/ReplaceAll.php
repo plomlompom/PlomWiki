@@ -1,6 +1,4 @@
 <?php
-# ISSUES: Doesn't currently apply $hook_PrepareWrite_page.
-
 $actions_meta[] = array('GlobalRegexReplace', '?action=ReplaceAll');
 
 function ReplaceAll_RegexError($errno, $errstr)
@@ -61,13 +59,15 @@ function PrepareWrite_ReplaceAll()
   $tmp_path_pattern = NewTemp($pattern);
 
   # Write tasks.
+  $x['tasks'][$todo_urgent][] = array('touch', array($todo_replace_all));
   foreach ($titles as $title)
-    $x['tasks'][$todo_urgent][] = array('ReplaceAll_OnPage', 
+  { $todo_temp = NewTemp();
+    $x['tasks'][$todo_urgent][] = array('ReplaceAll_OnPage',
                                         array($todo_replace_all, $title,
                                               $timestamp, $tmp_path_pattern,
                                               $tmp_path_replace, $del_rule_0,
                                               $tmp_path_del_0, $del_rule_1,
-                                              $tmp_path_del_1));
+                                              $tmp_path_del_1, $todo_temp)); }
   $x['tasks'][$todo_urgent][] = array('WorkTodo', array($todo_replace_all));
   $x['tasks'][$todo_urgent][] = array('unlink', array($tmp_path_pattern));
   $x['tasks'][$todo_urgent][] = array('unlink', array($tmp_path_replace));
@@ -76,11 +76,10 @@ function PrepareWrite_ReplaceAll()
 
   return $x; }
 
-function ReplaceAll_OnPage($todo, $title, $timestamp, $path_pattern, 
+function ReplaceAll_OnPage($todo_replace_all, $title, $timestamp, $path_pattern, 
                            $path_replace, $del_rule_0, $tmp_path_del_0, 
-                           $del_rule_1, $tmp_path_del_1)
-# Build tasks for applying replacement rules on a specific page.
-{ global $diff_dir, $nl, $pages_dir;
+                           $del_rule_1, $tmp_path_del_1, $todo_tmp_replace_all)
+{ global $diff_dir, $nl, $pages_dir, $work_dir;
   $page_path      = $pages_dir.$title;
   $diff_path      = $diff_dir.$title;
   $old_text       = file_get_contents($page_path);
@@ -92,48 +91,29 @@ function ReplaceAll_OnPage($todo, $title, $timestamp, $path_pattern,
   # Perform actual replace task on page $text. Abort if nothing changed.
   $text = preg_replace($pattern, $replace, $old_text);
   if ($text === $old_text)
-    return;
-
-  # Don't overwrite any existing todo file with an unfinished product!
-  if (is_file($todo))
-    $old_todo  = file_get_contents($todo);
-  $todo_temp = NewTemp($old_todo);
+  { unlink($todo_tmp_replace_all);                # Clean up unneeded temp file.
+    return; }
 
   # Apply page deletion rules.
-  if ('' === $text)
-  { if     (0 == $del_rule_0)
-    { WriteTask($todo_temp, 'DeletePage', array($title, $timestamp));
-      rename($todo_temp, $todo);
-      return; }
-    elseif (1 == $del_rule_0) 
-      $text = $del_rule_0_alt; }
   if ('delete' === $text)
-  { if     (0 == $del_rule_1)
-    { WriteTask($todo_temp, 'DeletePage', array($title, $timestamp));
-      rename($todo_temp, $todo);
-      return; }
-    elseif (1 == $del_rule_1) 
-      $text = $del_rule_1_alt; }  
+    if (1 == $del_rule_1) $text = $del_rule_1_alt;
+  if ('' === $text)
+  { if     (0 == $del_rule_0) $text = 'delete';
+    elseif (1 == $del_rule_0) $text = $del_rule_0_alt; }
 
-  # Else, as in any page text edit, first update / create diff file content, ...
-  $new_diff_id = 0;
-  $author      = 'admin';
-  $summary     = 'ReplaceAll';
-  $diff_add    = PlomDiff($old_text, $text);
-  $diff_old    = file_get_contents($diff_path);
-  $diff_list   = DiffList($diff_path); 
-  $old_diff_id = 0;
-  foreach ($diff_list as $id => $diff_data)
-  { if ($id > $old_diff_id)
-      $old_diff_id = $id;
-    $new_diff_id = $old_diff_id + 1; }
-  $diff_new    = $new_diff_id.$nl.$timestamp.$nl.$author.$nl.$summary.$nl.
-                 $diff_add.'%%'.$nl.$diff_old;
-
-  # ... then write diff and page file updating task into todo file
-  WriteTask($todo_temp, 'SafeWrite', array($diff_path), array($diff_new));
-  WriteTask($todo_temp, 'SafeWrite', array($page_path), array($text));
-  rename($todo_temp, $todo); }
+  if ($todo_tmp_replace_all)
+  { $x = file_get_contents($todo_replace_all);
+    file_put_contents($todo_tmp_replace_all, $x);
+    $path_text    = NewTemp($text);
+    $path_author  = NewTemp('Admin');
+    $path_summary = NewTemp('GlobalRegexReplace');
+    $todo_plugins = $work_dir.'todo_plugins';
+    $tmp_0 = NewTemp(); $tmp_1 = NewTemp(); $tmp_2 = NewTemp();
+    WriteTask($todo_tmp_replace_all, 'WritePage', 
+              array($title, $todo_plugins, $tmp_0, $tmp_1, $tmp_2, $path_text,
+                    $path_author, $path_summary));
+    WriteTask($todo_tmp_replace_all, 'WorkTodo', array($todo_plugins));
+    rename($todo_tmp_replace_all, $todo_replace_all); } }
 
 function GetAllLegalTitlesInDir($dir)
 # Return an array of all legal page titles in $dir.

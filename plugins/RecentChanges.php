@@ -4,11 +4,16 @@
 $RC_dir                  = $plugin_dir.'RecentChanges/';
 $RC_path                 = $RC_dir.'RecentChanges.txt';
 $actions_meta[]          = array('RecentChanges', '?action=RecentChanges');
-$hook_PrepareWrite_page .= 
-             'Add_to_RecentChanges($x, $title, $timestamp, $author, $summary);';
+$hook_WritePage .= '
+$tmp = Newtemp();
+$x = NewTemp($txt_PluginsTodo);
+WriteTask($x, "Add_to_RecentChanges", array($title, $timestamp, $author,
+                                            $summary, $tmp));
+$txt_PluginsTodo = file_get_contents($x);
+unlink($x);';
 
-function Add_to_RecentChanges(&$x, $title, $timestamp, $author, $summary)
-# Add time stamp of page change to RecentChanges file.
+function Add_to_RecentChanges($title, $timestamp, $author, $summary, $tmp)
+# Add info of page change to RecentChanges file.
 { global $nl, $RC_dir, $RC_path, $todo_urgent;
 
   if (!is_dir($RC_dir))
@@ -20,8 +25,9 @@ function Add_to_RecentChanges(&$x, $title, $timestamp, $author, $summary)
 
   $RC_txt = $timestamp.$nl.$title.$nl.$author.$nl.$summary.$nl.'%%'.$nl.$RC_txt;
 
-  $x['tasks'][$todo_urgent][] = array('SafeWrite',
-                                             array($RC_path), array($RC_txt)); }
+  if (is_file($tmp))
+  { file_put_contents($tmp, $RC_txt); 
+    rename($tmp, $RC_path); } }
 
 function Action_RecentChanges()
 # Provide HTML output of RecentChanges file.
