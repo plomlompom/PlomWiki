@@ -397,8 +397,7 @@ function WorkTodo($todo, $do_reload = FALSE)
 { global $max_exec_time, $nl, $now;
 
   if (is_file($todo))
-  { 
-    # Lock todo file while working on it.
+  { # Lock todo file while working on it.
     Lock($todo);
     $p_todo = fopen($todo, 'r+');
 
@@ -411,21 +410,28 @@ function WorkTodo($todo, $do_reload = FALSE)
       { $stop_by_time = TRUE;
         break; }
     
-      # Eval lines not commented out. Comment out lines worked through.
+      # Eval lines not commented out. Comment out lines worked through, except
+      # for unfinished WorkTodo's.
       $pos  = ftell($p_todo);
       $line = fgets($p_todo);
       if ($line[0] !== '#')
-      { $call = substr($line, 0, -1);
+      { fseek($p_todo, $pos);
+        $call = substr($line, 0, -1);
         eval($call);
-        fseek($p_todo, $pos);
-        fwrite($p_todo, '#');
-        fgets($p_todo); } }
+        $finished = TRUE;
+        if (substr($call, 0, 9) == 'WorkTodo(')
+          eval('$finished = '.$call);
+        if ($finished)
+        { fwrite($p_todo, '#');
+          fgets($p_todo); } } }
 
     # Delete file if stopped by EOF. In any case, unlock it.
     fclose($p_todo);
     if (!$stop_by_time) 
       unlink($todo);
     UnLock($todo); }
+
+  else return 'finished';
 
   # Reload.
   if ($do_reload)
