@@ -40,10 +40,11 @@ function MarkupLinks($text)
   { $old  = '[['.$string.']]';
 
     # Try to force linked text into $legal_title format.
-    $gaps    = array('&apos;','&quot;','&amp;',';',':','\\','/',',','.',' ');
-    $umlauts = array(array('Ä','Ae'), array('Ö','Oe'), array('Ü','ue'),
-                     array('ä','ae'), array('ö','oe'), array('ü','ue'), 
-                     array('ß','ss'));
+    $gaps    = array('&apos;', '&quot;', '&amp;', ';', ':', '\\', '/', ',', '.',
+                     ' ', '?', '!');
+    $umlauts = array(array('Ä', 'Ae'), array('Ö', 'Oe'), array('Ü', 'ue'),
+                     array('ä', 'ae'), array('ö', 'oe'), array('ü', 'ue'), 
+                     array('ß', 'ss'));
     if (!strpos($string, '|') and !preg_match('/^'.$legal_url.'$/', $string))
     { $temp = $string;
       foreach ($umlauts as $umlaut) 
