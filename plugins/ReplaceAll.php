@@ -30,6 +30,10 @@ function Action_ReplaceAll()
            '<input type="radio" name="del_rule_1" value="1" checked />Fill said'
           .' pages with this text: <input type="text" name="del_rule_1_alt" '.
                  'size="30" value="Emptied by GlobalReplace" /><p />'.$nl.
+           '<h3>Author / summary</h3>'.
+           '<p>Author: <input name="author" type="text" value="Admin" \> '.$nl.
+                              'Summary: <input name="summary" type="text" '.$nl.
+                                             'value="GlobalReplace" \></p>'.$nl.
            '<h3>Affirm</h3>';
 
   $form  = BuildPostForm($root_rel.'?action=write&amp;t=ReplaceAll', $input);
@@ -46,6 +50,8 @@ function PrepareWrite_ReplaceAll()
   $del_rule_1       = Sanitize($_POST['del_rule_1']);
   $del_rule_1_alt   = Sanitize($_POST['del_rule_1_alt']);
   $regex            = Sanitize($_POST['regex']);
+  $tmp_path_author  = NewTemp($_POST['author']);
+  $tmp_path_summary = NewTemp($_POST['summary']);
   $tmp_path_del_0   = NewTemp($del_rule_0_alt);
   $tmp_path_del_1   = NewTemp($del_rule_1_alt);
   $tmp_path_replace = NewTemp($replace);
@@ -67,7 +73,9 @@ function PrepareWrite_ReplaceAll()
     $x['tasks'][$todo_urgent][] = array('ReplaceAll_OnPage',
                                         array($todo_replace_all, $title, $regex,
                                               $timestamp, $tmp_path_pattern,
-                                              $tmp_path_replace, $del_rule_0,
+                                              $tmp_path_replace, 
+                                              $tmp_path_author, 
+                                              $tmp_path_summary, $del_rule_0,
                                               $tmp_path_del_0, $del_rule_1,
                                               $tmp_path_del_1, $todo_temp)); }
   $x['tasks'][$todo_urgent][] = array('WorkTodo', array($todo_replace_all));
@@ -79,9 +87,9 @@ function PrepareWrite_ReplaceAll()
   return $x; }
 
 function ReplaceAll_OnPage($todo_replace_all, $title, $regex, $timestamp, 
-                           $path_pattern, $path_replace, $del_rule_0,
-                           $tmp_path_del_0, $del_rule_1, $tmp_path_del_1, 
-                           $todo_tmp_replace_all)
+                           $path_pattern, $path_replace, $path_author,
+                           $path_summary, $del_rule_0, $tmp_path_del_0,
+                           $del_rule_1, $tmp_path_del_1, $todo_tmp_replace_all)
 { global $diff_dir, $nl, $pages_dir, $work_dir;
   $page_path      = $pages_dir.$title;
   $diff_path      = $diff_dir.$title;
@@ -109,8 +117,6 @@ function ReplaceAll_OnPage($todo_replace_all, $title, $regex, $timestamp,
   { $x = file_get_contents($todo_replace_all);
     file_put_contents($todo_tmp_replace_all, $x);
     $path_text    = NewTemp($text);
-    $path_author  = NewTemp('Admin');
-    $path_summary = NewTemp('GlobalReplace');
     $todo_plugins = $work_dir.'todo_plugins';
     $tmp_0 = NewTemp(); $tmp_1 = NewTemp(); $tmp_2 = NewTemp();
     WriteTask($todo_tmp_replace_all, 'WritePage', 
