@@ -586,62 +586,19 @@ function PlomDiff($text_A, $text_B)
   array_unshift($lines_A, $esc);        array_unshift($lines_B, $esc);
   $lines_A[] = $esc;                    $lines_B[] = $esc;
 
-  # Fill $equals with all possible equalities between blocks of lines.
-  $equals = array();
-  foreach ($lines_A as $n_A => $line_A)
-    foreach ($lines_B as $n_B => $line_B)
-      if ($line_A === $line_B)
-      { $ln = 1;
-        for ($i = $n_A + 1; $i < count($lines_A); $i++)
-          if ($lines_A[$n_A + $ln] === $lines_B[$n_B + $ln]) $ln++;
-          else                                               break;
-        $equals[] = array($n_A, $n_B, $ln); }
-
-  # Fill $equal with largest-possible line-block equalities.
-  $equal = array();
-  while (!empty($equals))
-  { $max_equal = PlomDiff_LargestThirdElement($equals);
-    $max_n_A = $max_equal[0]; $max_n_B = $max_equal[1]; $max_ln = $max_equal[2];
-    $equal[] = $max_equal;
-
-    # Eliminate from / truncate $equals blocks intersecting current $max_equal.
-    foreach ($equals as $n_equal => $arr)
-    { $n_A = $arr[0]; $n_B = $arr[1]; $ln = $arr[2]; 
-
-      # Unset $equals block if it starts inside $max_equal block.
-      if (   $max_n_A <= $n_A and $n_A < $max_n_A + $max_ln
-          or $max_n_B <= $n_B and $n_B < $max_n_B + $max_ln)
-        unset($equals[$n_equal]);
-
-      # Else, truncate $equals block to end where $max_equal block starts.
-      else
-      { for ($i = $n_A + 1; $i < $n_A + $ln; $i++)
-          if ($i == $max_n_A)
-          { $equals[$n_equal][2] = $i - $n_A;
-            break; }
-        for ($i = $n_B + 1; $i < $n_B + $ln; $i++)
-          if ($i == $max_n_B)
-          { $equals[$n_equal][2] = $i - $n_B;
-            break; } } } }
-
-  # Rid $equal of out-of-order blocks. Prefer keeping large blocks. Sort $equal.
-  $equal_unsorted = PlomDiff_PutIntoOrderByLargest($equal);
-  $n_As = array();
-  foreach ($equal_unsorted as $arr)
-    $n_As[] = $arr[0];
-  sort($n_As);
-  foreach ($n_As as $n_A)
-  { foreach ($equal_unsorted as $arr)
-      if ($arr[0] == $n_A)
-      { $equal_sorted[] = $arr; 
-        break; } }
+  # Build and sort a list of consecutive un-changed text sections.
+  PlomDiff_AddUnchangedSections($lines_A, $lines_B, $equals);
+  foreach ($lines_A as $n => $dump)
+    foreach ($equals as $arr)
+      if ($n === $arr[0])
+        $equals_sorted[] = $arr;
 
   # Build diff by inverting $equal.
-  foreach ($equal_sorted as $n => $arr)
-  { if ($n == count($equal_sorted) - 1)                # Last diff element would
+  foreach ($equals_sorted as $n => $arr)
+  { if ($n == count($equals_sorted) - 1)               # Last diff element would
       break;                                           # be garbage, ignore.
     $n_A = $arr[0]; $n_B = $arr[1]; $ln = $arr[2];
-    $arr_next = $equal_sorted[$n + 1];
+    $arr_next = $equals_sorted[$n + 1];
     $offset_A = $n_A + $ln;           $offset_B = $n_B + $ln;
     $n_A_next = $arr_next[0] - 1;     $n_B_next = $arr_next[1] - 1;
     $txt_A = $txt_B = '';
@@ -661,6 +618,48 @@ function PlomDiff($text_A, $text_B)
 
   return $diffs; }
 
+function PlomDiff_AddUnchangedSections($lines_A, $lines_B, &$equals)
+# Recursively add to $equals consecutive unchanged lines between $lines_{A,B}.
+{ $return = PlomDiff_AddUnchangedSection($lines_A, $lines_B, $equals);
+  if (!empty($return))
+  { $before = $return[0]; $after = $return[1];
+    if (!empty($before[0]))
+      PlomDiff_AddUnchangedSections($before[0], $before[1], $equals);
+    if (!empty($after[0] ))
+     PlomDiff_AddUnchangedSections($after [0], $after [1], $equals); } }
+
+function PlomDiff_AddUnchangedSection($lines_A, $lines_B, &$equals)
+# Add to $equal largest non-change between $lines_{A,B}, return before/after.
+{ 
+  # Try to find the largest section of unchanged lines between $lines_{A,B}.
+  $ln_old = 0;
+  foreach ($lines_A as $n_A => $line_A)
+  { foreach ($lines_B as $n_B => $line_B)
+    { if ($line_A === $line_B)
+      { $ln = 1;
+        for ($i = $n_A + 1; !empty($lines_A[$i]); $i++)
+          if ($lines_A[$n_A + $ln] === $lines_B[$n_B + $ln]) $ln++;
+          else                                               break;
+        if ($ln > $ln_old)
+        { $largest_equal = array($n_A, $n_B, $ln);
+          $ln_old = $ln; } } } }
+  if (empty($largest_equal))
+    return;
+  $equals[] = $largest_equal;
+
+  # If successful, return slices of lines before and after $largest_equal.
+  foreach ($lines_A as $n_A => $dump)
+    { if ($n_A == $largest_equal[0]) break; $a++; }
+  foreach ($lines_B as $n_B => $dump)
+    { if ($n_B == $largest_equal[1]) break; $b++; }
+  $start_A  = key($lines_A); 
+  $start_B  = key($lines_B);
+  $before[] = array_slice($lines_A, 0, $largest_equal[0] - $start_A, TRUE);
+  $before[] = array_slice($lines_B, 0, $largest_equal[1] - $start_B, TRUE);
+  $after[]  = array_slice($lines_A, $a + $ln_old, NULL, TRUE);
+  $after[]  = array_slice($lines_B, $b + $ln_old, NULL, TRUE);
+  return array($before, $after); }
+
 function PlomDiff_RangeLines($lines, $offset, $n_next, $prefix)
 # Output list of diff $range string and diff lines $txt.
 { global $nl;
@@ -670,36 +669,6 @@ function PlomDiff_RangeLines($lines, $offset, $n_next, $prefix)
     if ($offset <= $n and $n <= $n_next)
       $txt .= $nl.$prefix.$line;
   return array($range, $txt); }
-
-function PlomDiff_PutIntoOrderByLargest($arr, $return = FALSE)
-# Reduce lines-blocks list $arr to one-way direction, try to keep large blocks.
-{ $loc_max  = PlomDiff_LargestThirdElement($arr);
-  $return[] = $loc_max;
-  $before   = PlomDiff_ReturnOrderedBeforeOrAfter($arr, $loc_max, TRUE);
-  $after    = PlomDiff_ReturnOrderedBeforeOrAfter($arr, $loc_max, FALSE); 
-  if ($before) $return = array_merge($before, $return);
-  if ($after ) $return = array_merge($after,  $return);
-  return $return; }
-
-function PlomDiff_ReturnOrderedBeforeOrAfter($arr_arr, $arr_max, $before = TRUE)
-# Return $arr_arr arrays left/right of $arr_max, directed in one way only.
-{ $return = FALSE;
-  foreach ($arr_arr as $arr)
-  { if (   ( $before and $arr[0] < $arr_max[0] and $arr[1] < $arr_max[1])
-        or (!$before and $arr[0] > $arr_max[0] and $arr[1] > $arr_max[1]))  
-      $legit[] = $arr; }
-  if (!empty($legit))
-    $return = PlomDiff_PutIntoOrderByLargest($legit, $return);
-  return $return; }
-
-function PlomDiff_LargestThirdElement($arr_arr)
-# Return of array $arr_arr array with the largest value in its third field.
-{ $max = array(NULL, NULL, 0);
-  foreach ($arr_arr as $arr)
-  { $a = $arr[0]; $b = $arr[1]; $c = $arr[2];
-    if ($c > $max[2])
-      $max = array($a, $b, $c); }
-  return $max; }
 
 function PlomPatch($text_A, $diff)
 # Patch $text_A to $text_B via $diff.
