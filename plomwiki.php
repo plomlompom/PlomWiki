@@ -637,7 +637,7 @@ function PlomDiff_AddUnchangedSection($lines_A, $lines_B, &$equals)
   { foreach ($lines_B as $n_B => $line_B)
     { if ($line_A === $line_B)
       { $ln = 1;
-        for ($i = $n_A + 1; !empty($lines_A[$i]); $i++)
+        for ($i = $n_A + 1; NULL !== $lines_A[$i]; $i++)
           if ($lines_A[$n_A + $ln] === $lines_B[$n_B + $ln]) $ln++;
           else                                               break;
         if ($ln > $ln_old)
