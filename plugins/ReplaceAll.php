@@ -81,6 +81,8 @@ function PrepareWrite_ReplaceAll()
   $x['tasks'][$todo_urgent][] = array('WorkTodo', array($todo_replace_all));
   $x['tasks'][$todo_urgent][] = array('unlink', array($tmp_path_pattern));
   $x['tasks'][$todo_urgent][] = array('unlink', array($tmp_path_replace));
+  $x['tasks'][$todo_urgent][] = array('unlink', array($tmp_path_author));
+  $x['tasks'][$todo_urgent][] = array('unlink', array($tmp_path_summary));
   $x['tasks'][$todo_urgent][] = array('unlink', array($tmp_path_del_0));
   $x['tasks'][$todo_urgent][] = array('unlink', array($tmp_path_del_1));
 
@@ -119,9 +121,11 @@ function ReplaceAll_OnPage($todo_replace_all, $title, $regex, $timestamp,
     $path_text    = NewTemp($text);
     $todo_plugins = $work_dir.'todo_plugins';
     $tmp_0 = NewTemp(); $tmp_1 = NewTemp(); $tmp_2 = NewTemp();
+    $tmp_path_author  = NewTemp(file_get_contents($path_author));
+    $tmp_path_summary = NewTemp(file_get_contents($path_summary));
     WriteTask($todo_tmp_replace_all, 'WritePage', 
               array($title, $todo_plugins, $tmp_0, $tmp_1, $tmp_2, $path_text,
-                    $path_author, $path_summary));
+                    $tmp_path_author, $tmp_path_summary));
     WriteTask($todo_tmp_replace_all, 'WorkTodo', array($todo_plugins));
     rename($todo_tmp_replace_all, $todo_replace_all); } }
 
