@@ -10,14 +10,21 @@ $x = NewTemp($txt_PluginsTodo);
 $state = 1;
 if     ($text == \'delete\') $state = 0;
 elseif ($diff_old == \'\')   $state = 2;
-WriteTask($x, "Add_to_RecentChanges", array($title, $timestamp, $author,
-                                            $summary, $tmp, $state));
+$tmp_author  = NewTemp($author);
+$tmp_summary = NewTemp($summary);
+WriteTask($x, "Add_to_RecentChanges", array($title, $timestamp, $tmp_author,
+                                            $tmp_summary, $tmp, $state));
+WriteTask($x, "unlink", array($tmp_author));
+WriteTask($x, "unlink", array($tmp_summary));
 $txt_PluginsTodo = file_get_contents($x);
 unlink($x);';
 
-function Add_to_RecentChanges($title,$timestamp,$author,$summary,$tmp,$state)
+function Add_to_RecentChanges($title,$timestamp,$tmp_author,$tmp_summary,$tmp,$state)
 # Add info of page change to RecentChanges file.
 { global $nl, $RC_dir, $RC_path, $todo_urgent;
+
+  $author  = file_get_contents($tmp_author);
+  $summary = file_get_contents($tmp_summary);
 
   if (!is_dir($RC_dir))
     mkdir($RC_dir);
