@@ -78,6 +78,8 @@ function Action_page_view()
     $text = '<p>Page does not exist. <a href="'.$title_url.
                                        '&amp;action=page_edit">Create?</a></p>';
 
+  $text .= '<hr />';
+
   # Before leaving, execute plugin hook.
   eval($hook_Action_page_view);
   Output_HTML($title, $text); }
