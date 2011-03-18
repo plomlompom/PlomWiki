@@ -3,8 +3,10 @@
 $Comments_dir   = $plugin_dir.'Comments/';
 $captcha_path   = $Comments_dir.'captcha';
 $actions_meta[] = array('Comments administration', '?action=comments_admin');
+$actions_meta[] = array('RecentComments', '?action=RecentComments');
 $hook_Action_page_view .= '$text .= Comments(); ';
 $permissions['comment'][] = '_comment_captcha';
+$Comments_Recent_path = $Comments_dir.'_RecentComments.txt';
 
 #########################
 # Most commonly called. #
@@ -113,7 +115,71 @@ function PrepareWrite_comment()
   $add = $new_id.$nl.$timestamp.$nl.$author.$nl.$url.$nl.$text.$nl.$esc.$nl;
   $x['tasks'][$todo_urgent][] = array('SafeWrite',
                                       array($cur_page_file), array($old.$add));
+  $tmp = NewTemp();
+  $x['tasks'][$todo_urgent][] = array('Comments_AddToRecent',
+                                      array($title, $new_id, $timestamp, $tmp),
+                                      array($author));
   return $x; }
+
+###################
+# Recent Comments #
+###################
+
+function Action_RecentComments()
+# Provide HTML output of RecentComments file.
+{ global $Comments_Recent_path, $nl, $title_root;
+
+  $output = '';
+  if (is_file($Comments_Recent_path))
+  { $txt      = file_get_contents($Comments_Recent_path);
+    $lines    = explode($nl, $txt);
+    $i        = 0;
+    $date_old = '';
+    foreach ($lines as $line)
+    { $i++;
+      if ('%%' == $line)
+        $i = 0;
+      elseif (1 == $i) 
+      { $datetime   = date('Y-m-d H:i:s', (int) $line);
+        list($date, $time) = explode(' ', $datetime); }
+      elseif (2 == $i)
+        $author = $line;
+      elseif (3 == $i)
+        $title = $line;
+      elseif (4 == $i)
+      { $id = $line;
+        $string = '               <li>'.$time.': '.$author.' <a href="'.
+                  $title_root.$title.'#comment_'.$id.'">on '.$title.'</a></li>';
+        if ($date != $date_old)
+        { $string = substr($string, 15);
+          $string = '          </ul>'.$nl.'     </li>'.$nl.'     <li>'.$date.$nl
+                                                     .'          <ul> '.$string;
+          $date_old = $date; } 
+        $list[] = $string; } }
+    $list[0] = substr($list[0], 15);
+    $output = '<ul>'.implode($nl, $list).$nl.'          </ul>'.$nl.'     </li>'.
+                                                                  $nl.'</ul>'; }   
+  else 
+    $output = '<p>No RecentComments file found.</p>';
+
+  Output_HTML('Recent Comments', $output); }
+
+function Comments_AddToRecent($title, $id, $timestamp, $tmp, $path_author)
+# Add info of comment addition to RecentComments file.
+{ global $Comments_Recent_path, $nl;
+  $author = file_get_contents($path_author);
+
+  $Comments_Recent_txt = '';
+  if (is_file($Comments_Recent_path))
+    $Comments_Recent_txt = file_get_contents($Comments_Recent_path);
+
+  $add = $timestamp.$nl.$author.$nl.$title.$nl.$id.$nl;
+  $Comments_Recent_txt = $add.'%%'.$nl.$Comments_Recent_txt;
+
+  if (is_file($tmp))
+  { file_put_contents($tmp, $Comments_Recent_txt); 
+    rename($tmp, $Comments_Recent_path); 
+    unlink($path_author); } }
 
 ###########################
 # Comments administration #
