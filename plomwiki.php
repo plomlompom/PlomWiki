@@ -842,11 +842,14 @@ function Output_HTML($title_h, $content, $head = '')
   if ($head) $head .= $nl;
 
   # Generate header / action bars.
-  $header_wiki = '<p>'.$nl.'PlomWiki: '.$nl.
+  $header_wiki = '<p>'.$nl.'PlomWiki BETA: '.$nl.
                  ActionBarLinks($actions_meta, $root_rel).'</p>'.$nl2;
   if (substr($action, 7, 5) == 'page_')
     $header_page = $nl.'<p>'.$nl.ActionBarLinks($actions_page, $title_url).
                                                                      '</p>'.$nl;
+
+  $header_page = $header_page.'<hr />';
+
   # Final HTML.
   echo '<title>'.$title_h.'</title>'.$nl.$head.$nl.
        $header_wiki.'<h1>'.$title_h.'</h1>'.$nl.$header_page.$nl.$content; }
