@@ -33,10 +33,14 @@ function MarkupAutolink($text)
   { $regex_pagename = AutoLink_RetrieveRegexForTitle($pagename);
     
     # Build autolinks into $text where $avoid applies.
-    $avoid = '(?=[^>]*($|<(?!\/(a|script))))';
-    $match = '/('.$regex_pagename.')'.$avoid.'/ieu';
-    $repl  = 'AutoLink_SetLink("$1", $links_out)';
-    $text  = preg_replace($match, $repl, $text); }
+    $avoid  = '(?=[^>]*($|<(?!\/(a|script))))';
+    $match  = '/('.$regex_pagename.')'.$avoid.'/ieu';
+    $titles = array();
+    foreach ($links_out as $x)
+      if (preg_match('/'.$regex_pagename.'/ieu', $x))
+        $titles[] = $x;
+    $repl   = 'AutoLink_SetLink("$1", $titles)';
+    $text   = preg_replace($match, $repl, $text); }
   
   return $text; }
 
