@@ -163,11 +163,13 @@ function MarkupCode($text)
 
   # Escape $store'd lines. Replace marked up code with these, <pre>-format it.
   foreach ($store as $pre)
-  { $pre  = preg_replace('/(?<='.$line_start.')(.*?)(?='.$line_end.')/', 
+  { $pre = str_replace('$', $esc.'dollar'.$esc, $pre);
+    $pre  = preg_replace('/(?<='.$line_start.')(.*?)(?='.$line_end.')/', 
                          $esc.'$1', $pre);
     $text = preg_replace('/(?<='.$line_start.')'.$regex.'(?='.$line_end.')/s', 
                          $esc.'<pre>'.$nl.$pre."\n\r".'</pre>', 
-                         $text, $limit = 1); }
+                         $text, $limit = 1); 
+    $text = str_replace($esc.'dollar'.$esc, '$', $text); }
   
   return $text; }
 
