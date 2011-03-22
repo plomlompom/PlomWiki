@@ -31,8 +31,8 @@ function Comments()
       if ($url)
         $author = '<a href="'.$url.'">'.$author.'</a>';
       $comment_text = '<p>'.$x['text'].'</p>';
-      $comments .= $nl2.'<p><a name="comment_'.$id.'" href="#comment_'.$id.'">#'
-                                                            .$id.'</a></p>'.$nl.
+      $comments .= $nl2.'<p id="comment_'.$id.'"><a href="#comment_'.$id.'">#'.
+                                                             $id.'</a></p>'.$nl.
                    $comment_text.$nl.
                    '<p><em>(Written '.$datetime.' by "'.$author.
                                                              '".)</em></p>'; } }
@@ -94,9 +94,14 @@ function PrepareWrite_comment()
   foreach (array('author', 'url', 'text') as $variable_name)
     $$variable_name = Sanitize($$variable_name);
 
-  # Check for failure conditions: empty variables.
+  # Check for failure conditions: empty variables, too large values.
   if (!$author) ErrorFail('Author field empty.');
   if (!$text)   ErrorFail('No comment written.');
+  $max_length_author_url = 300;
+  if (strlen($author) > $max_length_author_url)
+    ErrorFail('Author name must not exceed '.$max_length_author_url.' chars.');
+  if (strlen($url) > $max_length_author_url)
+    ErrorFail('URL must not exceed '.$max_length_author_url.' chars.');
 
   # Collect from $cur_page_file $old text and $highest_id, to top with $new_id.
   $cur_page_file = $Comments_dir.$title;
