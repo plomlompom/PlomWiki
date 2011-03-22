@@ -93,15 +93,20 @@ function PrepareWrite_comment()
   # Repair problematical characters in submitted texts.
   foreach (array('author', 'url', 'text') as $variable_name)
     $$variable_name = Sanitize($$variable_name);
+  $author = str_replace("\xE2\x80\xAE", '', $author); # Unicode:ForceRightToLeft
 
-  # Check for failure conditions: empty variables, too large values.
+  # Check for failure conditions: empty variables, too large or bad values.
   if (!$author) ErrorFail('Author field empty.');
   if (!$text)   ErrorFail('No comment written.');
-  $max_length_author_url = 300;
-  if (strlen($author) > $max_length_author_url)
-    ErrorFail('Author name must not exceed '.$max_length_author_url.' chars.');
-  if (strlen($url) > $max_length_author_url)
-    ErrorFail('URL must not exceed '.$max_length_author_url.' chars.');
+  $max_length_url = 2048; $max_length_author = 1000;
+  if (strlen($author) > $max_length_author)
+    ErrorFail('Author name must not exceed '.$max_length_author.' chars.');
+  if (strlen($url) > $$max_length_url = 2048)
+    ErrorFail('URL must not exceed '.$max_length_url.' chars.');
+  $legal_url = '[A-Za-z][A-Za-z0-9\+\.\-]*:([A-Za-z0-9\.\-_~:/\?#\[\]@!\$&\'\('.
+               '\)\*\+,;=]|%[A-Fa-f0-9]{2})+';
+  if ($url and !preg_match('{^'.$legal_url.'$}', $url))
+    ErrorFail('Invalid URL format.');
 
   # Collect from $cur_page_file $old text and $highest_id, to top with $new_id.
   $cur_page_file = $Comments_dir.$title;
