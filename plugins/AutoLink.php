@@ -98,7 +98,7 @@ function BuildRegex($title)
   $encoding           = 'UTF-8';
   $minimal_root       = 4;
   $suffix_tolerance   = 3;
-  $gaps_to_allow_easy = ' .,:;';
+  $gaps_to_allow_easy = ' .,:';
   $gaps_to_allow_hard = array('\'', '/', '\\', '(', ')', '[', ']');
   $gaps_to_allow_long = array();
 
