@@ -250,17 +250,22 @@ function Action_write()
 
 function PrepareWrite_page()
 # Deliver to Action_write() all information needed for page writing process.
-{ global $page_path, $title, $title_url, $todo_urgent, $work_dir;
+{ global $nl, $page_path, $title, $title_url, $todo_urgent, $work_dir;
   $text = Sanitize($_POST['text']);
 
-  # Check for error conditions: $text empty or unchanged.
+  # Check for error conditions: $text empty, unchanged or too long/large.
   if (is_file($page_path))
     $old_text = file_get_contents($page_path);
   if (!$text)         
     ErrorFail('Empty pages not allowed.', 
               'Replace text with "delete" if you want to delete the page.');
-  elseif ($text == $old_text)            
+  if ($text == $old_text)  
     ErrorFail('You changed nothing!');
+  $max_lines = 6000; $max_length = 250000;
+  if (count(explode($nl, $text)) > $max_lines)
+    ErrorFail('Number of lines in text must not exceed '.$max_lines.'.');
+  if (strlen($text) > $max_length)
+    ErrorFail('Size of text must not exceed '.$max_length.' bytes.');
 
   # Fill in "author" and "summary" fields, with default values if necessary.
   $author      = str_replace($nl, '', Sanitize($_POST['author'] ));
