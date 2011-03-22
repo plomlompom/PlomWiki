@@ -98,11 +98,13 @@ function PrepareWrite_comment()
   # Check for failure conditions: empty variables, too large or bad values.
   if (!$author) ErrorFail('Author field empty.');
   if (!$text)   ErrorFail('No comment written.');
-  $max_length_url = 2048; $max_length_author = 1000;
+  $max_length_url = 2048; $max_length_author = 1000; $max_length_text = 10000;
   if (strlen($author) > $max_length_author)
     ErrorFail('Author name must not exceed '.$max_length_author.' chars.');
-  if (strlen($url) > $$max_length_url = 2048)
+  if (strlen($url) > $$max_length_url)
     ErrorFail('URL must not exceed '.$max_length_url.' chars.');
+  if (strlen($url) > $$max_length_text)
+    ErrorFail('Comment text must not exceed '.$max_length_text.' chars.');
   $legal_url = '[A-Za-z][A-Za-z0-9\+\.\-]*:([A-Za-z0-9\.\-_~:/\?#\[\]@!\$&\'\('.
                '\)\*\+,;=]|%[A-Fa-f0-9]{2})+';
   if ($url and !preg_match('{^'.$legal_url.'$}', $url))
