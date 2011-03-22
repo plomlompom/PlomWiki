@@ -674,8 +674,8 @@ function PlomDiff_RangeLines($lines, $offset, $n_next, $prefix)
 
 function PlomPatch($text_A, $diff)
 # Patch $text_A to $text_B via $diff.
-{ global $nl;
- 
+{ global $esc, $nl;
+
   # Explode $diff into $patch_tmp = array($action_tmp => array($line, ...), ...)
   $patch_lines = explode($nl, $diff);
   $patch_tmp = array(); $action_tmp = '';
@@ -688,49 +688,57 @@ function PlomPatch($text_A, $diff)
   $patch = array();
   foreach ($patch_tmp as $action_tmp => $lines)
   { if     (strpos($action_tmp, 'd'))
-           { list($left, $ignore) = explode('d', $action_tmp);
+           { list($left, $ignore)  = explode('d', $action_tmp);
              if (!strpos($left, ',')) 
-               $left = $left.','.$left;
-             list($start, $end) = explode(',', $left);
+               $left               = $left.','.$left;
+             list($start, $end)    = explode(',', $left);
              $action = 'd'.$start; $patch[$action] = $end; }
     elseif (strpos($action_tmp, 'a'))
            { list($start, $ignore) = explode('a', $action_tmp);
-             $action = 'a'.$start; $patch[$action] = $lines; }
+             $action               = 'a'.$start; $patch[$action] = $lines; }
     elseif (strpos($action_tmp, 'c'))
-           { list($left, $right) = explode('c', $action_tmp);
+           { list($left, $right)   = explode('c', $action_tmp);
              if (!strpos($left, ','))
                $left = $left.','.$left;
-             list($start, $end) = explode(',', $left);
-             $action         = 'd'.$start;
-             $patch[$action] = $end;
-             $action         = 'a'.$start; 
+             list($start, $end)    = explode(',', $left);
+             $action               = 'd'.$start;
+             $patch[$action]       = $end;
+             $action               = 'a'.$start; 
              foreach ($lines as $line) if ($line[0] == '>')
-               $patch[$action][] = $line; } }
+               $patch[$action][]   = $line; } }
 
   # Create $lines_{A,B} arrays where key equals line number. Add temp 0-th line.
-  $lines_A = explode($nl, $text_A); 
-  foreach ($lines_A as $key => $line)
-    $lines_A[$key + 1] = $line.$nl;
-  $lines_A[0] = ''; $lines_B = $lines_A;
-
+  $lines_A = array($nl);
+  foreach (explode($nl, $text_A) as $key => $line)
+    $lines_A[$key + 1] = $nl.$line;
+  if     ($text_A == '')   $lines_A = array($nl);        # Special cases for
+  elseif ($text_A == $esc) $lines_A = array($nl);        # empty or almost-empty
+  elseif ($text_A == $nl)  $lines_A = array($nl, $nl);   # texts. 
+  $lines_B = $lines_A;
+  
+  # According to $patch, add or delete line lengths on $lines_B.
   foreach ($patch as $action => $value)
-  { # Glue new lines to $lines_B[$apply_after_line] with $nl.
-    if     ($action[0] == 'a')
-           { $apply_after_line = substr($action, 1);
-             foreach ($value as $line_diff)
-               $lines_B[$apply_after_line] .= substr($line_diff, 1).$nl; }
-    # Cut deleted lines' lengths from $lines_B[$apply_from_line:$until_line].
-    elseif ($action[0] == 'd')
-           { $apply_from_line = substr($action, 1);
-             $until_line = $value;
-             for ($i = $apply_from_line; $i <= $until_line; $i++) 
-             { $end_of_original_line = strlen($lines_A[$i]);
-               $lines_B[$i] = substr($lines_B[$i], $end_of_original_line); } } }
+  { $char          = $action[0];
+    $apply_at_line = substr($action, 1);
+    if     ($char == 'a')
+      foreach ($value as $line_diff)
+        $lines_B[$apply_at_line] .= $nl.substr($line_diff, 1);
+    elseif ($char == 'd')
+    { $until_line = $value;
+      for ($i = $apply_at_line; $i <= $until_line; $i++) 
+      { $original_line_end = strlen($lines_A[$i]);
+        $lines_B[$i]       = substr($lines_B[$i], $original_line_end); } } }
 
-  # Before returning, remove potential superfluous $nl at $text_B end.
-  $text_B = implode($lines_B);
-  if (substr($text_B,-1) == $nl)
-    $text_B = substr($text_B,0,-1);
+  # Truncate from each line in B preceding "\n" or, if not found, unset line.
+  foreach ($lines_B as $n => $line)
+  { if ($nl == $line[0]) $lines_B[$n] = substr($line, 1);
+    else                 unset($lines_B[$n]); }
+
+  # Implode $lines_B to $text_B with $nl. Remove first char if it's not alone.
+  $text_B = implode($nl, $lines_B);
+  if (strlen($text_B) > 1)
+    $text_B = substr($text_B, 1);
+
   return $text_B; }
 
 function ReverseDiff($old_diff)
@@ -748,6 +756,8 @@ function ReverseDiff($old_diff)
         { list($left, $right) = explode($char, $line); 
           $line = $right.$reverse.$left; break; } } }
     $new_diff .= $line.$nl; }
+  $new_diff = substr($new_diff, 0, -1);
+
   return $new_diff; }
 
 function DiffList($diff_path)
