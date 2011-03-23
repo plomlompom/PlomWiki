@@ -19,11 +19,11 @@ $work_failed_logins_dir = $work_dir.'failed_logins/';
 $nl = "\n";                      $nl2 = $nl.$nl;                    $esc = "\r";
 
 # Check for unfinished setup file, execute if found.
-if (is_file($setup_file))
+if (is_file($setup_file)) 
   require($setup_file);
 
 # URL generation information.
-$root_rel = 'plomwiki.php';      $title_root = $root_rel.'?title=';
+$root_rel = 'plomwiki.php';                   $title_root = $root_rel.'?title=';
 
 # Get $max_exec_time and $now to know until when orderly stopping is possible.
 $max_exec_time = ini_get('max_execution_time');                   $now = time();
