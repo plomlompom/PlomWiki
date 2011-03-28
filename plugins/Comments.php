@@ -145,7 +145,7 @@ function PrepareWrite_comment()
   if (strlen($text) > $max_length_text)
     ErrorFail($esc.'CommentsTextMax'.$esc.': '.$max_length_text);
   $legal_url = '[A-Za-z][A-Za-z0-9\+\.\-]*:([A-Za-z0-9\.\-_~:/\?#\[\]@!\$&\'\('.
-               '\)\*\+,;=]|%[A-Fa-f0-9]{2})+';
+               '\)\*\+,;=]|%[A-Fa-f0-9]{2})+'; # Thx to @erlehmann
   if ($url and !preg_match('{^'.$legal_url.'$}', $url))
     ErrorFail($esc.'CommentsInvalidURL'.$esc);
 
