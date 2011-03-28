@@ -1,12 +1,39 @@
 <?php
 
-$Comments_dir   = $plugin_dir.'Comments/';
-$captcha_path   = $Comments_dir.'captcha';
-$actions_meta[] = array('Comments administration', '?action=comments_admin');
-$actions_meta[] = array('RecentComments', '?action=RecentComments');
-$hook_Action_page_view .= '$text .= Comments(); ';
+# PlomWiki plugin Comments
+# Provides comments; Action_comments_admin(), Action_RecentComments()
+
+# Language-specific variables.
+$l['CommentsAdmin'] = 'Comments administration';
+$l['RecentComments'] = 'RecentComments';
+$l['Comments'] = 'Comments';
+$l['NoComments'] = 'No one commented on this page yet.';
+$l['CommentsWrite'] = 'Write your own comment';
+$l['CommentsWriteNo'] = 'Comment writing currently not possible: captcha not set.';
+$l['CommentsName'] = 'Your name';
+$l['CommentsURL'] = 'Your URL';
+$l['CommentsAskCaptcha'] = 'Captcha password needed! Write';
+$l['CommentsNoAuthor'] = 'Author field empty.';
+$l['CommentsNoText'] = 'No comment written.';
+$l['CommentsAuthorMax'] = 'Author name must not exceed length (characters/bytes)';
+$l['CommentsURLMax'] = 'URL must not exceed length (characters/bytes)';
+$l['CommentsTextMax'] = 'Text must not exceed length (characters/bytes)';
+$l['CommentsInvalidURL'] = 'Invalid URL format.';
+$l['CommentsRecentNo'] = 'No RecentComments file found.';
+$l['CommentsNoDir'] = 'Comments directory not yet built.';
+$l['BuildCommentsDir'] = 'Build comments directory.';
+$l['NoBuildCommentsDir'] = 'Do not build comments directory.';
+$l['CommentsCurCaptcha'] = 'Current captcha';
+$l['CommentsNoCurCaptcha'] = 'No captcha set yet.';
+$l['CommentsNewCaptcha'] = 'Set new captcha';
+$l['CommentsNewCaptchaExplain'] = 'Write "delete" to unset captcha. Commenting won\'t be possible then.';
+$l['CommentsCannotBuildDir'] = 'Cannot build Comments directory. Comments directory already exists.';
+
+$Comments_dir             = $plugin_dir.'Comments/';
+$captcha_path             = $Comments_dir.'captcha';
+$Comments_Recent_path     = $Comments_dir.'_RecentComments.txt';
+$hook_Action_page_view   .= '$text .= \'<hr />\'.Comments(); ';
 $permissions['comment'][] = '_comment_captcha';
-$Comments_Recent_path = $Comments_dir.'_RecentComments.txt';
 
 #########################
 # Most commonly called. #
@@ -14,7 +41,7 @@ $Comments_Recent_path = $Comments_dir.'_RecentComments.txt';
 
 function Comments()
 # Return display of page comments and commenting form.
-{ global $captcha_path, $Comments_dir, $nl, $nl2, $pages_dir, $title,$title_url;
+{ global $captcha_path, $Comments_dir, $esc, $nl, $nl2, $pages_dir, $title,$title_url;
 
   # Silently fail if $Comments_dir or page do not exist.
   if (!is_dir($Comments_dir) or !is_file($pages_dir.$title))
@@ -34,29 +61,28 @@ function Comments()
       $comments .= $nl2.'<p id="comment_'.$id.'"><a href="#comment_'.$id.'">#'.
                                                              $id.'</a></p>'.$nl.
                    $comment_text.$nl.
-                   '<p><em>(Written '.$datetime.' by "'.$author.
-                                                             '".)</em></p>'; } }
+                   '<p><em>('.$author.' / '.$datetime.')</em></p>'; } }
   if (!$comments)
-    $comments = $nl2.'<p>No one commented on this page yet.</p>';
+    $comments = $nl2.'<p>'.$esc.'NoComments'.$esc.'</p>';
 
   # Commenting $form. Allow commenting depending on $captcha_path's existence.
-  $write   = '<h2>Write your own comment</h2>'.$nl2;
+  $write   = '<h2>'.$esc.'CommentsWrite'.$esc.'</h2>'.$nl2;
   if (is_file($captcha_path))
-  { $input = 'Your name: <input name="author" /><br />'.$nl.
-             'Your URL: <input name="URL" />'.$nl.
+  { $input = $esc.'CommentsName'.$esc.': <input name="author" /><br />'.$nl.
+             $esc.'CommentsURL'.$esc.': <input name="URL" />'.$nl.
              '<pre><textarea name="text" rows="10" cols="40">'.$nl.$text.
                                                             '</textarea></pre>';
     $captcha = file_get_contents($captcha_path);
     $form  = BuildPostForm($title_url.'&amp;action=write&amp;t=comment', $input, 
-                           'Captcha password needed! Write "'.$captcha.
+                           $esc.'CommentsAskCaptcha'.$esc.' "'.$captcha.
                            '": <input name="pw" size="5" /><input name="auth" '.
                                    'type="hidden" value="_comment_captcha" />');
     $write .= $form; }
   else
-    $write .= '<p>Comment writing currently not possible: captcha not set.</p>';
+    $write .= '<p>'.$esc.'CommentsWriteNo'.$esc.'</p>';
 
 
-  return $nl2.'<h2>Comments</h2>'.$comments.$nl2.$write; }
+  return $nl2.'<h2>'.$esc.'Comments'.$esc.'</h2>'.$comments.$nl2.$write; }
 
 function Comments_GetComments($comment_file, $escape_html = TRUE)
 # Read $comment_file into more structured, readable array $comments.
@@ -96,19 +122,19 @@ function PrepareWrite_comment()
   $author = str_replace("\xE2\x80\xAE", '', $author); # Unicode:ForceRightToLeft
 
   # Check for failure conditions: empty variables, too large or bad values.
-  if (!$author) ErrorFail('Author field empty.');
-  if (!$text)   ErrorFail('No comment written.');
+  if (!$author) ErrorFail($esc.'CommentsNoAuthor'.$esc);
+  if (!$text)   ErrorFail($esc.'CommentsNoText'.$esc);
   $max_length_url = 2048; $max_length_author = 1000; $max_length_text = 10000;
   if (strlen($author) > $max_length_author)
-    ErrorFail('Author name must not exceed '.$max_length_author.' chars.');
+    ErrorFail($esc.'CommentsAuthorMax'.$esc.': '.$max_length_author);
   if (strlen($url) > $$max_length_url)
-    ErrorFail('URL must not exceed '.$max_length_url.' chars.');
+    ErrorFail($esc.'CommentsURLMax'.$esc.': '.$max_length_url);
   if (strlen($url) > $$max_length_text)
-    ErrorFail('Comment text must not exceed '.$max_length_text.' chars.');
+    ErrorFail($esc.'CommentsTextMax'.$esc.': '.$max_length_text);
   $legal_url = '[A-Za-z][A-Za-z0-9\+\.\-]*:([A-Za-z0-9\.\-_~:/\?#\[\]@!\$&\'\('.
                '\)\*\+,;=]|%[A-Fa-f0-9]{2})+';
   if ($url and !preg_match('{^'.$legal_url.'$}', $url))
-    ErrorFail('Invalid URL format.');
+    ErrorFail($esc.'CommentsInvalidURL'.$esc);
 
   # Collect from $cur_page_file $old text and $highest_id, to top with $new_id.
   $cur_page_file = $Comments_dir.$title;
@@ -139,7 +165,7 @@ function PrepareWrite_comment()
 
 function Action_RecentComments()
 # Provide HTML output of RecentComments file.
-{ global $Comments_Recent_path, $nl, $title_root;
+{ global $l, $esc, $Comments_Recent_path, $nl, $title_root;
 
   $output = '';
   if (is_file($Comments_Recent_path))
@@ -172,9 +198,10 @@ function Action_RecentComments()
     $output = '<ul>'.implode($nl, $list).$nl.'          </ul>'.$nl.'     </li>'.
                                                                   $nl.'</ul>'; }   
   else 
-    $output = '<p>No RecentComments file found.</p>';
+    $output = '<p>'.$esc.'CommentsRecentNo'.$esc.'</p>';
 
-  Output_HTML('Recent Comments', $output); }
+  $l['title'] = $esc.'RecentComments'.$esc; $l['content'] = $output;
+  Output_HTML(); }
 
 function Comments_AddToRecent($title, $id, $timestamp, $tmp, $path_author)
 # Add info of comment addition to RecentComments file.
@@ -199,36 +226,34 @@ function Comments_AddToRecent($title, $id, $timestamp, $tmp, $path_author)
 
 function Action_comments_admin()
 # Administration menu for comments.
-{ global $captcha_path, $Comments_dir, $nl, $nl2, $root_rel;
+{ global $captcha_path, $Comments_dir, $esc, $l, $nl, $nl2, $root_rel;
 
   # If no $Comments_dir, offer creating it.
   $build_dir = '';
   if (!is_dir($Comments_dir))
-    $build_dir = '<p>'.$nl.'<strong>Comments directory not yet built.</strong>'.
-                                  ' (Comments will not work before.)<br />'.$nl.
+    $build_dir = '<p>'.$nl.'<strong>'.$esc.'CommentsNoDir'.$esc.'</strong><br />'.$nl.
                  '<input type="radio" name="build_dir" value="yes" '.
-                          'checked="checked">Build comments directory.<br>'.$nl.
-                 '<input type="radio" name="build_dir" value="no"> Do not '.
-                                            'build comments directory.<br>'.$nl.
+                          'checked="checked">'.$esc.'BuildCommentsDir'.$esc.'<br>'.$nl.
+                 '<input type="radio" name="build_dir" value="no">'.$esc.'NoBuildCommentsDir'.$esc.'<br>'.$nl.
                  '</p>'.$nl;
 
   # Captcha setting.
   if (is_file($captcha_path))
-    $cur_captcha = 'Current captcha: "'.file_get_contents($captcha_path).'".';
+    $cur_captcha = $esc.'CommentsCurCaptcha'.$esc.': "'.file_get_contents($captcha_path).'".';
   else
-    $cur_captcha = 'No captcha set yet.';
+    $cur_captcha = $esc.'CommentsNoCurCaptcha'.$esc;
   $captcha = '<p><strong>'.$cur_captcha.'</strong></p>'.$nl.
-             '<p>Set new captcha: <input name="captcha" /> (Write "delete" to '.
-                  'unset captcha. Commenting won\'t be possible then.)</p>'.$nl;
+             '<p>'.$esc.'CommentsNewCaptcha'.$esc.': <input name="captcha" /> ('.$esc.'CommentsNewCaptchaExplain'.$esc.')</p>'.$nl;
 
   # Final HTML.
   $input   = $build_dir.$captcha;
   $form = BuildPostForm($root_rel.'?action=write&amp;t=comments_admin', $input);
-  Output_HTML('Comments administration', $form); }
+  $l['title'] = $esc.'CommentsAdmin'.$esc; $l['content'] = $form;
+  Output_HTML(); }
 
 function PrepareWrite_comments_admin()
 # Return to Action_write() all information needed for comments administration.
-{ global $captcha_path, $Comments_dir, $nl, $pw_path, $root_rel, $title_url,
+{ global $captcha_path, $Comments_dir, $esc, $nl, $pw_path, $root_rel, $title_url,
          $todo_urgent;
   $new_pw    = $_POST['captcha'];
   $build_dir = $_POST['build_dir'];
@@ -237,9 +262,7 @@ function PrepareWrite_comments_admin()
   # Directory building.
   if ($build_dir == 'yes')
   { if (is_dir($Comments_dir))
-      ErrorFail('Aborted comment administration. Cannot build Comments '.
-                                                                   'directory.',
-                'Comments directory already exists.');
+      ErrorFail($esc.'CommentsCannotBuildDir'.$esc);
     else
       $x['tasks'][$todo_urgent][] = array('mkdir', array($Comments_dir)); }
 
@@ -250,12 +273,10 @@ function PrepareWrite_comments_admin()
     $pw_file_text = $salt.$nl;
     if ('delete' == $new_pw) 
     { unset($passwords['_comment_captcha']);
-      $success_captcha = '<p>Unsetting captcha.</p>'; 
       if (is_file($captcha_path))
         $x['tasks'][$todo_urgent][] = array('unlink', array($captcha_path)); }
     else
     { $passwords['_comment_captcha'] = hash('sha512', $salt.$new_pw);
-      $success_captcha = '<p>Setting new captcha</p>'; 
       $x['tasks'][$todo_urgent][] = array('SafeWrite', 
                                         array($captcha_path), array($new_pw)); }
     foreach ($passwords as $key => $pw)

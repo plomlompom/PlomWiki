@@ -28,31 +28,31 @@ $root_rel = 'plomwiki.php';                   $title_root = $root_rel.'?title=';
 # Get $max_exec_time and $now to know until when orderly stopping is possible.
 $max_exec_time = ini_get('max_execution_time');                   $now = time();
 
-# Default action bar links data, read by ActionBarLinks() for Output_HTML().
-$actions_meta = array(array('Jump to Start page', '?title=Start'),
-                      array('Set admin password', '?action=set_pw_admin'));
-$actions_page = array(array('View',               '&amp;action=page_view'),
-                      array('Edit',               '&amp;action=page_edit'),
-                      array('History',            '&amp;action=page_history'));
-
 # Get page title. Build dependent variables.
 $legal_title = '[a-zA-Z0-9-]+';
 $title       = GetPageTitle($legal_title);
-$page_path   = $pages_dir .$title;
-$diff_path   = $diff_dir  .$title;
-$title_url   = $title_root.$title;
+{ $page_path = $pages_dir .$title;
+  $diff_path = $diff_dir  .$title;
+  $title_url = $title_root.$title; }
 
 # Allowed password keys: '*', pagenames and any "_"-preceded [a-z_] chars.
 $legal_pw_key = '\*|_[a-z_]+|'.$legal_title;
 
 # Insert plugins' code.
-foreach (ReadAndTrimLines($plugin_list_path) as $line)
+foreach (ReadAndTrimLines($plugin_list_path) as $line) 
   require($line);
 
 # Before executing user's action, do urgent work if urgent todo file is found.
 if (is_file($todo_urgent))
   WorkTodo($todo_urgent, TRUE);
+
+# Fail if $title provided was invalid.
+if (!$title)
+  ErrorFail($esc.'IllegalPageTitle'.$esc); 
+
+# Get user action. If page-specific, set $theme_default's $l['header_page'].
 $action = GetUserAction();
+eval($hook_before_action);
 $action();
 
 ############################################
@@ -67,7 +67,7 @@ $action();
 
 function Action_page_view()
 # Formatted display of a page.
-{ global $hook_Action_page_view, $page_path, $title, $title_url;
+{ global $esc, $hook_Action_page_view, $l, $page_path, $title, $title_url;
   
   # Get text from file. If none, show invitation to create one. Else, markup it.
   if (is_file($page_path)) 
@@ -75,19 +75,17 @@ function Action_page_view()
     $text = EscapeHTML($text); 
     $text = Markup($text); }
   else
-    $text = '<p>Page does not exist. <a href="'.$title_url.
-                                       '&amp;action=page_edit">Create?</a></p>';
-
-  $text .= '<hr />';
+    $text = $esc.'PageDontExist'.$esc.' <a href="'.$title_url.
+                   '&amp;action=page_edit">'.$esc.'PageCreate?'.$esc.'</a>';
 
   # Before leaving, execute plugin hook.
   eval($hook_Action_page_view);
-  Output_HTML($title, $text); }
+  $l['title'] = $title; $l['content'] = $text;
+  Output_HTML(); }
 
 function Action_page_edit()
 # Edit form on a page source text. Send results to ?action=write.
-{ global $hook_Action_page_edit, $markup_help, $nl, $nl2, $page_path, $title,
-         $title_url;
+{ global $esc,$hook_Action_page_edit,$l,$nl,$page_path,$title,$title_url;
 
   # If no page file is found, start with an empty $text.
   if (is_file($page_path)) 
@@ -95,20 +93,22 @@ function Action_page_edit()
     $text = EscapeHTML($text); }
   else $text = '';
 
-  # Final HTML of edit form and JavaScript to localStorage-store password.
-  $input = '<pre><textarea name="text" rows="20" style="width:100%">'.$nl.
-           $text.'</textarea></pre>'.$nl.
-           'Author: <input name="author" type="text" />'.$nl.
-           'Summary: <input name="summary" type="text" />';
+  # Final HTML of edit form.
+  $input = '<textarea name="text" rows="'.$esc.'Action_page_edit_TextareaRows'.
+                                                                  $esc.'">'.$nl.
+           $text.'</textarea>'.$nl.
+           $esc.'Author'.$esc.': <input name="author" type="text" />'.$nl.
+           $esc.'Summary'.$esc.': <input name="summary" type="text" />';
   $form = BuildPostForm($title_url.'&amp;action=write&amp;t=page', $input);
   eval($hook_Action_page_edit);
-  $content = $form.$nl2.$markup_help;
-  Output_HTML('Editing: '.$title, $content); }
+  $l['title'] = $esc.'Editing'.$esc.': "'.$title.'"';
+  $l['content'] = $form.$content;
+  Output_HTML(); }
 
 function Action_page_history()
 # Show version history of page (based on its diff file), offer reverting.
-{ global $diff_path, $nl, $nl2, $title, $title_url;
-  $text = '<p>Page "'.$title.'" has no history.</p>';           # Fallback text.
+{ global $diff_path,$esc,$hook_Action_page_history,$l,$nl,$title,$title_url;
+  $text = $esc.'PageNoHistory'.$esc;                            # Fallback text.
 
   # Try to build $diff_list from $diff_path. If successful, format into HTML.
   if (is_file($diff_path)) 
@@ -122,8 +122,9 @@ function Action_page_history()
       $author      = EscapeHTML($diff_data['author']);
       $summary     = EscapeHTML($diff_data['summary']);
       $desc        = $time_string.': '.$summary.' ('.$author.')';
-      $diffs[] =  '<p>'.$desc.' (<a href="'.$title_url.'&amp;action=page_revert'
-                  .'&amp;id='.$id.'">revert</a>):</p>'.$nl.'<div class="diff">';
+      $diffs[] =  '<div class="diff_desc">'.$desc.' (<a href="'.$title_url.
+                  '&amp;action=page_revert&amp;id='.$id.'">'.$esc.'revert'.$esc.
+                                   '</a>):</div>'.$nl.'<div class="diff_text">';
 
       # Preformat remaining lines. Translate arrows into less ambiguous +/-.
       foreach (explode($nl, $diff_data['text']) as $line_n => $line)
@@ -133,16 +134,15 @@ function Action_page_history()
       $diffs[] = '</div>'.$nl; }
     $text = implode($nl, $diffs); }
 
-  # Final HTML.
-  $css = '<style type="text/css">'.$nl.
-         'pre'.$nl.'{ white-space: pre-wrap;'.$nl.'  text-indent:-12pt;'.$nl.
-         '  margin-top:0px;'.$nl.'  margin-bottom:0px; }'.$nl2.'.diff '.$nl.
-         '{ margin-left:12pt; }'.$nl.'</style>';
-  Output_HTML('Diff history of: '.$title, $text, $css); }
+  # Before leaving, execute plugin hook.
+  eval($hook_Action_page_history);
+  $l['title'] = $esc.'History'.$esc.': "'.$title.'"'; $l['content'] = $text;
+  Output_HTML(); }
 
 function Action_page_revert()
 # Prepare version reversion and ask user for confirmation.
-{ global $diff_path, $nl, $title, $title_url, $page_path;
+{ global $diff_path, $esc, $hook_Action_page_revert, $l, $nl, $title,
+         $title_url, $page_path;
   $id          = $_GET['id'];
   $diff_list   = DiffList($diff_path);
   $time_string = date('Y-m-d H:i:s', (int) $diff_list[$id]['time']);
@@ -161,12 +161,14 @@ function Action_page_revert()
   { $input   = '<input type="hidden" name="text" value="'.$text.'">'.$nl.
                '<input type="hidden" name="summary" value="revert">';
     $form    = BuildPostForm($title_url.'&amp;action=write&amp;t=page', $input);
-    $content = '<p>Revert page to before '.$time_string.'?</p>'.$nl.$form; }
+    $content = $form; }
   else 
-    ErrorFail('No valid reversion date given.');
+    ErrorFail($esc.'InvalidRevertPoint'.$esc);
 
-  # Final HTML.
-  Output_HTML('Reverting: '.$title, $content); }
+  # Before leaving, execute plugin hook.
+  eval($hook_Action_page_revert);
+  $l['title'] = $esc.'RevertToBefore'.$esc.' '.$time_string.'?'; $l['content']= $form;
+  Output_HTML(); }
 
 ####################################
 # Page text manipulation functions #
@@ -209,7 +211,7 @@ function EscapeHTML($text)
 function Action_write()
 # User writing to DB. Expects password $_POST['pw'] and target type $_GET['t'],
 # which determines the function shaping the details (like what to write where).
-{ global $nl, $nl2, $root_rel, $todo_urgent; 
+{ global $esc, $nl, $nl2, $root_rel, $todo_urgent; 
   $pw = $_POST['pw']; $auth = $_POST['auth']; $t = $_GET['t'];
 
   # Target type chooses writing preparation function, gets variables from it.
@@ -217,7 +219,7 @@ function Action_write()
   if (function_exists($prep_func))
     $x = $prep_func();
   else 
-    ErrorFail('No known target type specified.');
+    ErrorFail($esc.'InvalidTarget'.$esc);
   $redir = $x['redir']; $task_write_list = $x['tasks'];
 
   # Give a redir URL more harmless than a write action page if $redir is empty.
@@ -226,7 +228,7 @@ function Action_write()
 
   # Password check.
   if (!CheckPW($auth, $pw, $t))
-    ErrorFail('Authentication failure.');
+    ErrorFail($esc.'AuthFail'.$esc);
 
   # From $task_write_list, add tasks to temp versions of todo lists.
   $temps = array();
@@ -250,22 +252,21 @@ function Action_write()
 
 function PrepareWrite_page()
 # Deliver to Action_write() all information needed for page writing process.
-{ global $nl, $page_path, $title, $title_url, $todo_urgent, $work_dir;
+{ global $esc, $nl, $page_path, $title, $title_url, $todo_urgent, $work_dir;
   $text = Sanitize($_POST['text']);
 
   # Check for error conditions: $text empty, unchanged or too long/large.
   if (is_file($page_path))
     $old_text = file_get_contents($page_path);
   if (!$text)         
-    ErrorFail('Empty pages not allowed.', 
-              'Replace text with "delete" if you want to delete the page.');
+    ErrorFail($esc.'NoEmptyPage'.$esc);
   if ($text == $old_text)  
-    ErrorFail('You changed nothing!');
+    ErrorFail($esc.'NothingChanged'.$esc);
   $max_lines = 6000; $max_length = 250000;
   if (count(explode($nl, $text)) > $max_lines)
-    ErrorFail('Number of lines in text must not exceed '.$max_lines.'.');
+    ErrorFail($esc.'MaxLinesText'.$esc.$max_lines);
   if (strlen($text) > $max_length)
-    ErrorFail('Size of text must not exceed '.$max_length.' bytes.');
+    ErrorFail($esc.'MaxSizeText'.$esc.$max_length);
 
   # Fill in "author" and "summary" fields, with default values if necessary.
   $author      = str_replace($nl, '', Sanitize($_POST['author'] ));
@@ -287,17 +288,17 @@ function PrepareWrite_page()
 
 function PrepareWrite_admin_sets_pw()
 # Deliver to Action_write() all information needed for pw writing process.
-{ global $legal_pw_key, $nl, $pw_path, $todo_urgent;
+{ global $esc, $legal_pw_key, $nl, $pw_path, $todo_urgent;
 
   # Check password key and new password for validity.
   $new_pw   = $_POST['new_pw'];
   $new_auth = $_POST['new_auth'];
   if (!$new_pw)
-    ErrorFail('Empty password not allowed.');
+    ErrorFail($esc.'EmptyPW'.$esc);
   if (!$new_auth)
-    ErrorFail('Not told what to set password for.');
+    ErrorFail($esc.'EmptyAuth'.$esc);
   if (!preg_match('/^('.$legal_pw_key.')$/', $new_auth))
-    ErrorFail('Invalid password key.');
+    ErrorFail($esc.'InvalidPWKey'.$esc);
 
   # Splice new password hash into text of password file at $pw_path.
   $passwords            = ReadPasswordList($pw_path);
@@ -310,7 +311,7 @@ function PrepareWrite_admin_sets_pw()
 
   # Actual writing tasks for Action_write().
   $x['tasks'][$todo_urgent][] = array('SafeWrite',
-                                         array($pw_path), array($pw_file_text));
+                                      array($pw_path), array($pw_file_text));
   return $x; }
 
 #############
@@ -319,20 +320,23 @@ function PrepareWrite_admin_sets_pw()
 
 function Action_set_pw_admin()
 # Display page for setting new admin password.
-{ ChangePW_form('admin', '*', 'Old admin'); }
+{ global $esc, $hook_Action_set_pw_admin;
+  eval($hook_Action_set_pw_admin);
+  ChangePW_form($esc.'admin'.$esc, '*', $esc.'OldAdmin'.$esc); }
 
 function ChangePW_form($desc_new_pw, $new_auth, $desc_pw = 'Admin', 
                        $auth = '*', $t = 'admin_sets_pw')
 # Output page for changing password keyed to $auth and described by $desc.
-{ global $nl, $nl2, $title_url;
-  $input = 'New password for '.$desc_new_pw.':<br />'.$nl.
+{ global $esc, $l, $nl, $nl2, $title_url;
+  $input = $esc.'NewPWfor'.$esc.' '.$desc_new_pw.':<br />'.$nl.
            '<input type="hidden" name="new_auth" value="'.$new_auth.'">'.$nl
           .'<input type="password" name="new_pw" /><br />'.$nl.
            '<input type="hidden" name="auth" value="'.$auth.'">'.$nl.
-           $desc_pw.' password :<br />'.$nl.
+           $desc_pw.' '.$esc.'pw'.$esc.':<br />'.$nl.
            '<input type="password" name="pw">';
   $form = BuildPostForm($title_url.'&amp;action=write&amp;t='.$t, $input, '');
-  Output_HTML('Changing password for '.$desc_new_pw, $form); }
+  $l['title'] = $esc.'ChangePWfor'.$esc.' '.$desc_new_pw; $l['content'] = $form;
+  Output_HTML(); }
 
 function CheckPW($key, $pw_posted, $target)
 # Check if hash of $pw_posted fits $key password hash in internal password list.
@@ -369,12 +373,12 @@ function CheckPW($key, $pw_posted, $target)
 
 function ReadPasswordList($path)
 # Read password list from $path into array.
-{ global $legal_pw_key, $nl;
+{ global $esc, $legal_pw_key, $nl;
   $content = substr(file_get_contents($path), 0, -1);
 
   # Trigger error if password file is not found / empty.
   if (!$content)
-    ErrorFail('No valid password file found.');
+    ErrorFail($esc.'NoPWfile'.$esc);
   
   # Build $passwords list from file's $content.
   $passwords = array();
@@ -465,7 +469,7 @@ function WriteTask($todo, $func, $values_easy = array(), $values_hard = array())
 
 function Lock($path)
 # Check for and create lockfile for $path. Locks block $lock_dur seconds max.
-{ global $max_exec_time;
+{ global $esc, $max_exec_time;
   $lock_dur = 2 * $max_exec_time;
   $now      = time();
   $lock     = $path.'_lock';
@@ -474,8 +478,7 @@ function Lock($path)
   if (is_file($lock))
   { $time = file_get_contents($lock);
     if ($time + $lock_dur > $now)
-      ErrorFail('Stuck by a lockfile of too recent a timestamp.',
-                'Lock effective for '.$lock_dur.' seconds. Try a bit later.'); }
+      ErrorFail($esc.'Locked'.$esc.$lock_dur); }
   file_put_contents($lock, $now); }
 
 function UnLock($path)
@@ -826,9 +829,7 @@ function GetPageTitle($legal_title, $fallback = 'Start')
 # Only allow alphanumeric titles plus -. If title is empty, assume $fallback.
 { $title = $_GET['title']; 
   if (!$title) $title = $fallback;
-  if (!preg_match('/^'.$legal_title.'$/', $title)) 
-    ErrorFail('Illegal page title.', 
-              'Only alphanumeric characters and "-" allowed'); 
+  if (!preg_match('/^'.$legal_title.'$/', $title)) return;
  return $title; }
 
 function GetUserAction($fallback = 'Action_page_view')
@@ -845,38 +846,49 @@ function GetUserAction($fallback = 'Action_page_view')
 
 function ErrorFail($msg, $help = '')
 # Fail and output error $msg. $help may provide additional helpful advice.
-{ global $nl;
-  $text = '<p><strong>'.$msg.'</strong></p>'.$nl.'<p>'.$help.'</p>';
-  Output_HTML('Error', $text); 
+{ global $esc, $hook_ErrorFail, $l, $nl;
+  eval($hook_ErrorFail);
+  $text = $msg;
+  $l['title'] = $esc.'Error'.$esc; $l['content'] = $text;
+  Output_HTML(); 
   exit(); }
 
-function Output_HTML($title_h, $content, $head = '')
-# Generate final HTML output from given parameters and global variables.
-{ global $action, $actions_meta, $actions_page, $nl, $nl2, $root_rel, $title, 
-                                                                     $title_url;
+function Output_HTML($title, $content, $head = '')
+# Generate final HTML output by applying parameters on global variable $style.
+{ global $esc, $design, $header_page, $l;
+  # $l['content'] = $content; $l['title'] = $title; $l['head'] = $head;
+  while (FALSE !== strpos($design, $esc))
+    $design = ReplaceEscapedVariables($design);
+  echo $design; }
 
-  # If we have more $head lines, append a newline for better code readability.
-  if ($head) $head .= $nl;
+function ReplaceEscapedVariables($string)
+{ global $esc, $l; 
 
-  # Generate header / action bars.
-  $header_wiki = '<p>'.$nl.'PlomWiki BETA: '.$nl.
-                 ActionBarLinks($actions_meta, $root_rel).'</p>'.$nl2;
-  if (substr($action, 7, 5) == 'page_')
-    $header_page = $nl.'<p>'.$nl.ActionBarLinks($actions_page, $title_url).
-                                                                     '</p>'.$nl;
+  # Explode $string by $esc, collect strings surrounded by it as variable names.
+  $strings = explode($esc, $string); $collect = FALSE; $vars = array();
+  foreach ($strings as $n => $part)
+    if ($collect) 
+    { $vars[] = $part;
+      $collect = FALSE; }
+    else 
+      $collect = TRUE;
 
-  $header_page = $header_page.'<hr />';
+  # Replace variable names in $vars with $l variable contents.
+  foreach ($vars as $n => $var)
+    $vars[$n] = $l[$var];
 
-  # Final HTML.
-  echo '<title>'.$title_h.'</title>'.$nl.$head.$nl.
-       $header_wiki.'<h1>'.$title_h.'</h1>'.$nl.$header_page.$nl.$content; }
+  # Echo elements of $string alternately as-is or as variables from $vars.
+  $collect = FALSE; $i = 0; $string = '';
+  foreach ($strings as $n => $part)
+    if ($collect) 
+    { $string .= $vars[$i];
+      $i++;
+      $collect = FALSE; }
+    else 
+    { $string .= $part;
+      $collect = TRUE; }
 
-function ActionBarLinks($array_actions, $root)
-# Build a HTML line of action links from $array_actions over $root.
-{ global $nl;
-  foreach ($array_actions as $action)
-    $links .= '<a href="'.$root.$action[1].'">'.$action[0].'</a> '.$nl;
-  return $links; }
+  return $string; }
 
 function WorkScreenReload($redir = '')
 # Just output the HTML of a work message and instantly redirect to $redirect.
@@ -888,11 +900,12 @@ function WorkScreenReload($redir = '')
        '<p>Working.</p>'; 
   exit(); }
 
-function BuildPostForm($URL, $input, $ask_pw = NULL)
+function BuildPostForm($URL, $input, $ask_pw = NULL, $class = NULL)
 # HTML form. $URL = action, $input = code between, $ask_pw = PW input element.
-{ global $nl;
+{ global $esc, $nl;
   if ($ask_pw === NULL)
-    $ask_pw = 'Admin password: <input name="pw" type="password" />'.
+    $ask_pw = 'Admin '.$esc.'pw'.$esc.': <input name="pw" type="password" />'.
                               '<input name="auth" type="hidden" value="*" />';
-  return '<form method="post" action="'.$URL.'">'.$nl.$input.$nl.$ask_pw.$nl.
+  return '<form class="'.$class.'" method="post" action="'.$URL.'">'.$nl.
+                                                         $input.$nl.$ask_pw.$nl.
          '<input type="submit" value="OK" />'.$nl.'</form>'; }

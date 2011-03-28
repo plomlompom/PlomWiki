@@ -1,4 +1,7 @@
 # Insert relative paths to plugin files here. Comment out with #.
+plugins/DefaultVars.php
+plugins/DefaultDesign.php
+
 plugins/StandardLib.php
 plugins/StandardMarkup.php
 plugins/Search.php
@@ -7,3 +10,5 @@ plugins/AutoLink.php
 plugins/Comments.php
 plugins/PwPages.php
 plugins/ReplaceAll.php
+#plugins/DiffRepair.php
+#plugins/German.php

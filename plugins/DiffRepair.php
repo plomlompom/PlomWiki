@@ -1,11 +1,12 @@
 <?php
 
-####################
-# Check functions. #
-####################
+# PlomWiki plugin "DiffRepair"
+# Provides Action_DiffRepair_Check(), Action_page_DiffRepair_Check(),
+#          Action_DiffRepair(), Action_page_DiffRepair()
 
-$actions_page[] = array('Check diffs',  '&amp;action=page_DiffRepair_Check');
-$actions_meta[] = array('Check diffs',  '?action=DiffRepair_Check');
+# Language-specific variables.
+$l['CheckDiffs'] = 'Check Diffs';
+$l['RepairDiffs'] = 'Repair Diffs';
 
 $DiffRepair_Check_Actions = array(
 'CheckEmptyDiffs' => array('empty diffs',      'contain empty diff(s)',       'CONTAINS EMPTY DIFFS!',      'contains no empty diffs.'),
@@ -13,9 +14,16 @@ $DiffRepair_Check_Actions = array(
 'CheckBrokenLine' => array('broken diff line', 'have a broken line of diffs', 'DIFF LINE BROKEN!',          'diff line not broken.'),
 'CheckBadStart'   => array('non-empty start',  'have a non-empty diff start', 'NON-EMPTY START!',           'empty start.'),
 'CheckChronology' => array('bad chronology',   'have a bad chronology',       'BAD CHRONOLOGY!',            'good chronology'));
+$DiffRepair_Repair_Actions = array('CorrectAddDel' => 'Correct alt/del mix-ups',
+                                   'Optimize'      => 'Optimize diffs',
+                                   'DeleteEmpty'   => 'Delete empty diffs');
+
+####################
+# Check functions. #
+####################
 
 function Action_page_DiffRepair_Check()
-{ global $title, $title_url, $DiffRepair_Check_Actions;
+{ global $l, $title, $title_url, $DiffRepair_Check_Actions;
   $action  = $_GET['function'];
 
   if (in_array($action, array_keys($DiffRepair_Check_Actions)))
@@ -30,12 +38,13 @@ function Action_page_DiffRepair_Check()
     $output = '';
     foreach ($DiffRepair_Check_Actions as $action => $data)
     { $name = $data[0];
-      $output .= '<a href="'.$title_url.'&amp;action=page_DiffRepair_Check&amp;function='.$action.'" >'.$name.'<br />'.$nl; } }
+      $output .= '<a href="'.$title_url.'&amp;action=page_DiffRepair_Check&amp;function='.$action.'" >'.$name.'</a><br />'.$nl; } }
 
-  Output_HTML($title, $output); }
+  $l['title'] = $title; $l['content'] = $output;
+  Output_HTML(); }
 
 function Action_DiffRepair_Check()
-{ global $root_rel, $DiffRepair_Check_Actions, $title_root;
+{ global $l, $root_rel, $DiffRepair_Check_Actions, $title_root;
   $action = $_GET['function'];
 
   if (in_array($action, array_keys($DiffRepair_Check_Actions)))
@@ -55,9 +64,10 @@ else
     $output = '';
     foreach ($DiffRepair_Check_Actions as $action => $data)
     { $name = $data[0];
-      $output .= '<a href="'.$root_rel.'?action=DiffRepair_Check&amp;function='.$action.'" >'.$name.'<br />'.$nl; } }
+      $output .= '<a href="'.$root_rel.'?action=DiffRepair_Check&amp;function='.$action.'" >'.$name.'</a><br />'.$nl; } }
 
-  Output_HTML($title, $output); }
+  $l['title'] = $title; $l['content'] = $output;
+  Output_HTML(); }
 
 function DiffRepair_CheckEmptyFirst($title)
 { global $diff_dir;
@@ -82,36 +92,17 @@ function DiffRepair_CheckBrokenLine($title)
   $page_path = $pages_dir.$title;
   $diff_path = $diff_dir.$title;
   $diff_list = DiffList($diff_path);
-  # $text = $text_original = substr(file_get_contents($page_path), 0, -1);
   $text = $text_original = file_get_contents($page_path);
-
-  $nl = "\n";
-  # print_r($diff_list);
-  # echo '$$$'.$text.'$$$'.$nl;
-  # echo '--------------------------'.$nl.$nl;
 
   foreach ($diff_list as $diff_data)
   { $diff          = $diff_data['text'];
-
-    # echo '&&&'.$diff.'&&&'.$nl;
     $reversed_diff = ReverseDiff($diff);
-    # echo '|||'.$reversed_diff.'|||'.$nl;
-    $text          = PlomPatch($text, $reversed_diff); 
-    # echo '$$$'.$text.'$$$'.$nl; 
-  }
-
-  # echo $nl.$nl.'--------------------------'.$nl.$nl;
+    $text          = PlomPatch($text, $reversed_diff); }
 
   $diff_list_reversed = array_reverse($diff_list);
-  # print_r($diff_list);
-  # print_r($diff_list_reversed);
   foreach ($diff_list_reversed as $diff_data)
   { $diff = $diff_data['text'];
-
-    # echo '|||'.$diff.'|||'.$nl;
-    $text = PlomPatch($text, $diff); 
-    # echo '$$$'.$text.'$$$'.$nl; 
-  }
+    $text = PlomPatch($text, $diff); }
 
   if ($text !== $text_original) return TRUE;
   else                          return FALSE; }
@@ -123,19 +114,10 @@ function DiffRepair_CheckBadStart($title)
   $diff_list = DiffList($diff_path);
   $text = file_get_contents($page_path);
 
-  # $nl = "\n";
-  # print_r($diff_list);
-  # echo '$$$'.$text.'$$$'.$nl;
-  # echo '--------------------------'.$nl.$nl;
-
   foreach ($diff_list as $diff_data)
   { $diff          = $diff_data['text'];
-    # echo '&&&'.$diff.'&&&'.$nl;
     $reversed_diff = ReverseDiff($diff);
-    # echo '|||'.$reversed_diff.'|||'.$nl;
-    $text          = PlomPatch($text, $reversed_diff); 
-    # echo '$$$'.$text.'$$$'.$nl; 
-  }
+    $text          = PlomPatch($text, $reversed_diff); }
 
   if ($text !== '') return TRUE;
   else              return FALSE; }
@@ -160,26 +142,21 @@ function DiffRepair_CheckChronology($title)
 # Repair functions. #
 #####################
 
-$actions_page[] = array('Repair diffs', '&amp;action=page_DiffRepair');
-$actions_meta[] = array('Repair diffs', '?action=DiffRepair');
-
-$DiffRepair_Repair_Actions = array('CorrectAddDel' => 'Correct alt/del mix-ups',
-                                   'Optimize'      => 'Optimize diffs',
-                                   'DeleteEmpty'   => 'Delete empty diffs');
-
 function Action_page_DiffRepair()
-{ global $title, $title_url, $DiffRepair_Repair_Actions;
+{ global $l, $title, $title_url, $DiffRepair_Repair_Actions;
   foreach ($DiffRepair_Repair_Actions as $action => $name)
     $input .= '<input type="radio" name="function" value="'.$action.'">'.$name.'<br />';
   $content = BuildPostForm($title_url.'&amp;action=write&amp;t=DiffRepairPage', $input);
-  Output_HTML('Apply repair function to diffs for "'.$title.'"?', $content); }
+  $l['title'] = 'Apply repair function to diffs for "'.$title.'"?'; $l['content'] = $content;
+  Output_HTML(); }
 
 function Action_DiffRepair()
-{ global $root_rel, $DiffRepair_Repair_Actions;
+{ global $l, $root_rel, $DiffRepair_Repair_Actions;
   foreach ($DiffRepair_Repair_Actions as $action => $name)
     $input .= '<input type="radio" name="function" value="'.$action.'">'.$name.'<br />';
   $content = BuildPostForm($root_rel.'?action=write&amp;t=DiffRepairAll', $input);
-  Output_HTML('Apply repair function to all pages?', $content); }
+  $l['title'] = 'Apply repair function to all pages?'; $l['content'] = $content;
+  Output_HTML(); }
 
 function PrepareWrite_DiffRepairPage()
 { global $todo_urgent, $title, $title_url;

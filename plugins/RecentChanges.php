@@ -1,9 +1,13 @@
 <?php
-# RecentChanges plugin.
+# PlomWiki plugin "RecentChanges"
+# Provides Action_RecentChanges().
+
+# Language-specific variables.
+$l['RecentChanges'] = 'Recent Changes';
+$l['NoRecentChanges'] = 'No RecentChanges file found.';
 
 $RC_dir                  = $plugin_dir.'RecentChanges/';
 $RC_path                 = $RC_dir.'RecentChanges.txt';
-$actions_meta[]          = array('RecentChanges', '?action=RecentChanges');
 $hook_WritePage .= '
 $tmp = Newtemp();
 $x = NewTemp($txt_PluginsTodo);
@@ -21,7 +25,7 @@ unlink($x);';
 
 function Add_to_RecentChanges($title,$timestamp,$tmp_author,$tmp_summary,$tmp,$state)
 # Add info of page change to RecentChanges file.
-{ global $nl, $RC_dir, $RC_path, $todo_urgent;
+{ global $nl, $l, $RC_dir, $RC_path, $todo_urgent;
 
   $author  = file_get_contents($tmp_author);
   $summary = file_get_contents($tmp_summary);
@@ -44,7 +48,7 @@ function Add_to_RecentChanges($title,$timestamp,$tmp_author,$tmp_summary,$tmp,$s
 
 function Action_RecentChanges()
 # Provide HTML output of RecentChanges file.
-{ global $nl, $nl2, $RC_path, $title_root;
+{ global $esc, $l, $nl, $nl2, $RC_path, $title_root;
 
   # Format RecentChanges file content into HTML output.
   $output = '';
@@ -84,7 +88,8 @@ function Action_RecentChanges()
     $output = '<ul>'.implode($nl, $list).$nl.'          </ul>'.$nl.'     </li>'.
                                                                   $nl.'</ul>'; }
   else 
-    $output = '<p>No RecentChanges file found.</p>';
+    $output = '<p>'.$esc.'NoRecentChanges'.$esc.'</p>';
   
   # Final HTML.
-  Output_HTML('Recent Changes', $output); }
+  $l['title'] = $esc.'RecentChanges'.$esc; $l['content'] = $output;
+  Output_HTML(); }

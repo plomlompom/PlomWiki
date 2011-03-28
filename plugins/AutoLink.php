@@ -1,9 +1,17 @@
 <?php
 
-$AutoLink_dir   = $plugin_dir.'AutoLink/';
+# PlomWiki plugin "AutoLink"
+# Provides autolinks; Action_autolink_admin()
 
-# Plugin hooks.
-$actions_meta[] = array('AutoLink administration', '?action=autolink_admin');
+# Language-specific phrases.
+$l['AutoLinkAdmin'] = 'AutoLink administration';
+$l['AutoLinkBuild'] = 'Build';
+$l['AutoLinkDestroy'] = 'Destroy';
+$l['AutoLinkNoBuildDB'] = 'Not building AutoLink DB. Directory already exists.';
+$l['AutoLinkNoDestroyDB'] = 'Not destroying AutoLink DB. Directory does not exist.';
+$l['AutoLinkInvalidDBAction'] = 'Invalid AutoLink DB action.';
+
+$AutoLink_dir   = $plugin_dir.'AutoLink/';
 $hook_WritePage .= '
 $x = NewTemp($txt_PluginsTodo);
 $y = array();
@@ -12,7 +20,7 @@ foreach ($y as $task)
   WriteTask($x, $task[0], $task[1]);
 $txt_PluginsTodo = file_get_contents($x);
 unlink($x);';
-$hook_Action_page_view  .= '$text .= AutoLink_Backlinks(); ';
+$hook_Action_page_view  .= '$text .= \'<hr />\'.AutoLink_Backlinks(); ';
 
 ##########
 # Markup #
@@ -68,8 +76,11 @@ function AutoLink_SetLink($string, $titles)
 # Backlinks #
 #############
 
+$l['AutoLinkBacklinks'] = 'AutoLink BackLinks';
+$l['AutoLinkNoBacklinks'] = 'No AutoLink backlinks found for this page.';
+
 function AutoLink_Backlinks()
-{ global $AutoLink_dir, $nl2, $root_rel, $title;
+{ global $AutoLink_dir, $esc, $nl2, $root_rel, $title;
 
   # Don't do anything if there's no Autolink file for the page displayed
   $cur_page_file = $AutoLink_dir.$title;
@@ -83,9 +94,9 @@ function AutoLink_Backlinks()
 
   # $backlinks empty message.
   if (!$links_in)
-    $backlinks = 'No AutoLink backlinks found for this page.';
+    $backlinks = $esc.'AutoLinkNoBacklinks'.$esc;
   
-  return $nl2.'<h2>AutoLink Backlinks</h2>'.$nl2.'<p>'.$backlinks.'</p>'; }
+  return $nl2.'<h2>'.$esc.'AutoLinkBacklinks'.$esc.'</h2>'.$nl2.'<p>'.$backlinks.'</p>'; }
 
 ####################
 # Regex generation #
@@ -243,30 +254,29 @@ function UpdateAutoLinks($t, $title, $text, $diff)
   return $t; }
 
 function Action_autolink_admin()
-{ global $AutoLink_dir, $nl;
+{ global $l, $AutoLink_dir, $esc, $nl;
 
   # Offer building or purging of DB, dependant on existence of $AutoLink_dir.
   if (!is_dir($AutoLink_dir)) $do_what = 'Build';
   else                        $do_what = 'Destroy';
 
   # Final HTML.
-  $input = '<p>'.$do_what.' AutoLink DB?</p>'.$nl.
+  $input = '<p>'.$esc.'AutoLink'.$do_what.$esc.' AutoLink DB?</p>'.$nl.
            '<input name="auth" type="hidden" value="*" />'.$nl.
            '<input type="hidden" name="do_what" value="'.$do_what.'" />';
   $form = BuildPostForm($root_rel.'?action=write&amp;t=autolink_admin', $input);
-  Output_HTML('AutoLink administration', $form); }
+  $l['title'] = $esc.'AutoLinkAdmin'.$esc; $l['content'] = $form; 
+  Output_HTML(); }
 
 function PrepareWrite_autolink_admin()
-{ global $AutoLink_dir, $nl, $root_rel, $todo_urgent;
+{ global $AutoLink_dir, $esc, $nl, $root_rel, $todo_urgent;
   $action = $_POST['do_what'];
 
   if ('Build' == $action)
   { 
     # Abort if $AutoLink_dir found, else prepare task to create it.
     if (is_dir($AutoLink_dir))
-      ErrorFail('Not building AutoLink DB.', 
-                'Directory already exists. <a href="'.$root_rel.
-                                     '?action=autolink_destroy_db">Purge?</a>');
+      ErrorFail($esc.'AutoLinkNoBuildDB'.$esc);
     $x['tasks'][$todo_urgent][] = array('mkdir', array($AutoLink_dir));
 
     # Build page file creation, linking tasks.
@@ -281,7 +291,7 @@ function PrepareWrite_autolink_admin()
   {
     # Abort if $AutoLink_dir found, else prepare task to create it.
     if (!is_dir($AutoLink_dir))
-      ErrorFail('Not destroying AutoLink DB.', 'Directory does not exist.');
+      ErrorFail($esc.'AutoLinkNoDestroyDB'.$esc);
   
     # Add unlink(), rmdir() tasks for $AutoLink_dir and its contents.
     $p_dir = opendir($AutoLink_dir);
@@ -292,7 +302,7 @@ function PrepareWrite_autolink_admin()
     $x['tasks'][$todo_urgent][] = array('rmdir', array($AutoLink_dir)); }
 
   else
-    ErrorFail('Invalid AutoLink DB action.');
+    ErrorFail($esc.'AutoLinkInvalidDBAction'.$esc);
 
   return $x; }
 

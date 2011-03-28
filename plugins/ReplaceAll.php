@@ -1,5 +1,10 @@
 <?php
-$actions_meta[] = array('GlobalReplace', '?action=ReplaceAll');
+
+# PlomWiki plugin "ReplaceAll"
+# Provides Action_ReplaceAll()
+
+$l['GlobalReplace'] = 'GlobalReplace';
+$l['ActionLinks_head'] .= '<a href="'.$root_rel.'?action=ReplaceAll">'.$esc.'GlobalReplace'.$esc.'</a> '.$nl;
 
 function ReplaceAll_RegexError($errno, $errstr)
 # Return PHP preg_replace() error message to explain regex mistake.
@@ -8,7 +13,7 @@ function ReplaceAll_RegexError($errno, $errstr)
 
 function Action_ReplaceAll()
 # Administration menu for markup translation.
-{ global $nl, $root_rel;
+{ global $l, $nl, $root_rel;
 
   $input = '<p>Perform string / regular expression replacement for all pages.</p>'.$nl.
            '<h3>What to replace by what</h3>'.$nl.
@@ -37,7 +42,8 @@ function Action_ReplaceAll()
            '<h3>Affirm</h3>';
 
   $form  = BuildPostForm($root_rel.'?action=write&amp;t=ReplaceAll', $input);
-  Output_HTML('Global string / regex replacement', $form); }
+  $l['title'] = 'Global string / regex replacement'; $l['content'] = $form;
+  Output_HTML(); }
 
 function PrepareWrite_ReplaceAll()
 # Return to Action_write() tasks for a whole new todo list of replacements.

@@ -1,10 +1,15 @@
 <?php
+# PlomWiki plugin "Search"
+# Provides Action_search().
 
-$actions_meta[] = array('Search', '?action=search');
+# Language-specific variables.
+$l['Search']            = 'Search'; 
+$l['SearchResults']     = 'Search results for';
+$l['SearchResultsNone'] = 'None.';
 
 function Action_search()
 # Case-insensitive search through all pages' texts and titles.
-{ global $legal_title, $nl, $nl2, $pages_dir, $title_root;
+{ global $esc, $legal_title, $l, $nl, $nl2, $pages_dir, $title_root;
 
   # Produce search results HTML if $_GET['query'] is provided.
   $query = $_GET['query'];
@@ -12,7 +17,9 @@ function Action_search()
   { if (get_magic_quotes_gpc())
       $query = stripslashes($query);
 
-    $results = $nl2.'<h2>Search results for: '.EscapeHTML($query).'</h2>'.$nl2;
+    $results = $nl2.
+               '<h2>'.$esc.'SearchResults'.$esc.': '.EscapeHTML($query).'</h2>'.
+                                                                           $nl2;
 
     $matches = array();
     $query_low = strtolower($query);
@@ -24,12 +31,12 @@ function Action_search()
 
     $matches_str .= implode($nl, $matches); 
     if ($matches_str) $results .= '<ul>'.$nl.$matches_str.$nl.'</ul>'; 
-    else              $results .= '<p>None.</p>'; }
+    else              $results .= '<p>'.$esc.'SearchResultsNone'.$esc.'</p>'; }
 
-  $title_h = 'Search';
   $content = '<form method="get" action="'.$root_rel.'">'.$nl.
              '<input type="hidden" name="action" value="search" />'.$nl.
              '<input type="text" name="query" value="'.$query.'" />'.$nl.
-             '<input type="submit" value="Search!" />'.$nl.
+             '<input type="submit" value="'.$esc.'Search'.$esc.'!" />'.$nl.
              '</form>'.$results; 
-  Output_HTML($title_h, $content); }
+  $l['title'] = $esc.'Search'.$esc; $l['content'] = $content;
+  Output_HTML(); }

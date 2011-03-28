@@ -2,7 +2,7 @@
 # PlomWiki StandardMarkup
 
 # Provide help message to be shown in editing window.
-$markup_help = '<h3>PlomWiki markup cheatsheet</h3>'.$nl.
+$l['markup_help'] = '<h3>PlomWiki markup cheatsheet</h3>'.$nl.
                '<p>In-line:</p>'.$nl
               .'<pre style="white-space: pre-wrap;">[*<strong>strong</strong>*]'
               .' [/<em>emphasis</em>/] [-<del>deleted</del>-] [[<a href="'.
@@ -14,6 +14,10 @@ $markup_help = '<h3>PlomWiki markup cheatsheet</h3>'.$nl.
                '!!!!] heading 1.1.1 etc., down to !]'.$nl2.'*] list element'.$nl
               .'  *] indented once'.$nl.'    *] indented twice'.$nl2.'[@'.$nl.
                'preformatted'.$nl.'@]'.$nl.'</pre>';
+
+$hook_Action_page_edit .= '
+global $nl2; 
+$content .= $nl2.$esc.\'markup_help\'.$esc;';
 
 # Escape marks. Remember $esc is stripped from any page text by plomwiki.php.
 # A line starting with $esc escapes paragraphing by MarkupParagraphs().
