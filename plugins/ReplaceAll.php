@@ -4,7 +4,6 @@
 # Provides Action_ReplaceAll()
 
 $l['GlobalReplace'] = 'GlobalReplace';
-$l['ActionLinks_head'] .= '<a href="'.$root_rel.'?action=ReplaceAll">'.$esc.'GlobalReplace'.$esc.'</a> '.$nl;
 
 function ReplaceAll_RegexError($errno, $errstr)
 # Return PHP preg_replace() error message to explain regex mistake.
