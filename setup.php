@@ -16,7 +16,8 @@ if (!file_put_contents($pw_path, $pw_file_text)) $fail = TRUE;
 
 # Answer according to success.
 if ($fail)
-  ErrorFail('PlomWiki Setup failed. Something is wrong!');
+{ echo '<p><strong>PlomWiki Setup failed. Something is wrong!</strong></p>';
+  exit(); }
 else
 { unlink($setup_file); 
   WorkScreenReload($root_rel); }
