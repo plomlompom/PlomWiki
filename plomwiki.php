@@ -853,7 +853,7 @@ function ErrorFail($msg, $help = '')
   Output_HTML(); 
   exit(); }
 
-function Output_HTML($title, $content, $head = '')
+function Output_HTML()
 # Generate final HTML output by applying parameters on global variable $style.
 { global $esc, $design, $header_page, $l;
   # $l['content'] = $content; $l['title'] = $title; $l['head'] = $head;
