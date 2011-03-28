@@ -72,7 +72,6 @@ function Action_page_view()
   # Get text from file. If none, show invitation to create one. Else, markup it.
   if (is_file($page_path)) 
   { $text = file_get_contents($page_path); 
-    $text = EscapeHTML($text); 
     $text = Markup($text); }
   else
     $text = $esc.'PageDontExist'.$esc.' <a href="'.$title_url.
