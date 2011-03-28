@@ -140,9 +140,9 @@ function PrepareWrite_comment()
   $max_length_url = 2048; $max_length_author = 1000; $max_length_text = 10000;
   if (strlen($author) > $max_length_author)
     ErrorFail($esc.'CommentsAuthorMax'.$esc.': '.$max_length_author);
-  if (strlen($url) > $$max_length_url)
+  if (strlen($url) > $max_length_url)
     ErrorFail($esc.'CommentsURLMax'.$esc.': '.$max_length_url);
-  if (strlen($url) > $$max_length_text)
+  if (strlen($url) > $max_length_text)
     ErrorFail($esc.'CommentsTextMax'.$esc.': '.$max_length_text);
   $legal_url = '[A-Za-z][A-Za-z0-9\+\.\-]*:([A-Za-z0-9\.\-_~:/\?#\[\]@!\$&\'\('.
                '\)\*\+,;=]|%[A-Fa-f0-9]{2})+';
