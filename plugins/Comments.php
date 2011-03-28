@@ -57,7 +57,7 @@ function Comments()
       $url = $x['url'];
       if ($url)
         $author = '<a href="'.$url.'">'.$author.'</a>';
-      $comment_text = '<p>'.$x['text'].'</p>';
+      $comment_text = Comments_FormatText($x['text']);
       $comments .= $nl2.'<p id="comment_'.$id.'"><a href="#comment_'.$id.'">#'.
                                                              $id.'</a></p>'.$nl.
                    $comment_text.$nl.
@@ -84,7 +84,22 @@ function Comments()
 
   return $nl2.'<h2>'.$esc.'Comments'.$esc.'</h2>'.$comments.$nl2.$write; }
 
-function Comments_GetComments($comment_file, $escape_html = TRUE)
+function Comments_FormatText($text)
+# Comment formatting: EscapeHTML, paragraphing / line breaks.
+{ global $nl;
+  $text = EscapeHTML($text);
+  $lines = explode($nl, $text);
+  $last_line = '';
+  foreach ($lines as $n => $line)
+  { if     (''  == $last_line and '' !== $line) $lines[$n] = '<p>'.$line;
+    elseif ('' !== $last_line and ''  == $line) $lines[$n] = '</p>'.$nl;
+    elseif ('' !== $last_line and '' !== $line) $lines[$n] = '<br />'.$nl.$line;
+    $last_line = $line; }
+  $text = implode($lines);
+  if ('</p>' == substr($text, -4)) $text = $text.'</p>';
+  return $text; }
+
+function Comments_GetComments($comment_file)
 # Read $comment_file into more structured, readable array $comments.
 { global $esc, $nl;
   $comments = array();
@@ -96,9 +111,7 @@ function Comments_GetComments($comment_file, $escape_html = TRUE)
       continue;
     $time = ''; $author = ''; $url = ''; $lines_comment = array();
     foreach (explode($nl, $entry_txt) as $line_n => $line)
-    { if ($escape_html)
-        $line = EscapeHTML($line);
-      if     ($line_n == 0)              $id              = $line;
+    { if     ($line_n == 0)              $id              = $line;
       elseif ($line_n == 1)              $datetime        = $line;
       elseif ($line_n == 2)              $author          = $line;
       elseif ($line_n == 3) { if ($line) $url             = $line; }
