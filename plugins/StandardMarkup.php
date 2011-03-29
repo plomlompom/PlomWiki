@@ -69,9 +69,9 @@ function MarkupLinks($text)
     $style = FALSE;
     $page  = FALSE;
     if (preg_match('{^'.$legal_url.'$}', $string))
-      $desc = $url  = $string;
+      $desc = $url = $string;
     elseif (preg_match('{^('.$legal_url.')\|(.*)$}', $string, $catch))
-    { $url  = $catch[1]; $desc = $catch[6]; }
+    { $url  = $catch[1]; $desc = $catch[4]; }
     elseif (preg_match('/^('.$legal_title.')\|(.*)$/', $string, $catch))
     { $page = $catch[1]; $desc = $catch[2]; }
     else
