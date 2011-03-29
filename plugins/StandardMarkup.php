@@ -33,10 +33,14 @@ $esc_store = array();
 
 function MarkupLinks($text)
 # [[LinkedPagename]], [[Linked|Text displayed]], [[http://linked-url.com]].
-{ global $nl, $title_root, $legal_title, $pages_dir;
+{ global $esc, $nl, $title_root, $legal_title, $pages_dir;
   $legal_url = '((http)|(https)|(ftp)):\/\/[^ '.$nl.'|]+?';
-  $regex = '/\[\[([^'.$nl.']+?)]]/';
-
+  $regex     = '/\[\[([^'.$nl.']+?)]]/';
+  $esc_off   = $esc.'}';
+  $esc_on    = '{'.$esc;
+  $n         = 0;
+  $esc_store = array();
+  
   # Go through each potential linking markup and decide with what to replace it.
   preg_match_all($regex, $text, $store);
   $store = $store[1];
@@ -73,16 +77,31 @@ function MarkupLinks($text)
       $link = FALSE;
 
     # If $link, build HTML link to replace markup; else, leave text unchanged.
+    # Don't replace right away but place markers to replace later.
     if ($link)
     { if ($page)
       { if (!is_file($pages_dir.$page)) 
-          $style = 'style="color: red;"';
+          $style = 'style="color: red;" ';
         $url = $title_root.$page; }
-      $repl = '<a '.$style.' href="'.$url.'">'.$desc.'</a>'; }
+      $repl = '<a '.$style.'href="'.$url.'">'.$desc.'</a>'; 
+      $esc_store[] = $repl;
+      $repl = $esc_on.$n.$esc_off;
+      $n++; }
     else
       $repl = $old;
-
     $text = str_replace($old, $repl, $text); }
+
+  # Link URLs outside of linking markup.
+  $regex = '{((http|https|ftp):([A-Za-z0-9\.\-_~:/\?#\[\]@!\$&\'\(\)\*\+,;=]|'.
+           '%[A-Fa-f0-9]{2})+)}';
+  $text = preg_replace($regex,
+                       '<a style="text-decoration: none;" href="$1">$1</a>',
+                       $text);
+
+  # Replace linking markup markers with HTML link strings.
+  foreach ($esc_store as $n => $string)
+    $text = str_replace($esc_on.$n.$esc_off, $string, $text);
+
   return $text; }
 
 function MarkupStrong($text)
