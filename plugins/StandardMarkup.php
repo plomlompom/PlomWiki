@@ -176,7 +176,7 @@ function MarkupCode($text)
   $line_start = '^|'.$nl;
   $line_end   = '$|'.$nl;
   $regex      = '\[@(.*?)@]';
-
+  
   # For further modification, temporarily store marked up code in $store.
   $store = array();
   preg_match_all('/('.$line_start.')'.$regex.'('.$line_end.')/s', 
@@ -184,13 +184,16 @@ function MarkupCode($text)
   $store = $store[2];
 
   # Escape $store'd lines. Replace marked up code with these, <pre>-format it.
+  # Solve some problems with symbols that are dangerous or confuse formatting.
   foreach ($store as $pre)
-  { $pre = str_replace('$', $esc.'dollar'.$esc, $pre);
-    $pre = str_replace('\\', $esc.'backslash'.$esc, $pre);
+  { $pre  = str_replace('$', $esc.'dollar'.$esc, $pre);
+    $pre  = str_replace('\\', $esc.'backslash'.$esc, $pre);
     $pre  = preg_replace('/(?<='.$line_start.')(.*?)(?='.$line_end.')/', 
-                         $esc.'$1', $pre);
+                         $esc.'$1 ', $pre);
+    $pre  = preg_replace('/^'.$esc.' '.$nl.$esc.'/', $esc, $pre);
+    $pre  = preg_replace('/'.$esc.' $/', '', $pre);
     $text = preg_replace('/(?<='.$line_start.')'.$regex.'(?='.$line_end.')/s', 
-                         $esc.'<pre>'.$nl.$pre."\n\r".'</pre>', 
+                         $esc.'<pre>'.$nl.$pre.$nl.$esc.'</pre>', 
                          $text, $limit = 1); 
     $text = str_replace($esc.'backslash'.$esc, '\\', $text);
     $text = str_replace($esc.'dollar'.$esc, '$', $text); }
