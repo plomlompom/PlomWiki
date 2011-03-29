@@ -54,7 +54,7 @@ function MarkupLinks($text)
     $umlauts = array(array('Ä', 'Ae'), array('Ö', 'Oe'), array('Ü', 'ue'),
                      array('ä', 'ae'), array('ö', 'oe'), array('ü', 'ue'), 
                      array('ß', 'ss'));
-    if (!strpos($string, '|') and !preg_match('/^'.$legal_url.'$/', $string))
+    if (!strpos($string, '|') and !preg_match('{^'.$legal_url.'$}', $string))
     { $temp = $string;
       foreach ($umlauts as $umlaut) 
         $temp = str_replace($umlaut[0], $umlaut[1], $temp);
@@ -68,9 +68,9 @@ function MarkupLinks($text)
     $link  = TRUE; 
     $style = FALSE;
     $page  = FALSE;
-    if (preg_match('/^'.$legal_url.'$/', $string))
+    if (preg_match('{^'.$legal_url.'$}', $string))
       $desc = $url  = $string;
-    elseif (preg_match('/^('.$legal_url.')\|(.*)$/', $string, $catch))
+    elseif (preg_match('{^('.$legal_url.')\|(.*)$}', $string, $catch))
     { $url  = $catch[1]; $desc = $catch[6]; }
     elseif (preg_match('/^('.$legal_title.')\|(.*)$/', $string, $catch))
     { $page = $catch[1]; $desc = $catch[2]; }
