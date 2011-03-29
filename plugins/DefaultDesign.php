@@ -15,11 +15,14 @@ $design = '<!DOCTYPE html>'.$nl.'<meta charset="UTF-8">'.$nl.
           '<a href="'.$root_rel.'?action=set_pw_admin">'.$esc.'SetAdminPW'.$esc.'</a> '.$nl2.
           '<h1>'.$esc.'title'.$esc.'</h1>'.$nl.
           '<p>'.$nl.
-          '<a href="'.$title_url.'&amp;action=page_view">'.$esc.'View'.$esc.'</a> '.$nl.
-          '<a href="'.$title_url.'&amp;action=page_edit">'.$esc.'Edit'.$esc.'</a> '.$nl.
-          '<a href="'.$title_url.'&amp;action=page_history">'.$esc.'History'.$esc.'</a> '.$nl.
+          $esc.'ActionLinks_page'.$esc.$nl.
           '</p>'.$nl.'<hr />'.$nl.
           '<div class="'.$esc.'css_class'.$esc.'">'.$esc.'content'.$esc.'</div>';
+
+$l['ActionLinks_page'] = 
+'<a href="'.$title_url.'&amp;action=page_view">'.$esc.'View'.$esc.'</a> '.$nl.
+'<a href="'.$title_url.'&amp;action=page_edit">'.$esc.'Edit'.$esc.'</a> '.$nl.
+'<a href="'.$title_url.'&amp;action=page_history">'.$esc.'History'.$esc.'</a> '.$nl;
 
 $hook_Action_page_edit .= '$l[\'css_class\'] = \'edit\';';
 $hook_Action_page_history .= '$l[\'css_class\'] = \'history\';';

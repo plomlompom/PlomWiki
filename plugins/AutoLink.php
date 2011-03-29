@@ -96,7 +96,7 @@ function AutoLink_Backlinks()
   if (!$links_in)
     $backlinks = $esc.'AutoLinkNoBacklinks'.$esc;
   
-  return $nl2.'<h2>'.$esc.'AutoLinkBacklinks'.$esc.'</h2>'.$nl2.'<p>'.$backlinks.'</p>'; }
+  return $nl2.'<p><strong>'.$esc.'AutoLinkBacklinks'.$esc.':</strong> '.$nl.$backlinks.'</p>'; }
 
 ####################
 # Regex generation #
