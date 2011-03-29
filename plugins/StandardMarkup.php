@@ -34,7 +34,8 @@ $esc_store = array();
 function MarkupLinks($text)
 # [[LinkedPagename]], [[Linked|Text displayed]], [[http://linked-url.com]].
 { global $esc, $nl, $title_root, $legal_title, $pages_dir;
-  $legal_url = '((http)|(https)|(ftp)):\/\/[^ '.$nl.'|]+?';
+  $legal_url = '(http|https|ftp):([A-Za-z0-9\.\-_~:/\?#\[\]@!\$&\'\(\)\*\+,;=]|'.
+               '%[A-Fa-f0-9]{2})+'; # Taken in part from @erlehmann.
   $regex     = '/\[\[([^'.$nl.']+?)]]/';
   $esc_off   = $esc.'}';
   $esc_on    = '{'.$esc;
@@ -92,9 +93,7 @@ function MarkupLinks($text)
     $text = str_replace($old, $repl, $text); }
 
   # Link URLs outside of linking markup.
-  $regex = '{((http|https|ftp):([A-Za-z0-9\.\-_~:/\?#\[\]@!\$&\'\(\)\*\+,;=]|'.
-           '%[A-Fa-f0-9]{2})+)}';
-  $text = preg_replace($regex,
+  $text = preg_replace('{('.$legal_url.')}',
                        '<a style="text-decoration: none;" href="$1">$1</a>',
                        $text);
 
