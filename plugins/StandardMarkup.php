@@ -5,10 +5,10 @@
 $l['markup_help'] = '<h3>PlomWiki markup cheatsheet</h3>'.$nl.
                '<p>In-line:</p>'.$nl
               .'<pre style="white-space: pre-wrap;">[*<strong>strong</strong>*]'
-              .' [/<em>emphasis</em>/] [-<del>deleted</del>-] [[<a href="'.
+                   .' [/<em>emphasis</em>/] [-<del>deleted</del>-] [[<a href="'.
                $title_root.'PagenameOrURL">PagenameOrURL</a>]] [[PagenameOrURL|'
               .'<a href="'.$title_root.'PagenameOrURL">Text displayed instead</'
-              .'a>]] [=[/unformatted/] [*text*]=]</pre>'.$nl.
+                                 .'a>]] [=[/unformatted/] [*text*]=]</pre>'.$nl.
                '<p>Multi-line:</p>'.$nl.'<pre>'.$nl.'!!!!!!] heading 1'.$nl.
                '!!!!!] heading 1.1'.$nl.
                '!!!!] heading 1.1.1 etc., down to !]'.$nl2.'*] list element'.$nl
@@ -36,58 +36,59 @@ function MarkupLinks($text)
 { global $esc, $nl, $title_root, $legal_title, $pages_dir;
   $legal_url = '(http|https|ftp):([A-Za-z0-9\.\-_~:/\?#\[\]@!\$&\'\(\)\*\+,;=]|'.
                '%[A-Fa-f0-9]{2})+'; # Taken in part from @erlehmann.
-  $regex     = '/\[\[([^'.$nl.']+?)]]/';
-  $esc_off   = $esc.'}';
-  $esc_on    = '{'.$esc;
-  $n         = 0;
-  $esc_store = array();
-  
+  $regex = '/\[\[([^'.$nl.']+?)]]/';
+  $esc_store = array(); $esc_off = $esc.'}'; $esc_on = '{'.$esc; $esc_n = 0;
+
   # Go through each potential linking markup and decide with what to replace it.
   preg_match_all($regex, $text, $store);
   $store = $store[1];
   foreach ($store as $string)
   { $old  = '[['.$string.']]';
 
-    # Try to force linked text into $legal_title format.
+    # Separate $string into $to_link and $desc, even if they're the same.
+    $pos_sep = strpos($string, '|');
+    if ($pos_sep)
+    { $to_link = substr($string, 0, $pos_sep);
+      $desc    = substr($string, $pos_sep + 1); }
+    else
+      $to_link = $desc = $string;
+
+    # Allow for whitespace before and after $legal_url in $to_link.
+    if (preg_match('{^ *'.$legal_url.' *$}', $to_link))
+      $to_link = str_replace(' ', '', $to_link);
+
+    # Try to force $to_link into $legal_title format if it's not URL-like.
     $gaps    = array('&apos;', '&quot;', '&amp;', ';', ':', '\\', '/', ',', '.',
                      ' ', '?', '!');
     $umlauts = array(array('Ä', 'Ae'), array('Ö', 'Oe'), array('Ü', 'ue'),
                      array('ä', 'ae'), array('ö', 'oe'), array('ü', 'ue'), 
                      array('ß', 'ss'));
-    if (!strpos($string, '|') and !preg_match('{^'.$legal_url.'$}', $string))
-    { $temp = $string;
-      foreach ($umlauts as $umlaut) 
-        $temp = str_replace($umlaut[0], $umlaut[1], $temp);
+    if (!preg_match('{^'.$legal_url.'$}', $to_link))
+    { foreach ($umlauts as $umlaut) 
+        $to_link = str_replace($umlaut[0], $umlaut[1], $to_link);
       foreach ($gaps as $gap)
-        $temp = str_replace($gap, ' ', $temp);
-      $temp = preg_replace('/ ([a-z])/e', 'strtoupper("$1")', $temp);
-      $temp = str_replace(' ', '', $temp);
-      $string = $temp.'|'.$string; }
+        $to_link = str_replace($gap, ' ', $to_link);
+      $to_link = preg_replace('/ ([a-z])/e', 'strtoupper("$1")', $to_link); 
+      $to_link = str_replace(' ', '', $to_link); }
 
-    # Try collecting from potential linking markup code HTML link parameters.
-    $link  = TRUE; 
-    $style = FALSE;
-    $page  = FALSE;
-    if (preg_match('{^'.$legal_url.'$}', $string))
-      $desc = $url = $string;
-    elseif (preg_match('{^('.$legal_url.')\|(.*)$}', $string, $catch))
-    { $url  = $catch[1]; $desc = $catch[4]; }
-    elseif (preg_match('/^('.$legal_title.')\|(.*)$/', $string, $catch))
-    { $page = $catch[1]; $desc = $catch[2]; }
-    else
-      $link = FALSE;
+    # Try collecting from $to_link HTML link parameters.
+    $link = TRUE; $page = FALSE;
+    if (preg_match('{^'.$legal_url.'$}', $to_link))       $url  = $to_link;
+    elseif (preg_match('/^'.$legal_title.'$/', $to_link)) $page = $to_link;
+    else                                                  $link = FALSE;
 
     # If $link, build HTML link to replace markup; else, leave text unchanged.
     # Don't replace right away but place markers to replace later.
+    $style = FALSE;
     if ($link)
     { if ($page)
       { if (!is_file($pages_dir.$page)) 
           $style = 'style="color: red;" ';
         $url = $title_root.$page; }
-      $repl = '<a '.$style.'href="'.$url.'">'.$desc.'</a>'; 
+      $repl        = '<a '.$style.'href="'.$url.'">'.$desc.'</a>'; 
       $esc_store[] = $repl;
-      $repl = $esc_on.$n.$esc_off;
-      $n++; }
+      $repl        = $esc_on.$esc_n.$esc_off;
+      $esc_n++; }
     else
       $repl = $old;
     $text = str_replace($old, $repl, $text); }
@@ -98,8 +99,8 @@ function MarkupLinks($text)
                        $text);
 
   # Replace linking markup markers with HTML link strings.
-  foreach ($esc_store as $n => $string)
-    $text = str_replace($esc_on.$n.$esc_off, $string, $text);
+  foreach ($esc_store as $esc_n => $string)
+    $text = str_replace($esc_on.$esc_n.$esc_off, $string, $text);
 
   return $text; }
 
