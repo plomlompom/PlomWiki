@@ -20,7 +20,6 @@ foreach ($y as $task)
   WriteTask($x, $task[0], $task[1]);
 $txt_PluginsTodo = file_get_contents($x);
 unlink($x);';
-$hook_Action_page_view  .= '$text .= \'<hr />\'.AutoLink_Backlinks(); ';
 
 ##########
 # Markup #
@@ -80,7 +79,7 @@ $l['AutoLinkBacklinks'] = 'AutoLink BackLinks';
 $l['AutoLinkNoBacklinks'] = 'No AutoLink backlinks found for this page.';
 
 function AutoLink_Backlinks()
-{ global $AutoLink_dir, $esc, $nl2, $root_rel, $title;
+{ global $AutoLink_dir, $l, $esc, $nl2, $root_rel, $title;
 
   # Don't do anything if there's no Autolink file for the page displayed
   $cur_page_file = $AutoLink_dir.$title;
@@ -96,7 +95,9 @@ function AutoLink_Backlinks()
   if (!$links_in)
     $backlinks = $esc.'AutoLinkNoBacklinks'.$esc;
   
-  return $nl2.'<p><strong>'.$esc.'AutoLinkBacklinks'.$esc.':</strong> '.$nl.$backlinks.'</p>'; }
+  return $nl2.
+         '<h2>'.$esc.'AutoLinkBacklinks'.$esc.'</h2>'.$nl.'<p>'.$backlinks.
+                                                                       '</p>'; }
 
 ####################
 # Regex generation #
@@ -418,5 +419,5 @@ function AutoLink_TasksLinksInOrOut($tasks, $dir, $title, $titles)
 # file and $title $dir ('in'/'out')of line 2 in $titles' AutoLink files.
 { foreach ($titles as $pagename)
   { $tasks[] = array('AutoLink_ChangeLine', array($title, 1, $dir, $pagename));
-    $tasks[] = array('AutoLink_ChangeLine', array($pagename, 2, $dir, $title)); }
+    $tasks[] = array('AutoLink_ChangeLine', array($pagename, 2, $dir, $title));}
   return $tasks; }
