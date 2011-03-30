@@ -107,6 +107,9 @@ function BuildRegex($title)
 # Generate the regular expression to match $title for autolinking in pages.
 { $umlaut_table = array('äÄ' => array('ae', 'Ae'), 'öÖ' => array('oe', 'Oe'),
                         'üÜ' => array('ue', 'Ue'), 'ß'  => array('ss'));
+  foreach ($umlaut_table as $umlaut => $transl)
+  { $umlaut_table_sub[$transl[0][0]] = $transl[0];
+    $umlaut_table_sub[$transl[1][0]] = $transl[1]; }
   $encoding           = 'UTF-8';
   $minimal_root       = 4;
   $suffix_tolerance   = 3;
@@ -147,6 +150,13 @@ function BuildRegex($title)
         { $part = substr($part, 0, -$replace_tolerance);
           break; }
         $replace_tolerance--; }
+
+      # What if cut-off is inside an umlaut translation? Identify all potential
+      # cut-off umlaut translations, replace with respective full versions.
+      $last_char = substr($part, -1);
+      foreach ($umlaut_table_sub as $char => $umlaut)
+        if ($last_char == $char)
+          $part = substr($part, 0, -1).$umlaut;
 
       # To a possibly reduced $part, add tolerance => $suffix_tolerance.
       $tolerance_sum = min($ln_part, ($replace_tolerance + $suffix_tolerance));
