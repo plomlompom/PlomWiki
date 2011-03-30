@@ -42,6 +42,7 @@ $l['SearchResults']                 = 'Such-Ergebnisse für';
 $l['SearchResultsNone']             = 'Keine.';
 $l['SetPagePW']                     = 'Seiten-Passwort setzen';
 $l['page']                          = 'Seite';
+$l['PWfor']                         = 'Passwort für';
 $l['CommentsAdmin']                 = 'Kommentar-Einstellungen';
 $l['RecentComments']                = 'Neueste Kommentare';
 $l['CommentsNoDir']                 = 'Kommentar-Verzeichnis noch nicht gebaut.';
