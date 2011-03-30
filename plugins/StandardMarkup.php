@@ -60,7 +60,7 @@ function MarkupLinks($text)
     # Try to force $to_link into $legal_title format if it's not URL-like.
     $gaps    = array('&apos;', '&quot;', '&amp;', ';', ':', '\\', '/', ',', '.',
                      ' ', '?', '!');
-    $umlauts = array(array('Ä', 'Ae'), array('Ö', 'Oe'), array('Ü', 'ue'),
+    $umlauts = array(array('Ä', 'Ae'), array('Ö', 'Oe'), array('Ü', 'Ue'),
                      array('ä', 'ae'), array('ö', 'oe'), array('ü', 'ue'), 
                      array('ß', 'ss'));
     if (!preg_match('{^'.$legal_url.'$}', $to_link))
