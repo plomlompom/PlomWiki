@@ -79,7 +79,7 @@ $l['AutoLinkBacklinks'] = 'AutoLink BackLinks';
 $l['AutoLinkNoBacklinks'] = 'No AutoLink backlinks found for this page.';
 
 function AutoLink_Backlinks()
-{ global $AutoLink_dir, $l, $esc, $nl2, $root_rel, $title;
+{ global $AutoLink_dir, $l, $esc, $nl, $nl2, $root_rel, $title;
 
   # Don't do anything if there's no Autolink file for the page displayed
   $cur_page_file = $AutoLink_dir.$title;
