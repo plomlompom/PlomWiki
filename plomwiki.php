@@ -119,9 +119,9 @@ function Action_page_history()
       $author      = EscapeHTML($diff_data['author']);
       $summary     = EscapeHTML($diff_data['summary']);
       $desc        = $time_string.': '.$summary.' ('.$author.')';
-      $diffs[] =  '<div class="diff_desc">'.$desc.' (<a href="'.$title_url.
-                  '&amp;action=page_revert&amp;id='.$id.'">'.$esc.'revert'.$esc.
-                                   '</a>):</div>'.$nl.'<div class="diff_text">';
+      $diffs[] =  '<div id="'.$id.'" class="diff_desc">'.$desc.' (<a href="'.
+                     $title_url.'&amp;action=page_revert&amp;id='.$id.'">'.$esc.
+                     'revert'.$esc.'</a>):</div>'.$nl.'<div class="diff_text">';
 
       # Preformat remaining lines. Translate arrows into less ambiguous +/-.
       foreach (explode($nl, $diff_data['text']) as $line_n => $line)
@@ -250,7 +250,10 @@ function Action_write()
 function PrepareWrite_page()
 # Deliver to Action_write() all information needed for page writing process.
 { global $esc, $nl, $page_path, $title, $title_url, $todo_urgent, $work_dir;
-  $text = Sanitize($_POST['text']);
+  $text    = Sanitize($_POST['text']);
+  $summary = str_replace($nl, '', Sanitize($_POST['summary']));
+  $author  = str_replace($nl, '', Sanitize($_POST['author'] ));
+  if (!$author) $author  = '?';
 
   # Check for error conditions: $text empty, unchanged or too long/large.
   if (is_file($page_path))
@@ -264,12 +267,6 @@ function PrepareWrite_page()
     ErrorFail($esc.'MaxLinesText'.$esc.$max_lines);
   if (strlen($text) > $max_length)
     ErrorFail($esc.'MaxSizeText'.$esc.$max_length);
-
-  # Fill in "author" and "summary" fields, with default values if necessary.
-  $author      = str_replace($nl, '', Sanitize($_POST['author'] ));
-  $summary     = str_replace($nl, '', Sanitize($_POST['summary']));
-  if (!$author)  $author  = 'Anonymous';
-  if (!$summary) $summary = '?';
 
   # Reserve empty temporary files for WritePage().
   $tmp_0 = NewTemp(); $tmp_1 = NewTemp(); $tmp_2 = NewTemp();
@@ -520,7 +517,8 @@ function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo,
 # Use texts found at $path_author and $path_summary as change descriptions. 
 # $todo_plugins catches actions added via plugin hook $hook_WritePage to its
 # $txt_PluginTodo; WorkTodo() on $todo_plugin needs to be called externally.
-{ global $del_dir, $diff_dir, $esc, $hook_WritePage, $nl, $pages_dir;
+{ global $del_dir, $diff_dir, $esc, $hook_WritePage, $hook_WritePage_diff, $nl,
+         $pages_dir;
   $page_path = $pages_dir.$title; 
   $diff_path = $diff_dir .$title;
   $text      = file_get_contents($path_text);
@@ -558,6 +556,8 @@ function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo,
       $new_diff_id = $old_diff_id + 1; }
     else
       $diff_old = '';
+    eval($hook_WritePage_diff);         # The best place to construct a summary
+    if (!$summary) $summary = '?';      # from the diff, if so inclined.
     $diff_new = $new_diff_id.$nl.$timestamp.$nl.$author.$nl.$summary.$nl.
                 $diff_add.'%%'.$nl.$diff_old;
 
