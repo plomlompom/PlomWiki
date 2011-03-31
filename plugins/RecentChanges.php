@@ -16,14 +16,16 @@ if     ($text == \'delete\') $state = 0;
 elseif ($diff_old == \'\')   $state = 2;
 $tmp_author  = NewTemp($author);
 $tmp_summary = NewTemp($summary);
-WriteTask($x, "Add_to_RecentChanges", array($title, $timestamp, $tmp_author,
-                                            $tmp_summary, $tmp, $state));
+WriteTask($x, "Add_to_RecentChanges", array($title, $timestamp, $new_diff_id, 
+                                            $tmp_author, $tmp_summary, $tmp,
+                                            $state));
 WriteTask($x, "unlink", array($tmp_author));
 WriteTask($x, "unlink", array($tmp_summary));
 $txt_PluginsTodo = file_get_contents($x);
 unlink($x);';
 
-function Add_to_RecentChanges($title,$timestamp,$tmp_author,$tmp_summary,$tmp,$state)
+function Add_to_RecentChanges($title, $timestamp, $id, $tmp_author,
+                              $tmp_summary, $tmp,$state)
 # Add info of page change to RecentChanges file.
 { global $nl, $l, $RC_dir, $RC_path, $todo_urgent;
 
@@ -40,7 +42,8 @@ function Add_to_RecentChanges($title,$timestamp,$tmp_author,$tmp_summary,$tmp,$s
   if     (0 == $state) $title = '!'.$title;
   elseif (2 == $state) $title = '+'.$title;
 
-  $RC_txt = $timestamp.$nl.$title.$nl.$author.$nl.$summary.$nl.'%%'.$nl.$RC_txt;
+  $RC_txt = $timestamp.$nl.$title.$nl.$id.$nl.$author.$nl.$summary.$nl.'%%'.$nl.
+                                                                        $RC_txt;
 
   if (is_file($tmp))
   { file_put_contents($tmp, $RC_txt); 
@@ -70,13 +73,22 @@ function Action_RecentChanges()
         { $state = $title[0];
           $title = substr($title, 1); } }
       elseif (3 == $i)
+        $id     = $line;
+      elseif (4 == $i)
         $author = $line;
-      elseif (4 == $i) 
-      { if     ('!' == $state) { $state_on='<del>';    $state_off='</del>'; }
-        elseif ('+' == $state) { $state_on='<strong>'; $state_off='</strong>'; }
+      elseif (5 == $i) 
+      { $diff_link = ' <a href="'.$title_root.$title.'&amp;action=page_history#'
+                                                                 .$id.'">#</a>';
+        if     ('!' == $state)
+        { $state_on  = '<del>';
+          $state_off = '</del>';
+          $diff_link=''; }
+        elseif ('+' == $state)
+        { $state_on='<strong>';
+          $state_off='</strong>'; }
         $string = '               <li>'.$time.' <a href="'.$title_root.$title.
-                   '">'.$state_on.$title.$state_off.'</a>: '.$line.' ('.$author.
-                                                                       ')</li>';
+                   '">'.$state_on.$title.$state_off.'</a>'.$diff_link.': '.$line
+                                                         .' ('.$author.')</li>';
         $state = $state_on = $state_off = '';
         if ($date != $date_old)
         { $string = substr($string, 15);
