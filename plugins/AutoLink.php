@@ -48,7 +48,7 @@ function MarkupAutolink($text)
         $titles[] = $x;
     $repl   = 'AutoLink_SetLink("$1", $titles)';
     $text   = preg_replace($match, $repl, $text); }
-  
+
   return $text; }
 
 function AutoLink_SetLink($string, $titles)
@@ -113,9 +113,9 @@ function BuildRegex($title)
   $encoding           = 'UTF-8';
   $minimal_root       = 4;
   $suffix_tolerance   = 3;
-  $gaps_to_allow_easy = ' .,:';
-  $gaps_to_allow_hard = array('\'', '/', '\\', '(', ')', '[', ']');
-  $gaps_to_allow_long = array();
+  $gaps_to_allow_easy = ' .,:\'';                               # Double symbols
+  $gaps_to_allow_hard = array('/', '\\', '(', ')', '[', ']');   # transformed by
+  $gaps_to_allow_long = array('&apos;');                        # EscapeHTML().
 
   # Divide with "!" over hyphens; at digit vs. char; char followed by uppercase.
   $regex = preg_replace(        '/(-+)/',           '!',   $title);
@@ -160,10 +160,10 @@ function BuildRegex($title)
 
       # To a possibly reduced $part, add tolerance => $suffix_tolerance.
       $tolerance_sum = min($ln_part, ($replace_tolerance + $suffix_tolerance));
-      $part .= '[a-z'.$legal_umlauts.']{0,'.$tolerance_sum.'}'; }
+      $part .= '([a-z'.$legal_umlauts.'\']|&apos;){0,'.$tolerance_sum.'}'; }
 
     # In a numerical $part, just add tolerance of $suffix_tolerance size.
-    else $part .= '[a-z'.$legal_umlauts.']{0,'.$suffix_tolerance.'}'; }
+    else $part .= '([a-z'.$legal_umlauts.'\']|&apos;){0,'.$suffix_tolerance.'}'; }
 
   # $gaps_to_allow: glue for $regex_parts. Integrate $gaps_to_allow_easy as is,
   # $...hard with escape chars and $...long with their own "or" parantheses.
