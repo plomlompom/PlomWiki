@@ -10,6 +10,14 @@ $l['AutoLinkDestroy'] = 'Destroy';
 $l['AutoLinkNoBuildDB'] = 'Not building AutoLink DB. Directory already exists.';
 $l['AutoLinkNoDestroyDB'] = 'Not destroying AutoLink DB. Directory does not exist.';
 $l['AutoLinkInvalidDBAction'] = 'Invalid AutoLink DB action.';
+$l['AutoLinkToggle'] = 'Toggle AutoLink display';
+
+# AutoLink display toggling.
+$l['AutoLinks_show'] = 'yes';
+$l['AutoLinks_show_neg'] = 'no';
+if ('no' == $_GET['show_autolinks'])
+{ $l['AutoLinks_show'] = 'no'; 
+  $l['AutoLinks_show_neg'] = 'yes'; }
 
 $AutoLink_dir   = $plugin_dir.'AutoLink/';
 $hook_WritePage .= '
@@ -28,8 +36,12 @@ unlink($x);';
 function MarkupAutolink($text)
 # Autolink $text according to its Autolink file.
 { global $AutoLink_dir, $title;
+
+  # AutoLink display toggling.
+  if ('no' == $_GET['show_autolinks'])
+    return $text;
   
-  # Don't do anything if there's no Autolink file for the page displayed
+  # Don't do anything if there's no Autolink file for the page displayed.
   $cur_page_file = $AutoLink_dir.$title;
   if (!is_file($cur_page_file))
     return $text; 

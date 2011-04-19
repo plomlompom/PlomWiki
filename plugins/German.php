@@ -75,3 +75,4 @@ $l['AutoLinkDestroy']               = 'Zerstöre';
 $l['AutoLinkNoBuildDB']             = 'Baue nicht AutoLink-DB. Verzeichnis existiert bereits.';
 $l['AutoLinkNoDestroyDB']           = 'Zerstöre nicht AutoLink-DB. Verzeichnis existiert nicht.';
 $l['AutoLinkInvalidDBAction']       = 'Ungültige AutoLink-DB-Handlung.';
+$l['AutoLinkToggle']                = 'AutoLink-Anzeige ein-/ausschalten';

@@ -42,9 +42,11 @@ $design = '<!DOCTYPE html>'.$nl.'<meta charset="UTF-8">'.$nl.
           '<div class="'.$esc.'css_class'.$esc.'">'.$esc.'content'.$esc.'</div>';
 
 $l['ActionLinks_page'] = '<div class="ActionLinks_page">'.
-'<a href="'.$title_url.'&amp;action=page_view">'.$esc.'View'.$esc.'</a> '.$nl.
+'<a href="'.$title_url.'&amp;action=page_view&amp;show_autolinks='.$esc.'AutoLinks_show'.$esc.'">'.$esc.'View'.$esc.'</a> '.$nl.
 '<a href="'.$title_url.'&amp;action=page_edit">'.$esc.'Edit'.$esc.'</a> '.$nl.
-'<a href="'.$title_url.'&amp;action=page_history">'.$esc.'History'.$esc.'</a></div>'.$nl;
+'<a href="'.$title_url.'&amp;action=page_history">'.$esc.'History'.$esc.'</a> '.$nl.
+'| '.$nl.
+'<a href="'.$title_url.'&amp;action=page_view&amp;show_autolinks='.$esc.'AutoLinks_show_neg'.$esc.'">'.$esc.'AutoLinkToggle'.$esc.'</a></div>'.$nl;
 
 $hook_Action_page_view .= 
 'if (!is_file($page_path))
