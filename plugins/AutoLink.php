@@ -81,8 +81,8 @@ function AutoLink_SetLink($string, $titles)
       $last_score = $score; }
 
   # Build link.
-  return '<a style="text-decoration: none;" href="'.$root_rel.'?title='.$title.
-                                                          '">'.$string.'</a>'; }
+  return '<a rel="nofollow" style="text-decoration: none;" href="'.$root_rel.
+                                         '?title='.$title.'">'.$string.'</a>'; }
 #############
 # Backlinks #
 #############
@@ -101,7 +101,7 @@ function AutoLink_Backlinks()
   # Build HTML of linked $links_in.
   $links_in = AutoLink_GetFromFileLine($cur_page_file, 2, TRUE);
   foreach ($links_in as $link)
-    $backlinks .= '<a href="'.$root_rel.'?title='.$link.'">'.$link.'</a> ';
+    $backlinks .= '<a rel="nofollow" href="'.$root_rel.'?title='.$link.'">'.$link.'</a> ';
 
   # $backlinks empty message.
   if (!$links_in)
