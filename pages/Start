@@ -12,4 +12,4 @@ Two notes concerning pagenames:
 
 To delete a page, reduce page text to "delete". Empty page text won't be posted.
 
-The default admin password is "Password". Change it [[http://www.plomlompom.de/PlomWiki/plomwiki.php?action=set_pw_admin|here]].
+The default admin password is "Password". Change it with the "Set admin password" option.
