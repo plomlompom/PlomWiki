@@ -9,8 +9,8 @@ Copy PlomWiki/ and everything below onto your server. Access your wiki via URL
 USE
 
 You can view each page's current text by clicking on the "View" link below its
-title and, if you know the password, edit it by clicking on "Edit". Clicking on
-"History", you can examine previous changes to the page text and, via "Revert"
+title and, if you know the password, edit it by clicking on "Edit". Click on
+"History" to can examine previous changes to the page text and, via "Revert"
 links, return the page text to its state before each such change (here, too,
 only if you know the password).
 
