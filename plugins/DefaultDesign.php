@@ -11,7 +11,7 @@ $design = '<!DOCTYPE html>'.$nl.'<meta charset="UTF-8">'.$nl.
           '</style>'.$nl.
           '<title>'.$esc.'title'.$esc.'</title>'.$nl.
           $esc.'head'.$esc.$nl.'PlomWiki BETA: '.$nl.
-          '<a href="'.$root_rel.'?title=Start">'.$esc.'JumpStart'.$esc.'</a> '.$nl.
+          '<a href="'.$root_rel.'?title=Start'.$esc.'pageview_params'.$esc.'">'.$esc.'JumpStart'.$esc.'</a> '.$nl.
           '<a href="'.$root_rel.'?action=set_pw_admin">'.$esc.'SetAdminPW'.$esc.'</a> '.$nl2.
           '<h1>'.$esc.'title'.$esc.'</h1>'.$nl.
           '<p>'.$nl.
@@ -20,7 +20,7 @@ $design = '<!DOCTYPE html>'.$nl.'<meta charset="UTF-8">'.$nl.
           '<div class="'.$esc.'css_class'.$esc.'">'.$esc.'content'.$esc.'</div>';
 
 $l['ActionLinks_page'] = 
-'<a href="'.$title_url.'&amp;action=page_view">'.$esc.'View'.$esc.'</a> '.$nl.
+'<a href="'.$title_url.'&amp;action=page_view'.$esc.'pageview_params'.$esc.'">'.$esc.'View'.$esc.'</a> '.$nl.
 '<a href="'.$title_url.'&amp;action=page_edit">'.$esc.'Edit'.$esc.'</a> '.$nl.
 '<a href="'.$title_url.'&amp;action=page_history">'.$esc.'History'.$esc.'</a> '.$nl;
 

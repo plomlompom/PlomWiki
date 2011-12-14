@@ -13,11 +13,10 @@ $l['AutoLinkInvalidDBAction'] = 'Invalid AutoLink DB action.';
 $l['AutoLinkToggle'] = 'Toggle AutoLink display';
 
 # AutoLink display toggling.
-$l['AutoLinks_show'] = 'yes';
-$l['AutoLinks_show_neg'] = 'no';
-if ('no' == $_GET['show_autolinks'])
-{ $l['AutoLinks_show'] = 'no'; 
-  $l['AutoLinks_show_neg'] = 'yes'; }
+$l['AutoLinks_show_neg'] = 'yes';
+if ('yes' == $_GET['show_autolinks'])
+{ $l['AutoLinks_show_neg'] = 'no'; 
+  $l['pageview_params'] = $l['pageview_params'].'&amp;show_autolinks=yes'; }
 
 $AutoLink_dir   = $plugin_dir.'AutoLink/';
 $hook_WritePage .= '
@@ -38,7 +37,7 @@ function MarkupAutolink($text)
 { global $AutoLink_dir, $title;
 
   # AutoLink display toggling.
-  if ('no' == $_GET['show_autolinks'])
+  if ('yes' !== $_GET['show_autolinks'])
     return $text;
   
   # Don't do anything if there's no Autolink file for the page displayed.
@@ -65,7 +64,7 @@ function MarkupAutolink($text)
 
 function AutoLink_SetLink($string, $titles)
 # From $links_out choose best title regex match to $string, return HTML link.
-{ global $root_rel; 
+{ global $l, $root_rel;
 
   # In $titles_ranked, store for each title its levenshtein distance to $string.
   $titles_ranked = array();
@@ -82,7 +81,7 @@ function AutoLink_SetLink($string, $titles)
 
   # Build link.
   return '<a rel="nofollow" style="text-decoration: none;" href="'.$root_rel.
-                                         '?title='.$title.'">'.$string.'</a>'; }
+                   '?title='.$title.$l['pageview_params'].'">'.$string.'</a>'; }
 #############
 # Backlinks #
 #############

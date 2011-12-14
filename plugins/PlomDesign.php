@@ -29,7 +29,7 @@ $design = '<!DOCTYPE html>'.$nl.'<meta charset="UTF-8">'.$nl.
           '<title>'.$esc.'title'.$esc.'</title>'.$nl.
           $esc.'head'.$esc.$nl.
           '<div style="float:left;">PlomWiki BETA: '.$nl.
-          '<a href="'.$root_rel.'?title=Start">'.$esc.'JumpStart'.$esc.'</a> '.$nl.
+          '<a href="'.$root_rel.'?title=Start'.$esc.'pageview_params'.$esc.'">'.$esc.'JumpStart'.$esc.'</a> '.$nl.
           '<a href="'.$root_rel.'?action=Search">'.$esc.'Search'.$esc.'</a> '.$nl.
           '<a href="'.$root_rel.'?action=RecentChanges">'.$esc.'RecentChanges'.$esc.'</a> '.$nl.
           '<a href="'.$root_rel.'?action=RecentComments">'.$esc.'RecentComments'.$esc.'</a> &nbsp; '.$nl.
@@ -42,7 +42,7 @@ $design = '<!DOCTYPE html>'.$nl.'<meta charset="UTF-8">'.$nl.
           '<div class="'.$esc.'css_class'.$esc.'">'.$esc.'content'.$esc.'</div>';
 
 $l['ActionLinks_page'] = '<div class="ActionLinks_page">'.
-'<a href="'.$title_url.'&amp;action=page_view&amp;show_autolinks='.$esc.'AutoLinks_show'.$esc.'">'.$esc.'View'.$esc.'</a> '.$nl.
+'<a href="'.$title_url.'&amp;action=page_view'.$esc.'pageview_params'.$esc.'">'.$esc.'View'.$esc.'</a> '.$nl.
 '<a href="'.$title_url.'&amp;action=page_edit">'.$esc.'Edit'.$esc.'</a> '.$nl.
 '<a href="'.$title_url.'&amp;action=page_history">'.$esc.'History'.$esc.'</a> '.$nl.
 '| '.$nl.

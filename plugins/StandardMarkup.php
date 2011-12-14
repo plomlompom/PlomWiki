@@ -14,10 +14,12 @@ $l['markup_help'] = '<h3>PlomWiki markup cheatsheet</h3>'.$nl.
                '!!!!] heading 1.1.1 etc., down to !]'.$nl2.'*] list element'.$nl
               .'  *] indented once'.$nl.'    *] indented twice'.$nl2.'[@'.$nl.
                'preformatted'.$nl.'@]'.$nl.'</pre>';
-
 $hook_Action_page_edit .= '
 global $nl2; 
 $content .= $nl2.$esc.\'markup_help\'.$esc;';
+
+# Plug-ins may use this variable to add GET parameters to in-wiki page links.Someth
+$l['pageview_params'] = '';
 
 # Escape marks. Remember $esc is stripped from any page text by plomwiki.php.
 # A line starting with $esc escapes paragraphing by MarkupParagraphs().
@@ -33,7 +35,7 @@ $esc_store = array();
 
 function MarkupLinks($text)
 # [[LinkedPagename]], [[Linked|Text displayed]], [[http://linked-url.com]].
-{ global $esc, $nl, $title_root, $legal_title, $pages_dir;
+{ global $esc, $nl, $title_root, $l, $legal_title, $pages_dir;
   $legal_url = '(http|https|ftp):([A-Za-z0-9\.\-_~:/\?#\[\]@!\$&\'\(\)\*\+,;=]|'.
                '%[A-Fa-f0-9]{2})+'; # Taken in part from @erlehmann.
   $regex = '/\[\[([^'.$nl.']+?)]]/';
@@ -84,7 +86,7 @@ function MarkupLinks($text)
     { if ($page)
       { if (!is_file($pages_dir.$page)) 
           $style = 'style="color: red;" ';
-        $url = $title_root.$page; }
+        $url = $title_root.$page.$l['pageview_params']; }
       $repl        = '<a '.$style.'href="'.$url.'">'.$desc.'</a>'; 
       $esc_store[] = $repl;
       $repl        = $esc_on.$esc_n.$esc_off;
