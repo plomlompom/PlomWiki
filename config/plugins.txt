@@ -27,4 +27,4 @@ plugins/StandardMarkup.php
 #plugins/PlomDesign.php
 
 # Non-English language plugins. Put these at the end.
-plugins/German.php
+#plugins/German.php
