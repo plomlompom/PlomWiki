@@ -1,14 +1,30 @@
 # Insert relative paths to plugin files here. Comment out with #.
+
+# Needed for a minimal PlomWiki. Only comment out if you have a replacement.
 plugins/DefaultVars.php
 plugins/DefaultDesign.php
 
-plugins/StandardLib.php
+# You'll probably want to have *some* wiki markup functions.
 plugins/StandardMarkup.php
-plugins/Search.php
-plugins/RecentChanges.php
-plugins/AutoLink.php
-plugins/Comments.php
-plugins/PwPages.php
-plugins/ReplaceAll.php
+
+# Functions used by more than one plugin (like Search and AutoLink).
+#plugins/StandardLib.php
+
+# Nice-to-have plug-ins.
+#plugins/Search.php
+#plugins/RecentChanges.php
+#plugins/AutoLink.php
+#plugins/Comments.php
+#plugins/PwPages.php
+#plugins/AutoSum.php
+#plugins/Today.php
+#plugins/ReplaceAll.php
+
+# For debugging.
 #plugins/DiffRepair.php
-#plugins/German.php
+
+# Alternative designs.
+#plugins/PlomDesign.php
+
+# Non-English language plugins. Put these at the end.
+plugins/German.php

@@ -6,8 +6,9 @@ MarkupHeadings
 MarkupStrong
 MarkupEmphasis
 MarkupDeleted
+#MarkupToday
 MarkupCode
 MarkupLists
 MarkupParagraphs
 MarkupUnescape
-MarkupAutolink
+#MarkupAutolink
