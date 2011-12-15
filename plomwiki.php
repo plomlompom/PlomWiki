@@ -28,7 +28,7 @@ $max_exec_time = ini_get('max_execution_time');                   $now = time();
 
 # Get page title. Build dependent variables.
 $legal_title = '[a-zA-Z0-9-]+';
-$title       = GetPageTitle($legal_title);
+$title       = GetPageTitle();
 { $page_path = $pages_dir .$title;
   $diff_path = $diff_dir  .$title;
   $title_url = $title_root.$title; }
@@ -603,12 +603,13 @@ function ReadAndTrimLines($path)
       $list[] = $line; } 
   return $list; }
 
-function GetPageTitle($legal_title, $fallback = 'Start')
+function GetPageTitle($fallback = 'Start')
 # Only allow alphanumeric titles plus -. If title is empty, assume $fallback.
-{ $title = $_GET['title']; 
+{ global $legal_title;
+  $title = $_GET['title']; 
   if (!$title) $title = $fallback;
   if (!preg_match('/^'.$legal_title.'$/', $title)) return;
- return $title; }
+  return $title; }
 
 function GetUserAction($fallback = 'Action_page_view')
 # Find appropriate code for user's '?action='. Assume $fallback if not found.
