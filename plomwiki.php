@@ -578,6 +578,152 @@ function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo,
   # Clean up.
   unlink($path_author); unlink($path_summary); unlink($path_text); }
 
+###################################################
+#                                                 #
+#   M I N O R   H E L P E R   F U N C T I O N S   #
+#                                                 #
+###################################################
+
+#########
+# Input #
+#########
+
+function ReadAndTrimLines($path)
+# Read file $path into a list of all lines sans comments and ending whitespaces.
+{ global $nl;
+
+  $lines = explode($nl, file_get_contents($path));
+  $list = array(); 
+  foreach ($lines as $line)
+  { $hash_pos = strpos($line, '#');
+    if ($hash_pos !== FALSE)
+      $line = substr($line, 0, $hash_pos);
+    $line = rtrim($line);
+    if ($line)
+      $list[] = $line; } 
+  return $list; }
+
+function GetPageTitle($legal_title, $fallback = 'Start')
+# Only allow alphanumeric titles plus -. If title is empty, assume $fallback.
+{ $title = $_GET['title']; 
+  if (!$title) $title = $fallback;
+  if (!preg_match('/^'.$legal_title.'$/', $title)) return;
+ return $title; }
+
+function GetUserAction($fallback = 'Action_page_view')
+# Find appropriate code for user's '?action='. Assume $fallback if not found.
+{ $action          = $_GET['action'];
+  $action_function = 'Action_'.$action;
+  if (!function_exists($action_function)) 
+    $action_function = $fallback;
+  return $action_function; }
+
+##########
+# Output #
+##########
+
+function ErrorFail($msg, $help = '')
+# Fail and output error $msg. $help may provide additional helpful advice.
+{ global $esc, $hook_ErrorFail, $l, $nl;
+  eval($hook_ErrorFail);
+  $text = $msg;
+  $l['title'] = $esc.'Error'.$esc; $l['content'] = $text;
+  Output_HTML(); 
+  exit(); }
+
+function Output_HTML()
+# Generate final HTML output by applying parameters on global variable $style.
+{ global $esc, $design, $header_page, $l;
+  # $l['content'] = $content; $l['title'] = $title; $l['head'] = $head;
+  while (FALSE !== strpos($design, $esc))
+    $design = ReplaceEscapedVariables($design);
+  echo $design; }
+
+function ReplaceEscapedVariables($string)
+{ global $esc, $l; 
+
+  # Explode $string by $esc, collect strings surrounded by it as variable names.
+  $strings = explode($esc, $string); $collect = FALSE; $vars = array();
+  foreach ($strings as $n => $part)
+    if ($collect) 
+    { $vars[] = $part;
+      $collect = FALSE; }
+    else 
+      $collect = TRUE;
+
+  # Replace variable names in $vars with $l variable contents.
+  foreach ($vars as $n => $var)
+    $vars[$n] = $l[$var];
+
+  # Echo elements of $string alternately as-is or as variables from $vars.
+  $collect = FALSE; $i = 0; $string = '';
+  foreach ($strings as $n => $part)
+    if ($collect) 
+    { $string .= $vars[$i];
+      $i++;
+      $collect = FALSE; }
+    else 
+    { $string .= $part;
+      $collect = TRUE; }
+
+  return $string; }
+
+function WorkScreenReload($redir = '')
+# Just output the HTML of a work message and instantly redirect to $redirect.
+{ global $nl;
+  if (!empty($redir))
+    $redir = '; URL='.$redir;
+  echo '<title>Working</title>'.$nl.
+       '<meta http-equiv="refresh" content="0'.$redir.'" />'.$nl.
+       '<p>Working.</p>'; 
+  exit(); }
+
+function BuildPostForm($URL, $input, $ask_pw = NULL, $class = NULL)
+# HTML form. $URL = action, $input = code between, $ask_pw = PW input element.
+{ global $esc, $nl;
+  if ($ask_pw === NULL)
+    $ask_pw = 'Admin '.$esc.'pw'.$esc.': <input name="pw" type="password" />'.
+                              '<input name="auth" type="hidden" value="*" />';
+  return '<form class="'.$class.'" method="post" action="'.$URL.'">'.$nl.
+                                                         $input.$nl.$ask_pw.$nl.
+         '<input type="submit" value="OK" />'.$nl.'</form>'; }
+
+#########
+# Other #
+#########
+
+function DiffList($diff_path)
+# Build, return page-specific diff list from file text at $diff_path.
+{ global $nl;
+  $diff_list = array();
+
+  # Remove superfluous "%%" and $nl from start and end of $file_txt.
+  $file_txt = file_get_contents($diff_path);
+  if (substr($file_txt,0,2) == '%%'    ) $file_txt = substr($file_txt,3);
+  if (substr($file_txt, -3) == '%%'.$nl) $file_txt = substr($file_txt,0,-3);
+  if (substr($file_txt, -2) == '%%'    ) $file_txt = substr($file_txt,0,-2);
+  if (substr($file_txt, -1) == $nl     ) $file_txt = substr($file_txt,0,-1);
+
+  if ($file_txt != '')
+  # Break $file_txt into separate $diff_txt's. Remove superfluous trailing $nl.
+  { $diffs = explode('%%'.$nl, $file_txt);
+    foreach ($diffs as $diff_n => $diff_txt)
+    { if (substr($diff_txt, -1) == $nl)
+        $diff_txt = substr($diff_txt, 0, -1);
+
+      # Harvest diff data / metadata from $diff_txt into $diff_list[$id].
+      $diff_lines = explode($nl, $diff_txt);
+      $diff_txt_new = array();
+      foreach ($diff_lines as $line_n => $line) 
+        if     ($line_n == 0) $id                        = $line;
+        elseif ($line_n == 1) $diff_list[$id]['time']    = $line;
+        elseif ($line_n == 2) $diff_list[$id]['author']  = $line;
+        elseif ($line_n == 3) $diff_list[$id]['summary'] = $line;
+        else                  $diff_txt_new[] = $line;
+      $diff_list[$id]['text'] = implode($nl, $diff_txt_new); } }
+
+  return $diff_list; }
+
 ###############
 #             #
 #   D I F F   #
@@ -764,145 +910,3 @@ function ReverseDiff($old_diff)
   $new_diff = substr($new_diff, 0, -1);
 
   return $new_diff; }
-
-function DiffList($diff_path)
-# Build, return page-specific diff list from file text at $diff_path.
-{ global $nl;
-  $diff_list = array();
-
-  # Remove superfluous "%%" and $nl from start and end of $file_txt.
-  $file_txt = file_get_contents($diff_path);
-  if (substr($file_txt,0,2) == '%%'    ) $file_txt = substr($file_txt,3);
-  if (substr($file_txt, -3) == '%%'.$nl) $file_txt = substr($file_txt,0,-3);
-  if (substr($file_txt, -2) == '%%'    ) $file_txt = substr($file_txt,0,-2);
-  if (substr($file_txt, -1) == $nl     ) $file_txt = substr($file_txt,0,-1);
-
-  if ($file_txt != '')
-  # Break $file_txt into separate $diff_txt's. Remove superfluous trailing $nl.
-  { $diffs = explode('%%'.$nl, $file_txt);
-    foreach ($diffs as $diff_n => $diff_txt)
-    { if (substr($diff_txt, -1) == $nl)
-        $diff_txt = substr($diff_txt, 0, -1);
-
-      # Harvest diff data / metadata from $diff_txt into $diff_list[$id].
-      $diff_lines = explode($nl, $diff_txt);
-      $diff_txt_new = array();
-      foreach ($diff_lines as $line_n => $line) 
-        if     ($line_n == 0) $id                        = $line;
-        elseif ($line_n == 1) $diff_list[$id]['time']    = $line;
-        elseif ($line_n == 2) $diff_list[$id]['author']  = $line;
-        elseif ($line_n == 3) $diff_list[$id]['summary'] = $line;
-        else                  $diff_txt_new[] = $line;
-      $diff_list[$id]['text'] = implode($nl, $diff_txt_new); } }
-
-  return $diff_list; }
-
-###################################################
-#                                                 #
-#   M I N O R   H E L P E R   F U N C T I O N S   #
-#                                                 #
-###################################################
-
-#########
-# Input #
-#########
-
-function ReadAndTrimLines($path)
-# Read file $path into a list of all lines sans comments and ending whitespaces.
-{ global $nl;
-
-  $lines = explode($nl, file_get_contents($path));
-  $list = array(); 
-  foreach ($lines as $line)
-  { $hash_pos = strpos($line, '#');
-    if ($hash_pos !== FALSE)
-      $line = substr($line, 0, $hash_pos);
-    $line = rtrim($line);
-    if ($line)
-      $list[] = $line; } 
-  return $list; }
-
-function GetPageTitle($legal_title, $fallback = 'Start')
-# Only allow alphanumeric titles plus -. If title is empty, assume $fallback.
-{ $title = $_GET['title']; 
-  if (!$title) $title = $fallback;
-  if (!preg_match('/^'.$legal_title.'$/', $title)) return;
- return $title; }
-
-function GetUserAction($fallback = 'Action_page_view')
-# Find appropriate code for user's '?action='. Assume $fallback if not found.
-{ $action          = $_GET['action'];
-  $action_function = 'Action_'.$action;
-  if (!function_exists($action_function)) 
-    $action_function = $fallback;
-  return $action_function; }
-
-##########
-# Output #
-##########
-
-function ErrorFail($msg, $help = '')
-# Fail and output error $msg. $help may provide additional helpful advice.
-{ global $esc, $hook_ErrorFail, $l, $nl;
-  eval($hook_ErrorFail);
-  $text = $msg;
-  $l['title'] = $esc.'Error'.$esc; $l['content'] = $text;
-  Output_HTML(); 
-  exit(); }
-
-function Output_HTML()
-# Generate final HTML output by applying parameters on global variable $style.
-{ global $esc, $design, $header_page, $l;
-  # $l['content'] = $content; $l['title'] = $title; $l['head'] = $head;
-  while (FALSE !== strpos($design, $esc))
-    $design = ReplaceEscapedVariables($design);
-  echo $design; }
-
-function ReplaceEscapedVariables($string)
-{ global $esc, $l; 
-
-  # Explode $string by $esc, collect strings surrounded by it as variable names.
-  $strings = explode($esc, $string); $collect = FALSE; $vars = array();
-  foreach ($strings as $n => $part)
-    if ($collect) 
-    { $vars[] = $part;
-      $collect = FALSE; }
-    else 
-      $collect = TRUE;
-
-  # Replace variable names in $vars with $l variable contents.
-  foreach ($vars as $n => $var)
-    $vars[$n] = $l[$var];
-
-  # Echo elements of $string alternately as-is or as variables from $vars.
-  $collect = FALSE; $i = 0; $string = '';
-  foreach ($strings as $n => $part)
-    if ($collect) 
-    { $string .= $vars[$i];
-      $i++;
-      $collect = FALSE; }
-    else 
-    { $string .= $part;
-      $collect = TRUE; }
-
-  return $string; }
-
-function WorkScreenReload($redir = '')
-# Just output the HTML of a work message and instantly redirect to $redirect.
-{ global $nl;
-  if (!empty($redir))
-    $redir = '; URL='.$redir;
-  echo '<title>Working</title>'.$nl.
-       '<meta http-equiv="refresh" content="0'.$redir.'" />'.$nl.
-       '<p>Working.</p>'; 
-  exit(); }
-
-function BuildPostForm($URL, $input, $ask_pw = NULL, $class = NULL)
-# HTML form. $URL = action, $input = code between, $ask_pw = PW input element.
-{ global $esc, $nl;
-  if ($ask_pw === NULL)
-    $ask_pw = 'Admin '.$esc.'pw'.$esc.': <input name="pw" type="password" />'.
-                              '<input name="auth" type="hidden" value="*" />';
-  return '<form class="'.$class.'" method="post" action="'.$URL.'">'.$nl.
-                                                         $input.$nl.$ask_pw.$nl.
-         '<input type="submit" value="OK" />'.$nl.'</form>'; }
