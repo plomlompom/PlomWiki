@@ -623,8 +623,8 @@ function GetUserAction($fallback = 'Action_page_view')
 # Output #
 ##########
 
-function ErrorFail($msg, $help = '')
-# Fail and output error $msg. $help may provide additional helpful advice.
+function ErrorFail($msg)
+# Fail and output error $msg.
 { global $esc, $hook_ErrorFail, $l, $nl;
   eval($hook_ErrorFail);
   $text = $msg;
