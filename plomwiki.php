@@ -634,8 +634,7 @@ function ErrorFail($msg)
 
 function Output_HTML()
 # Generate final HTML output by applying parameters on global variable $style.
-{ global $esc, $design, $header_page, $l;
-  # $l['content'] = $content; $l['title'] = $title; $l['head'] = $head;
+{ global $esc, $design;
   while (FALSE !== strpos($design, $esc))
     $design = ReplaceEscapedVariables($design);
   echo $design; }
