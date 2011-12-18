@@ -59,11 +59,11 @@ function Comments()
       if ($url)
         $author = '<a href="'.$url.'">'.$author.'</a>';
       $comment_text = Comments_FormatText($x['text']);
-      $comments .= $nl2.'<div id="comment_'.$id.'" class="Comments_head">'.
-                            '<a href="#comment_'.$id.'">#'.$id.'</a></div>'.$nl.
+      $comments .= $nl2.'<article id="comment_'.$id.'"><header class="Comments_head">'.
+                            '<a href="#comment_'.$id.'">#'.$id.'</a></header>'.$nl.
                    '<div class="Comments_body">'.$comment_text.'</div>'.$nl.
-                   '<div class="Comments_foot">'.$author.' / '.$datetime.
-                                                                   '</div>'; } }
+                   '<footer class="Comments_foot">'.$author.' / '.$datetime.
+                                                                   '</footer></article>'; } }
   if (!$comments)
     $comments = $nl2.'<p>'.$esc.'NoComments'.$esc.'</p>';
 
