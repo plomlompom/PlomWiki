@@ -399,7 +399,7 @@ function ReadPasswordList($path)
 
 function WorkTodo($todo, $do_reload = FALSE)
 # Work through todo file. Comment out finished lines. Delete file when finished.
-{ global $max_exec_time, $nl, $now;
+{ global $max_exec_time, $now;
 
   if (is_file($todo))
   { # Lock todo file while working on it.
