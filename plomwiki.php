@@ -142,29 +142,30 @@ function Action_page_revert()
          $title_url, $page_path;
   $id          = $_GET['id'];
   $diff_list   = DiffList($diff_path);
+  
+  # Try to find diff ID provided by user, determine its time. Fail if necessary.
+  if (!$diff_list[$id]['time'])
+    ErrorFail($esc.'InvalidRevertPoint'.$esc);
   $time_string = date('Y-m-d H:i:s', (int) $diff_list[$id]['time']);
 
-  # Revert $text back through $diff_list until $time hits $id.
+  # Revert $text back through $diff_list until $i hits $id.
   $text = file_get_contents($page_path);
   foreach ($diff_list as $i => $diff_data)
-  { if ($finished) break;
-    $reversed_diff           = ReverseDiff($diff_data['text']); 
-    $text                    = PlomPatch($text, $reversed_diff);
-    if ($id == $i) $finished = TRUE; }
+  { $reversed_diff = ReverseDiff($diff_data['text']); 
+    $text          = PlomPatch($text, $reversed_diff);
+    if ($id == $i) break; }
   $text = EscapeHTML($text);
 
-  # Ask for revert affirmation and password. If reversion date is valid.
-  if ($finished)
-  { $input   = '<input type="hidden" name="text" value="'.$text.'">'.$nl.
-               '<input type="hidden" name="summary" value="revert">';
-    $form    = BuildPostForm($title_url.'&amp;action=write&amp;t=page', $input);
-    $content = $form; }
-  else 
-    ErrorFail($esc.'InvalidRevertPoint'.$esc);
+  # Ask for revert affirmation and password.
+  $input   = '<input type="hidden" name="text" value="'.$text.'">'.$nl.
+             '<input type="hidden" name="summary" value="revert">';
+  $form    = BuildPostForm($title_url.'&amp;action=write&amp;t=page', $input);
+  $content = $form;
 
   # Before leaving, execute plugin hook.
   eval($hook_Action_page_revert);
-  $l['title'] = $esc.'RevertToBefore'.$esc.' '.$time_string.'?'; $l['content']= $form;
+  $l['title'] = $esc.'RevertToBefore'.$esc.' '.$time_string.'?';
+  $l['content']= $form;
   Output_HTML(); }
 
 ####################################
