@@ -519,30 +519,33 @@ function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo,
 # $txt_PluginTodo; WorkTodo() on $todo_plugin needs to be called externally.
 { global $del_dir, $diff_dir, $esc, $hook_WritePage, $hook_WritePage_diff, $nl,
          $pages_dir;
-  $page_path = $pages_dir.$title; 
-  $diff_path = $diff_dir .$title;
-  $text      = file_get_contents($path_text);
-  $author    = file_get_contents($path_author);
-  $summary   = file_get_contents($path_summary);
-  $timestamp = time();
+  $page_path       = $pages_dir.$title; 
+  $diff_path       = $diff_dir .$title;
+  $text            = file_get_contents($path_text);
+  $author          = file_get_contents($path_author);
+  $summary         = file_get_contents($path_summary);
+  $timestamp       = time();
+  $txt_PluginsTodo = '';
 
   # If 'delete', rename and timestamp page and its diff, move both to $del_dir.
   if ($text == 'delete')
-  { if (is_file($page_path)) 
+  { if (is_file($page_path))
+    { unlink($path_tmp_diff); unlink($path_tmp_text); # Clean up unneeded temps.
       $path_diff_del = $del_dir.$title.',del-diff-'.$timestamp;
       $path_page_del = $del_dir.$title.',del-page-'.$timestamp;
       if (is_file($diff_path)) rename($diff_path, $path_diff_del);
-      if (is_file($page_path)) rename($page_path, $path_page_del); 
-      unlink($path_tmp_diff); unlink($path_tmp_text); } # Clean up the unneeded.
-
+      if (is_file($page_path)) rename($page_path, $path_page_del); } }
+    
   else
   { # Collect $old_text for diff generation. Abort if identical to $text.
     $old_text = $esc;  # Code to PlomDiff() of $old_text having no lines at all.
     if (is_file($page_path))
       $old_text = file_get_contents($page_path);
-    if ($old_text == $text)
-      return;
-
+      
+    # This step should probably be deleted. But the plugins RecentChanges.php
+    # and AutoLink.php may need to be changed then, too.
+    if ($old_text == $text) return;
+    
     # Diff to previous version, add to diff file.
     $new_diff_id = 0;
     $diff_add    = PlomDiff($old_text, $text);
@@ -561,7 +564,7 @@ function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo,
     $diff_new = $new_diff_id.$nl.$timestamp.$nl.$author.$nl.$summary.$nl.
                 $diff_add.'%%'.$nl.$diff_old;
 
-    # Safe overwriting of page and diff file.
+    # Safe overwriting of page & diff file. Tmp files' absences indicate: done.
     if (is_file($path_tmp_diff))
     { file_put_contents($path_tmp_diff, $diff_new);
       rename($path_tmp_diff, $diff_path); }
@@ -572,8 +575,8 @@ function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo,
   # Add $txt_PluginTodo to $todo_plugin for plugin actions added via hook.
   eval($hook_WritePage);
   if (is_file($path_tmp_PluginsTodo))
-    file_put_contents($path_tmp_PluginsTodo, $txt_PluginsTodo);
-    rename($path_tmp_PluginsTodo, $todo_plugins); 
+  { file_put_contents($path_tmp_PluginsTodo, $txt_PluginsTodo);
+    rename($path_tmp_PluginsTodo, $todo_plugins); }
 
   # Clean up.
   unlink($path_author); unlink($path_summary); unlink($path_text); }
