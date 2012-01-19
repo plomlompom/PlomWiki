@@ -511,26 +511,27 @@ function SafeWrite($path_original, $path_temp)
   rename($path_temp, $path_original); }
 
 function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo, 
-                   $path_tmp_text, $path_text, $path_author, $path_summary)
-# Write text found at $path_text to page $title. Safely trigger individual file
-# writing actions only according to (non-)existence of $path_tmp_[...] files.
-# Use texts found at $path_author and $path_summary as change descriptions. 
+                   $path_tmp_page, $path_src_text, $path_src_author,
+                   $path_src_summary)
+# Write text found at $path_src_text to page $title. Safely trigger file writing
+# actions only according to (non-)existence of appropriate $path_tmp_[…] files.
+# Use texts found at $path_src_author & $path_src_summary as diff descriptions. 
 # $todo_plugins catches actions added via plugin hook $hook_WritePage to its
 # $txt_PluginTodo; WorkTodo() on $todo_plugin needs to be called externally.
 { global $del_dir, $diff_dir, $esc, $hook_WritePage, $hook_WritePage_diff, $nl,
          $pages_dir;
   $page_path       = $pages_dir.$title; 
   $diff_path       = $diff_dir .$title;
-  $text            = file_get_contents($path_text);
-  $author          = file_get_contents($path_author);
-  $summary         = file_get_contents($path_summary);
+  $text            = file_get_contents($path_src_text);
+  $author          = file_get_contents($path_src_author);
+  $summary         = file_get_contents($path_src_summary);
   $timestamp       = time();
   $txt_PluginsTodo = '';
 
   # If 'delete', rename and timestamp page and its diff, move both to $del_dir.
   if ($text == 'delete')
   { if (is_file($page_path))
-    { unlink($path_tmp_diff); unlink($path_tmp_text); # Clean up unneeded temps.
+    { unlink($path_tmp_diff); unlink($path_tmp_page); # Clean up unneeded temps.
       $path_diff_del = $del_dir.$title.',del-diff-'.$timestamp;
       $path_page_del = $del_dir.$title.',del-page-'.$timestamp;
       if (is_file($diff_path)) rename($diff_path, $path_diff_del);
@@ -568,9 +569,9 @@ function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo,
     if (is_file($path_tmp_diff))
     { file_put_contents($path_tmp_diff, $diff_new);
       rename($path_tmp_diff, $diff_path); }
-    if (is_file($path_tmp_text))
-    { file_put_contents($path_tmp_text, $text);
-      rename($path_tmp_text, $page_path); } }
+    if (is_file($path_tmp_page))
+    { file_put_contents($path_tmp_page, $text);
+      rename($path_tmp_page, $page_path); } }
 
   # Add $txt_PluginTodo to $todo_plugin for plugin actions added via hook.
   eval($hook_WritePage);
@@ -579,7 +580,7 @@ function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo,
     rename($path_tmp_PluginsTodo, $todo_plugins); }
 
   # Clean up.
-  unlink($path_author); unlink($path_summary); unlink($path_text); }
+  unlink($path_src_author); unlink($path_src_summary); unlink($path_src_text); }
 
 ###################################################
 #                                                 #
