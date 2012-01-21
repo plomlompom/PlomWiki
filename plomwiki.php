@@ -318,8 +318,7 @@ function PrepareWrite_admin_sets_pw()
 
 function Action_set_pw_admin()
 # Display page for setting new admin password.
-{ global $esc, $hook_Action_set_pw_admin;
-  eval($hook_Action_set_pw_admin);
+{ global $esc;
   ChangePW_form($esc.'admin'.$esc, '*', $esc.'OldAdmin'.$esc); }
 
 function ChangePW_form($desc_new_pw, $new_auth, $desc_pw = 'Admin', 
