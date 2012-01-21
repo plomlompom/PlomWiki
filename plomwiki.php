@@ -706,12 +706,8 @@ function DiffList($diff_path)
 { global $nl;
   $diff_list = array();
 
-  # Remove superfluous "%%" and $nl from start and end of $file_txt.
-  $file_txt = file_get_contents($diff_path);
-  if (substr($file_txt,0,2) == '%%'    ) $file_txt = substr($file_txt,3);
-  if (substr($file_txt, -3) == '%%'.$nl) $file_txt = substr($file_txt,0,-3);
-  if (substr($file_txt, -2) == '%%'    ) $file_txt = substr($file_txt,0,-2);
-  if (substr($file_txt, -1) == $nl     ) $file_txt = substr($file_txt,0,-1);
+  # Read in file text with superfluous trailing "%%\n" deleted.
+  $file_txt = substr(file_get_contents($diff_path),0,-3);
 
   if ($file_txt != '')
   # Break $file_txt into separate $diff_txt's. Remove superfluous trailing $nl.
