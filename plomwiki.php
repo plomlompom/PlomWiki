@@ -13,6 +13,9 @@ $del_dir    = $pages_dir.'deleted/';   $work_temp_dir = $work_dir.'temp/';
 $setup_file = 'setup.php';             $todo_urgent   = $work_dir.'todo_urgent';
 $work_failed_logins_dir = $work_dir.'failed_logins/';
 
+# Limit page lengths and line numbers. Keeps 'em manageable to PlomDiff() etc.
+$page_max_lines = 6000; $page_max_length = 250000;
+
 # Newline information. PlomWiki likes "\n", dislikes "\r".
 $nl = "\n";                      $nl2 = $nl.$nl;                    $esc = "\r";
 
@@ -250,7 +253,8 @@ function Action_write()
 
 function PrepareWrite_page()
 # Deliver to Action_write() all information needed for page writing process.
-{ global $esc, $nl, $page_path, $title, $title_url, $todo_urgent, $work_dir;
+{ global $esc, $page_max_lines, $page_max_length, $nl, $page_path, $title,
+         $title_url, $todo_urgent, $work_dir;
   $text    = Sanitize($_POST['text']);
   $summary = str_replace($nl, '', Sanitize($_POST['summary']));
   $author  = str_replace($nl, '', Sanitize($_POST['author'] ));
@@ -263,11 +267,10 @@ function PrepareWrite_page()
     ErrorFail($esc.'NoEmptyPage'.$esc);
   if ($text == $old_text)  
     ErrorFail($esc.'NothingChanged'.$esc);
-  $max_lines = 6000; $max_length = 250000;
-  if (count(explode($nl, $text)) > $max_lines)
-    ErrorFail($esc.'MaxLinesText'.$esc.$max_lines);
-  if (strlen($text) > $max_length)
-    ErrorFail($esc.'MaxSizeText'.$esc.$max_length);
+  if (count(explode($nl, $text)) > $page_max_lines)
+    ErrorFail($esc.'MaxLinesText'.$esc.$page_max_lines);
+  if (strlen($text) > $page_max_length)
+    ErrorFail($esc.'MaxSizeText'.$esc.$page_max_length);
 
   # Reserve empty temporary files for WritePage().
   $tmp_0 = NewTemp(); $tmp_1 = NewTemp(); $tmp_2 = NewTemp();
