@@ -39,4 +39,4 @@ function Action_search()
              '<input type="submit" value="'.$esc.'Search'.$esc.'!" />'.$nl.
              '</form>'.$results; 
   $l['title'] = $esc.'Search'.$esc; $l['content'] = $content;
-  Output_HTML(); }
+  OutputHTML(); }

@@ -220,7 +220,7 @@ function Action_RecentComments()
     $output = '<p>'.$esc.'CommentsRecentNo'.$esc.'</p>';
 
   $l['title'] = $esc.'RecentComments'.$esc; $l['content'] = $output;
-  Output_HTML(); }
+  OutputHTML(); }
 
 function Comments_AddToRecent($title, $id, $timestamp, $tmp, $path_author)
 # Add info of comment addition to RecentComments file.
@@ -272,7 +272,7 @@ function Action_comments_admin()
   $input   = $build_dir.$captcha;
   $form = BuildPostForm($root_rel.'?action=write&amp;t=comments_admin', $input);
   $l['title'] = $esc.'CommentsAdmin'.$esc; $l['content'] = $form;
-  Output_HTML(); }
+  OutputHTML(); }
 
 function PrepareWrite_comments_admin()
 # Return to Action_write() all information needed for comments administration.

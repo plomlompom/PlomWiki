@@ -81,7 +81,7 @@ function Action_page_view()
   # Before leaving, execute plugin hook.
   eval($hook_Action_page_view);
   $l['title'] = $title; $l['content'] = $text;
-  Output_HTML(); }
+  OutputHTML(); }
 
 function Action_page_edit()
 # Edit form on a page source text. Send results to ?action=write.
@@ -103,7 +103,7 @@ function Action_page_edit()
   eval($hook_Action_page_edit);
   $l['title'] = $esc.'Editing'.$esc.': "'.$title.'"';
   $l['content'] = $form.$content;
-  Output_HTML(); }
+  OutputHTML(); }
 
 function Action_page_history()
 # Show version history of page (based on its diff file), offer reverting.
@@ -137,7 +137,7 @@ function Action_page_history()
   # Before leaving, execute plugin hook.
   eval($hook_Action_page_history);
   $l['title'] = $esc.'History'.$esc.': "'.$title.'"'; $l['content'] = $text;
-  Output_HTML(); }
+  OutputHTML(); }
 
 function Action_page_revert()
 # Prepare version reversion and ask user for confirmation.
@@ -169,7 +169,7 @@ function Action_page_revert()
   eval($hook_Action_page_revert);
   $l['title'] = $esc.'RevertToBefore'.$esc.' '.$time_string.'?';
   $l['content']= $form;
-  Output_HTML(); }
+  OutputHTML(); }
 
 ####################################
 # Page text manipulation functions #
@@ -333,7 +333,7 @@ function ChangePW_form($desc_new_pw, $new_auth, $desc_pw = 'Admin',
            '<input type="password" name="pw">';
   $form = BuildPostForm($title_url.'&amp;action=write&amp;t='.$t, $input, '');
   $l['title'] = $esc.'ChangePWfor'.$esc.' '.$desc_new_pw; $l['content'] = $form;
-  Output_HTML(); }
+  OutputHTML(); }
 
 function CheckPW($key, $pw_posted, $target)
 # Check if hash of $pw_posted fits $key password hash in internal password list.
@@ -636,10 +636,10 @@ function ErrorFail($msg)
   eval($hook_ErrorFail);
   $text = $msg;
   $l['title'] = $esc.'Error'.$esc; $l['content'] = $text;
-  Output_HTML(); 
+  OutputHTML(); 
   exit(); }
 
-function Output_HTML()
+function OutputHTML()
 # Generate final HTML output by applying parameters on global variable $style.
 { global $esc, $design;
   while (FALSE !== strpos($design, $esc))

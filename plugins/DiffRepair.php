@@ -41,7 +41,7 @@ function Action_page_DiffRepair_Check()
       $output .= '<a href="'.$title_url.'&amp;action=page_DiffRepair_Check&amp;function='.$action.'" >'.$name.'</a><br />'.$nl; } }
 
   $l['title'] = $title; $l['content'] = $output;
-  Output_HTML(); }
+  OutputHTML(); }
 
 function Action_DiffRepair_Check()
 { global $l, $root_rel, $DiffRepair_Check_Actions, $title_root;
@@ -67,7 +67,7 @@ else
       $output .= '<a href="'.$root_rel.'?action=DiffRepair_Check&amp;function='.$action.'" >'.$name.'</a><br />'.$nl; } }
 
   $l['title'] = $title; $l['content'] = $output;
-  Output_HTML(); }
+  OutputHTML(); }
 
 function DiffRepair_CheckEmptyFirst($title)
 { global $diff_dir;
@@ -148,7 +148,7 @@ function Action_page_DiffRepair()
     $input .= '<input type="radio" name="function" value="'.$action.'">'.$name.'<br />';
   $content = BuildPostForm($title_url.'&amp;action=write&amp;t=DiffRepairPage', $input);
   $l['title'] = 'Apply repair function to diffs for "'.$title.'"?'; $l['content'] = $content;
-  Output_HTML(); }
+  OutputHTML(); }
 
 function Action_DiffRepair()
 { global $l, $root_rel, $DiffRepair_Repair_Actions;
@@ -156,7 +156,7 @@ function Action_DiffRepair()
     $input .= '<input type="radio" name="function" value="'.$action.'">'.$name.'<br />';
   $content = BuildPostForm($root_rel.'?action=write&amp;t=DiffRepairAll', $input);
   $l['title'] = 'Apply repair function to all pages?'; $l['content'] = $content;
-  Output_HTML(); }
+  OutputHTML(); }
 
 function PrepareWrite_DiffRepairPage()
 { global $todo_urgent, $title, $title_url;

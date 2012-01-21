@@ -288,7 +288,7 @@ function Action_autolink_admin()
            '<input type="hidden" name="do_what" value="'.$do_what.'" />';
   $form = BuildPostForm($root_rel.'?action=write&amp;t=autolink_admin', $input);
   $l['title'] = $esc.'AutoLinkAdmin'.$esc; $l['content'] = $form; 
-  Output_HTML(); }
+  OutputHTML(); }
 
 function PrepareWrite_autolink_admin()
 { global $AutoLink_dir, $esc, $nl, $root_rel, $todo_urgent;

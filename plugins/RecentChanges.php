@@ -104,4 +104,4 @@ function Action_RecentChanges()
   
   # Final HTML.
   $l['title'] = $esc.'RecentChanges'.$esc; $l['content'] = $output;
-  Output_HTML(); }
+  OutputHTML(); }

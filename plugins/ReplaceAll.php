@@ -42,7 +42,7 @@ function Action_ReplaceAll()
 
   $form  = BuildPostForm($root_rel.'?action=write&amp;t=ReplaceAll', $input);
   $l['title'] = 'Global string / regex replacement'; $l['content'] = $form;
-  Output_HTML(); }
+  OutputHTML(); }
 
 function PrepareWrite_ReplaceAll()
 # Return to Action_write() tasks for a whole new todo list of replacements.
