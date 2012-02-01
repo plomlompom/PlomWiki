@@ -24,10 +24,7 @@ $l['ActionLinks_page'] =
 '<a href="'.$title_url.'&amp;action=page_edit">'.$esc.'Edit'.$esc.'</a> '.$nl.
 '<a href="'.$title_url.'&amp;action=page_history">'.$esc.'History'.$esc.'</a> '.$nl;
 
-# $hook_Action_page_view   .= '$text .= \'<hr />\'.Comments();';
-# $hook_Action_page_view  .= '$text .= \'<hr />\'.AutoLink_Backlinks(); ';
-$hook_Action_page_edit .= '$l[\'css_class\'] = \'edit\';';
+$hook_Action_page_edit    .= '$l[\'css_class\'] = \'edit\';';
 $hook_Action_page_history .= '$l[\'css_class\'] = \'history\';';
-$hook_ErrorFail .= '$l[\'css_class\'] = \'default fail\';';
-$hook_before_action .= '
-if (substr($action, 7, 5) !== \'page_\') $l[\'ActionLinks_page\'] = \'\';';
+$hook_ErrorFail           .= '$l[\'css_class\'] = \'default fail\';';
+$hook_before_action       .= 'if (substr($action, 7, 5) !== \'page_\') $l[\'ActionLinks_page\'] = \'\';';
