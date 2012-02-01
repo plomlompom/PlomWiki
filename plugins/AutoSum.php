@@ -1,9 +1,9 @@
 <?php
 # Provide a more sophisticated default $summary for diffs.
 
-$hook_WritePage_diff .= 'if (!$summary) $summary = DoSomething($diff_add);';
+$hook_WritePage_diff .= 'if (!$summary) $summary = AutoSum($diff_add);';
 
-function DoSomething($diff_add)
+function AutoSum($diff_add)
 # Build a nice short summary of a diff from $diff_add.
 { global $nl;
   $diff_lines = explode($nl, $diff_add); 
