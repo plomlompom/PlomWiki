@@ -94,12 +94,17 @@ function Action_page_edit()
   else $text = '';
 
   # Final HTML of edit form.
-  $input = '<textarea name="text" rows="'.$esc.'Action_page_edit_TextareaRows'.
-                                                                  $esc.'">'.$nl.
-           $text.'</textarea>'.$nl.
-           $esc.'Author'.$esc.': <input name="author" type="text" />'.$nl.
-           $esc.'Summary'.$esc.': <input name="summary" type="text" />';
-  $form = BuildPostForm($title_url.'&amp;action=write&amp;t=page', $input);
+  $form = '<form method="post" '.
+                     'action="'.$title_url.'&amp;action=write&amp;t=page">'.$nl.
+          '<textarea name="text" '.
+                    'rows="'.$esc.'Action_page_edit_TextareaRows'.$esc.'">'.$nl.
+          $text.'</textarea>'.$nl.
+          $esc.'Author'.$esc.': <input name="author" type="text" />'.$nl.
+          $esc.'Summary'.$esc.': <input name="summary" type="text" />'.$nl.
+          'Admin '.$esc.'pw'.$esc.': '.'<input name="pw" type="password" />'.
+                            '<input name="auth" type="hidden" value="*" />'.$nl.
+          '<input type="submit" value="OK" />'.$nl.'</form>';
+  
   eval($hook_Action_page_edit);
   $l['title'] = $esc.'Editing'.$esc.': "'.$title.'"';
   $l['content'] = $form.$content;
@@ -160,17 +165,20 @@ function Action_page_revert()
   $text = EscapeHTML($text);
 
   # Ask for revert affirmation and password.
-  $input   = '<input type="hidden" name="text" value="'.$text.'">'.$nl.
-             '<input type="hidden" name="summary" value="revert">';
-  $form    = BuildPostForm($title_url.'&amp;action=write&amp;t=page', $input);
-  $content = $form;
+  $form = '<form '.$class.'method="post" '.
+                     'action="'.$title_url.'&amp;action=write&amp;t=page">'.$nl.
+          '<input type="hidden" name="text" value="'.$text.'">'.$nl.
+          '<input type="hidden" name="summary" value="revert">'.$nl.
+          'Admin '.$esc.'pw'.$esc.': <input name="pw" type="password" />'.
+                            '<input name="auth" type="hidden" value="*" />'.$nl.
+          '<input type="submit" value="OK" />'.$nl.'</form>';
 
   # Before leaving, execute plugin hook.
   eval($hook_Action_page_revert);
   $l['title'] = $esc.'RevertToBefore'.$esc.' '.$time_string.'?';
   $l['content']= $form;
   OutputHTML(); }
-
+  
 ####################################
 # Page text manipulation functions #
 ####################################
@@ -314,18 +322,19 @@ function PrepareWrite_admin_sets_pw()
 function Action_set_pw_admin()
 # Display page for setting new admin password.
 { global $esc, $l, $nl, $nl2, $title_url;
-  $input = $esc.'NewPWfor'.$esc.' '.$esc.'admin'.$esc.':<br />'.$nl.
-           '<input type="hidden" name="new_auth" value="*">'.$nl
-          .'<input type="password" name="new_pw" /><br />'.$nl.
-           '<input type="hidden" name="auth" value="*">'.$nl.
-           $esc.'OldAdmin'.$esc.' '.$esc.'pw'.$esc.':<br />'.$nl.
-           '<input type="password" name="pw">';
-  $form = BuildPostForm($title_url.'&amp;action=write&amp;t=admin_sets_pw',
-                        $input, '');
-  $l['title'] = $esc.'ChangePWfor'.$esc.' '.$esc.'admin'.$esc;
+  $form = '<form '.$class.'method="post" '.
+            'action="'.$title_url.'&amp;action=write&amp;t=admin_sets_pw">'.$nl.
+          $esc.'NewPWfor'.$esc.' '.$esc.'admin'.$esc.':<br />'.$nl.
+          '<input type="hidden" name="new_auth" value="*">'.$nl.
+          '<input type="password" name="new_pw" /><br />'.$nl.
+          '<input type="hidden" name="auth" value="*">'.$nl.
+          $esc.'OldAdmin'.$esc.' '.$esc.'pw'.$esc.':<br />'.$nl.
+          '<input type="password" name="pw">'.$nl.
+         '<input type="submit" value="OK" />'.$nl.'</form>';
+  $l['title'] = $esc.'ChangePWfor'.$esc.' '.$esc.'admin'.$esc; 
   $l['content'] = $form;
   OutputHTML(); }
-
+  
 function CheckPW($key, $pw_posted, $target)
 # Check if hash of $pw_posted fits $key password hash in internal password list.
 { global $permissions, $pw_path, $work_failed_logins_dir;
@@ -675,18 +684,6 @@ function WorkScreenReload($redir = '')
        '<meta http-equiv="refresh" content="0'.$redir.'" />'.$nl.
        '<p>Working.</p>'; 
   exit(); }
-
-function BuildPostForm($URL, $input, $ask_pw = NULL, $class = NULL)
-# HTML form. $URL = action, $input = code between, $ask_pw = PW input element.
-{ global $esc, $nl;
-  if ($ask_pw === NULL)
-    $ask_pw = 'Admin '.$esc.'pw'.$esc.': <input name="pw" type="password" />'.
-                              '<input name="auth" type="hidden" value="*" />';
-  if ($class !== NULL)
-    $class = 'class="'.$class.'" ';
-  return '<form '.$class.'method="post" action="'.$URL.'">'.$nl.$input.$nl.
-                                                                    $ask_pw.$nl.
-         '<input type="submit" value="OK" />'.$nl.'</form>'; }
 
 #########
 # Other #
