@@ -18,7 +18,7 @@ $hook_Action_page_edit .= '
 global $nl2; 
 $content .= $nl2.$esc.\'markup_help\'.$esc;';
 
-# Plug-ins may use this variable to add GET parameters to in-wiki page links.Someth
+# Plug-ins may use this variable to add GET parameters to in-wiki page links.
 $l['pageview_params'] = '';
 
 # Escape marks. Remember $esc is stripped from any page text by plomwiki.php.
