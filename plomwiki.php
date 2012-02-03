@@ -188,8 +188,7 @@ function Sanitize($text)
 { global $esc;
   if (get_magic_quotes_gpc())
     $text = stripslashes($text);
-  $text = str_replace($esc, '', $text);
-  return $text; }
+  return str_replace($esc, '', $text); }
 
 function EscapeHTML($text)
 # Replace symbols used by HTML. Correct ugly htmlspecialchars() formatting.
