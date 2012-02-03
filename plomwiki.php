@@ -219,12 +219,12 @@ function Action_write()
   $pw = $_POST['pw']; $auth = $_POST['auth']; $t = $_GET['t'];
 
   # Target type chooses writing preparation function, gets variables from it.
+  $task_write_list = array();
   $prep_func = 'PrepareWrite_'.$t;
   if (function_exists($prep_func))
-    $x = $prep_func();
+    $x = $prep_func($task_write_list, $redir);
   else 
     ErrorFail($esc.'InvalidTarget'.$esc);
-  $redir = $x['redir']; $task_write_list = $x['tasks'];
 
   # Give a redir URL more harmless than a write action page if $redir is empty.
   if (empty($redir))
@@ -387,7 +387,7 @@ function Action_set_pw_admin()
   $l['content'] = $form;
   OutputHTML(); }
   
-function PrepareWrite_admin_sets_pw()
+function PrepareWrite_admin_sets_pw(&$task_write_list, &$redir)
 # Deliver to Action_write() all information needed for pw writing process.
 { global $esc, $legal_pw_key, $nl, $pw_path, $todo_urgent;
 
@@ -411,9 +411,8 @@ function PrepareWrite_admin_sets_pw()
     $pw_file_text .= $key.':'.$pw.$nl;
 
   # Actual writing tasks for Action_write().
-  $x['tasks'][$todo_urgent][] = array('SafeWrite',
-                                      array($pw_path), array($pw_file_text));
-  return $x; }
+  $task_write_list[$todo_urgent][] = array('SafeWrite',
+                                      array($pw_path), array($pw_file_text)); }
   
 function CheckPW($key, $pw_posted, $target)
 # Check if hash of $pw_posted fits $key password hash in internal password list.
@@ -480,7 +479,7 @@ function ReadPasswordList($path)
 # Page writing #
 ################
 
-function PrepareWrite_page()
+function PrepareWrite_page(&$task_write_list, &$redir)
 # Deliver to Action_write() all information needed for page writing process.
 { global $esc, $page_max_lines, $page_max_length, $nl, $page_path, $title,
          $title_url, $todo_urgent, $work_dir;
@@ -506,12 +505,11 @@ function PrepareWrite_page()
 
   # $todo_plugin is for tasks added in WritePage() by plugins via hook.
   $todo_plugin = $work_dir.'todo_bonus';
-  $x['tasks'][$todo_urgent][] = 
+  $task_write_list[$todo_urgent][] = 
              array('WritePage',array($title, $todo_plugin,$tmp_0,$tmp_1,$tmp_2),
                    array($text, $author, $summary));
-  $x['tasks'][$todo_urgent][] = array('WorkTodo', array($todo_plugin));
-  $x['redir'] = $title_url;
-  return $x; }
+  $task_write_list[$todo_urgent][] = array('WorkTodo', array($todo_plugin));
+  $redir = $title_url; }
 
 function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo, 
                    $path_tmp_page, $path_src_text, $path_src_author,
