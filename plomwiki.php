@@ -816,6 +816,25 @@ function PlomDiff_RangeLines($lines, $offset, $n_next, $prefix)
       $txt .= $nl.$prefix.$line;
   return array($range, $txt); }
 
+function PlomDiffReverse($old_diff)
+# Reverse a diff.
+{ global $nl;
+
+  $old_diff = explode($nl, $old_diff);
+  $new_diff = '';
+  foreach ($old_diff as $line_n => $line)
+  { if     ($line[0] == '<') $line[0] = '>'; 
+    elseif ($line[0] == '>') $line[0] = '<';
+    else 
+    { foreach (array('c' => 'c', 'a' => 'd', 'd' => 'a') as $char => $reverse) 
+      { if (strpos($line, $char))
+        { list($left, $right) = explode($char, $line); 
+          $line = $right.$reverse.$left; break; } } }
+    $new_diff .= $line.$nl; }
+  $new_diff = substr($new_diff, 0, -1);
+
+  return $new_diff; }
+
 function PlomPatch($text_A, $diff)
 # Patch $text_A to $text_B via $diff.
 { global $esc, $nl;
@@ -884,22 +903,3 @@ function PlomPatch($text_A, $diff)
     $text_B = substr($text_B, 1);
 
   return $text_B; }
-
-function PlomDiffReverse($old_diff)
-# Reverse a diff.
-{ global $nl;
-
-  $old_diff = explode($nl, $old_diff);
-  $new_diff = '';
-  foreach ($old_diff as $line_n => $line)
-  { if     ($line[0] == '<') $line[0] = '>'; 
-    elseif ($line[0] == '>') $line[0] = '<';
-    else 
-    { foreach (array('c' => 'c', 'a' => 'd', 'd' => 'a') as $char => $reverse) 
-      { if (strpos($line, $char))
-        { list($left, $right) = explode($char, $line); 
-          $line = $right.$reverse.$left; break; } } }
-    $new_diff .= $line.$nl; }
-  $new_diff = substr($new_diff, 0, -1);
-
-  return $new_diff; }
