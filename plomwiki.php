@@ -159,7 +159,7 @@ function Action_page_revert()
   # Revert $text back through $diff_list until $i hits $id.
   $text = file_get_contents($page_path);
   foreach ($diff_list as $i => $diff_data)
-  { $reversed_diff = ReverseDiff($diff_data['text']); 
+  { $reversed_diff = PlomDiffReverse($diff_data['text']); 
     $text          = PlomPatch($text, $reversed_diff);
     if ($id == $i) break; }
   $text = EscapeHTML($text);
@@ -885,7 +885,7 @@ function PlomPatch($text_A, $diff)
 
   return $text_B; }
 
-function ReverseDiff($old_diff)
+function PlomDiffReverse($old_diff)
 # Reverse a diff.
 { global $nl;
 
