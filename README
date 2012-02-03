@@ -40,13 +40,13 @@ function found with that name or defaulting to "Action_view". This should give
 you an idea on how to add new actions by adding functions like "Action_xyz()".
 
 Plugins are implemented as code added by plomwiki.php to its run by examining
-PlomWiki/config/plugins.txt and requiring the contents of all files referenced
+PlomWiki/config/plugins and requiring the contents of all files referenced
 therein as relative paths (and not commented out with a "#"). Feel free to add
 not only functions, but also to extend global variables, especially those acting
 as hooks in the flow of certain important functions which eval() them as code.
 
 Wiki page markup is achieved by running the original page text through page text
-manipulation functions named and put into order in PlomWiki/config/markups.txt.
+manipulation functions named and put into order in PlomWiki/config/markups.
 PlomWiki's standard markup is built from functions defined in the plugin 
 StandardMarkup.php.
 
@@ -64,8 +64,8 @@ called to fill Action_write() with all it needs to know.
 
 As single bottleneck for DB writing, Action_write() also is the point where all
 password checks are called. It delivers POST "password=" and GET "t=" parameters
-to CheckPW() and waits for its OK. CheckPW() reads from config/password.txt a
-list of keys (could be the names of pages, users, whatever) mapped to password
+to CheckPW() and waits for its OK. CheckPW() reads from config/password a list
+of keys (could be the names of pages, users, whatever) mapped to password
 hashes; looks up (plugin-extendable) $permissions if the user-provided key is
 allowed to open targets of type "t=" (i.e. a password for page editing should
 not be usable for editing users); and if so, compares the hash of "password="

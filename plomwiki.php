@@ -5,9 +5,9 @@
 ##################
 
 # Filesystem information.
-$config_dir = 'config/';         $markup_list_path = $config_dir.'markups.txt';
-$plugin_dir = 'plugins/';        $pw_path          = $config_dir.'password.txt';
-$pages_dir  = 'pages/';          $plugin_list_path = $config_dir.'plugins.txt';
+$config_dir = 'config/';            $markup_list_path = $config_dir.'markups';
+$plugin_dir = 'plugins/';           $pw_path          = $config_dir.'password';
+$pages_dir  = 'pages/';             $plugin_list_path = $config_dir.'plugins';
 $diff_dir   = $pages_dir.'diffs/';     $work_dir      = 'work/';
 $del_dir    = $pages_dir.'deleted/';   $work_temp_dir = $work_dir.'temp/';
 $setup_file = 'setup.php';             $todo_urgent   = $work_dir.'todo_urgent';
@@ -176,7 +176,7 @@ function Action_page_revert()
 ####################################
 
 function Markup($text)
-# Applying markup functions in the order described by markups.txt to $text.
+# Applying markup functions in the order described by markups file to $text.
 { global $markup_list_path; 
   $lines = ReadAndTrimLines($markup_list_path);
   foreach ($lines as $line)
