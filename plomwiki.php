@@ -208,9 +208,9 @@ function EscapeHTML($text)
 #                         #
 ###########################
 
-#################################
-# User-accessible writing to DB #
-#################################
+###############################################
+# Action_write() and internal DB manipulation #
+###############################################
 
 function Action_write()
 # User writing to DB. Expects password $_POST['pw'] and target type $_GET['t'],
@@ -253,152 +253,6 @@ function Action_write()
 
   # Final HTML.
   WorkScreenReload($redir); }
-
-function PrepareWrite_page()
-# Deliver to Action_write() all information needed for page writing process.
-{ global $esc, $page_max_lines, $page_max_length, $nl, $page_path, $title,
-         $title_url, $todo_urgent, $work_dir;
-  $text    = Sanitize($_POST['text']);
-  $summary = str_replace($nl, '', Sanitize($_POST['summary']));
-  $author  = str_replace($nl, '', Sanitize($_POST['author'] ));
-  if (!$author) $author  = '?';
-
-  # Check for error conditions: $text empty, unchanged or too long/large.
-  if (is_file($page_path))
-    $old_text = file_get_contents($page_path);
-  if (!$text)         
-    ErrorFail($esc.'NoEmptyPage'.$esc);
-  if ($text == $old_text)  
-    ErrorFail($esc.'NothingChanged'.$esc);
-  if (count(explode($nl, $text)) > $page_max_lines)
-    ErrorFail($esc.'MaxLinesText'.$esc.$page_max_lines);
-  if (strlen($text) > $page_max_length)
-    ErrorFail($esc.'MaxSizeText'.$esc.$page_max_length);
-
-  # Reserve empty temporary files for WritePage().
-  $tmp_0 = NewTemp(); $tmp_1 = NewTemp(); $tmp_2 = NewTemp();
-
-  # $todo_plugin is for tasks added in WritePage() by plugins via hook.
-  $todo_plugin = $work_dir.'todo_bonus';
-  $x['tasks'][$todo_urgent][] = 
-             array('WritePage',array($title, $todo_plugin,$tmp_0,$tmp_1,$tmp_2),
-                   array($text, $author, $summary));
-  $x['tasks'][$todo_urgent][] = array('WorkTodo', array($todo_plugin));
-  $x['redir'] = $title_url;
-  return $x; }
-
-function PrepareWrite_admin_sets_pw()
-# Deliver to Action_write() all information needed for pw writing process.
-{ global $esc, $legal_pw_key, $nl, $pw_path, $todo_urgent;
-
-  # Check password key and new password for validity.
-  $new_pw   = $_POST['new_pw'];
-  $new_auth = $_POST['new_auth'];
-  if (!$new_pw)
-    ErrorFail($esc.'EmptyPW'.$esc);
-  if (!$new_auth)
-    ErrorFail($esc.'EmptyAuth'.$esc);
-  if (!preg_match('/^('.$legal_pw_key.')$/', $new_auth))
-    ErrorFail($esc.'InvalidPWKey'.$esc);
-
-  # Splice new password hash into text of password file at $pw_path.
-  $passwords            = ReadPasswordList($pw_path);
-  $salt                 = $passwords['$salt'];
-  $pw_file_text         = $salt.$nl;
-  $passwords[$new_auth] = hash('sha512', $salt.$new_pw);
-  unset($passwords['$salt']);
-  foreach ($passwords as $key => $pw)
-    $pw_file_text .= $key.':'.$pw.$nl;
-
-  # Actual writing tasks for Action_write().
-  $x['tasks'][$todo_urgent][] = array('SafeWrite',
-                                      array($pw_path), array($pw_file_text));
-  return $x; }
-
-#############
-# Passwords #
-#############
-
-function Action_set_pw_admin()
-# Display page for setting new admin password.
-{ global $esc, $l, $nl, $nl2, $title_url;
-  $form = '<form '.$class.'method="post" '.
-            'action="'.$title_url.'&amp;action=write&amp;t=admin_sets_pw">'.$nl.
-          $esc.'NewPWfor'.$esc.' '.$esc.'admin'.$esc.':<br />'.$nl.
-          '<input type="hidden" name="new_auth" value="*">'.$nl.
-          '<input type="password" name="new_pw" /><br />'.$nl.
-          '<input type="hidden" name="auth" value="*">'.$nl.
-          $esc.'OldAdmin'.$esc.' '.$esc.'pw'.$esc.':<br />'.$nl.
-          '<input type="password" name="pw">'.$nl.
-         '<input type="submit" value="OK" />'.$nl.'</form>';
-  $l['title'] = $esc.'ChangePWfor'.$esc.' '.$esc.'admin'.$esc; 
-  $l['content'] = $form;
-  OutputHTML(); }
-  
-function CheckPW($key, $pw_posted, $target)
-# Check if hash of $pw_posted fits $key password hash in internal password list.
-{ global $permissions, $pw_path, $work_failed_logins_dir;
-  $return = FALSE;
- 
-  # Let IPs that recently failed a login wait $delay seconds before next chance.
-  $ip_file = $work_failed_logins_dir.$_SERVER['REMOTE_ADDR'];
-  $delay   = 10;
-  if (is_file($ip_file))
-  { $birth = file_get_contents($ip_file);
-    while ($birth + $delay > time())
-      sleep(1); }
-  file_put_contents($ip_file, time());
-
-  # Fail if empty $key provided.
-  if (!$key)
-    return $return;
-
-  # Fail if $key is not authorized for target. Assume admin always authorized.
-  if ($key != '*' and !in_array($key, $permissions[$target]))
-      return $return;
-
-  # Try positive authentication. If successful, delete IP form failed logins.
-  $passwords   = ReadPasswordList($pw_path);
-  $salt        = $passwords['$salt'];
-  $salted_hash = hash('sha512', $salt.$pw_posted);
-  if (isset($passwords[$key])
-      and $salted_hash == $passwords[$key])
-  { $return = TRUE;
-    unlink($ip_file); }
-
-  return $return; }
-
-function ReadPasswordList($path)
-# Read password list from $path into array.
-{ global $esc, $legal_pw_key, $nl;
-  $content = substr(file_get_contents($path), 0, -1);
-
-  # Trigger error if password file is not found / empty.
-  if (!$content)
-    ErrorFail($esc.'NoPWfile'.$esc);
-  
-  # Build $passwords list from file's $content.
-  $passwords = array();
-  $lines = explode($nl, $content);
-  $salt = $lines[0];
-  unset($lines[0]);
-  foreach ($lines as $line)
-  { 
-    # Only read in allowed password keys according to $legal_pw_key.
-    preg_match('/^('.$legal_pw_key.'):(.+)$/', $line, $catch);
-    if ($catch)
-    { $range = $catch[1];
-      $pw    = $catch[2];
-      $passwords[$range] = $pw; } }
-
-  # Can't hurt to overwrite any '$salt' key smuggled in DESPITE $legal_pw_key.
-  $passwords['$salt'] = $salt; 
-
-  return $passwords; }
-
-############################
-# Internal DB manipulation #
-############################
 
 function WorkTodo($todo, $do_reload = FALSE)
 # Work through todo file. Comment out finished lines. Delete file when finished.
@@ -512,6 +366,152 @@ function SafeWrite($path_original, $path_temp)
 { if (!is_file($path_temp))    return;
   if (is_file($path_original)) unlink($path_original); 
   rename($path_temp, $path_original); }
+  
+#############
+# Passwords #
+#############
+
+function Action_set_pw_admin()
+# Display page for setting new admin password.
+{ global $esc, $l, $nl, $nl2, $title_url;
+  $form = '<form '.$class.'method="post" '.
+            'action="'.$title_url.'&amp;action=write&amp;t=admin_sets_pw">'.$nl.
+          $esc.'NewPWfor'.$esc.' '.$esc.'admin'.$esc.':<br />'.$nl.
+          '<input type="hidden" name="new_auth" value="*">'.$nl.
+          '<input type="password" name="new_pw" /><br />'.$nl.
+          '<input type="hidden" name="auth" value="*">'.$nl.
+          $esc.'OldAdmin'.$esc.' '.$esc.'pw'.$esc.':<br />'.$nl.
+          '<input type="password" name="pw">'.$nl.
+         '<input type="submit" value="OK" />'.$nl.'</form>';
+  $l['title'] = $esc.'ChangePWfor'.$esc.' '.$esc.'admin'.$esc; 
+  $l['content'] = $form;
+  OutputHTML(); }
+  
+function PrepareWrite_admin_sets_pw()
+# Deliver to Action_write() all information needed for pw writing process.
+{ global $esc, $legal_pw_key, $nl, $pw_path, $todo_urgent;
+
+  # Check password key and new password for validity.
+  $new_pw   = $_POST['new_pw'];
+  $new_auth = $_POST['new_auth'];
+  if (!$new_pw)
+    ErrorFail($esc.'EmptyPW'.$esc);
+  if (!$new_auth)
+    ErrorFail($esc.'EmptyAuth'.$esc);
+  if (!preg_match('/^('.$legal_pw_key.')$/', $new_auth))
+    ErrorFail($esc.'InvalidPWKey'.$esc);
+
+  # Splice new password hash into text of password file at $pw_path.
+  $passwords            = ReadPasswordList($pw_path);
+  $salt                 = $passwords['$salt'];
+  $pw_file_text         = $salt.$nl;
+  $passwords[$new_auth] = hash('sha512', $salt.$new_pw);
+  unset($passwords['$salt']);
+  foreach ($passwords as $key => $pw)
+    $pw_file_text .= $key.':'.$pw.$nl;
+
+  # Actual writing tasks for Action_write().
+  $x['tasks'][$todo_urgent][] = array('SafeWrite',
+                                      array($pw_path), array($pw_file_text));
+  return $x; }
+  
+function CheckPW($key, $pw_posted, $target)
+# Check if hash of $pw_posted fits $key password hash in internal password list.
+{ global $permissions, $pw_path, $work_failed_logins_dir;
+  $return = FALSE;
+ 
+  # Let IPs that recently failed a login wait $delay seconds before next chance.
+  $ip_file = $work_failed_logins_dir.$_SERVER['REMOTE_ADDR'];
+  $delay   = 10;
+  if (is_file($ip_file))
+  { $birth = file_get_contents($ip_file);
+    while ($birth + $delay > time())
+      sleep(1); }
+  file_put_contents($ip_file, time());
+
+  # Fail if empty $key provided.
+  if (!$key)
+    return $return;
+
+  # Fail if $key is not authorized for target. Assume admin always authorized.
+  if ($key != '*' and !in_array($key, $permissions[$target]))
+      return $return;
+
+  # Try positive authentication. If successful, delete IP form failed logins.
+  $passwords   = ReadPasswordList($pw_path);
+  $salt        = $passwords['$salt'];
+  $salted_hash = hash('sha512', $salt.$pw_posted);
+  if (isset($passwords[$key])
+      and $salted_hash == $passwords[$key])
+  { $return = TRUE;
+    unlink($ip_file); }
+
+  return $return; }
+
+function ReadPasswordList($path)
+# Read password list from $path into array.
+{ global $esc, $legal_pw_key, $nl;
+  $content = substr(file_get_contents($path), 0, -1);
+
+  # Trigger error if password file is not found / empty.
+  if (!$content)
+    ErrorFail($esc.'NoPWfile'.$esc);
+  
+  # Build $passwords list from file's $content.
+  $passwords = array();
+  $lines = explode($nl, $content);
+  $salt = $lines[0];
+  unset($lines[0]);
+  foreach ($lines as $line)
+  { 
+    # Only read in allowed password keys according to $legal_pw_key.
+    preg_match('/^('.$legal_pw_key.'):(.+)$/', $line, $catch);
+    if ($catch)
+    { $range = $catch[1];
+      $pw    = $catch[2];
+      $passwords[$range] = $pw; } }
+
+  # Can't hurt to overwrite any '$salt' key smuggled in DESPITE $legal_pw_key.
+  $passwords['$salt'] = $salt; 
+
+  return $passwords; }
+
+################
+# Page writing #
+################
+
+function PrepareWrite_page()
+# Deliver to Action_write() all information needed for page writing process.
+{ global $esc, $page_max_lines, $page_max_length, $nl, $page_path, $title,
+         $title_url, $todo_urgent, $work_dir;
+  $text    = Sanitize($_POST['text']);
+  $summary = str_replace($nl, '', Sanitize($_POST['summary']));
+  $author  = str_replace($nl, '', Sanitize($_POST['author'] ));
+  if (!$author) $author  = '?';
+
+  # Check for error conditions: $text empty, unchanged or too long/large.
+  if (is_file($page_path))
+    $old_text = file_get_contents($page_path);
+  if (!$text)         
+    ErrorFail($esc.'NoEmptyPage'.$esc);
+  if ($text == $old_text)  
+    ErrorFail($esc.'NothingChanged'.$esc);
+  if (count(explode($nl, $text)) > $page_max_lines)
+    ErrorFail($esc.'MaxLinesText'.$esc.$page_max_lines);
+  if (strlen($text) > $page_max_length)
+    ErrorFail($esc.'MaxSizeText'.$esc.$page_max_length);
+
+  # Reserve empty temporary files for WritePage().
+  $tmp_0 = NewTemp(); $tmp_1 = NewTemp(); $tmp_2 = NewTemp();
+
+  # $todo_plugin is for tasks added in WritePage() by plugins via hook.
+  $todo_plugin = $work_dir.'todo_bonus';
+  $x['tasks'][$todo_urgent][] = 
+             array('WritePage',array($title, $todo_plugin,$tmp_0,$tmp_1,$tmp_2),
+                   array($text, $author, $summary));
+  $x['tasks'][$todo_urgent][] = array('WorkTodo', array($todo_plugin));
+  $x['redir'] = $title_url;
+  return $x; }
 
 function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo, 
                    $path_tmp_page, $path_src_text, $path_src_author,
