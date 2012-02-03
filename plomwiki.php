@@ -313,21 +313,17 @@ function PrepareWrite_admin_sets_pw()
 
 function Action_set_pw_admin()
 # Display page for setting new admin password.
-{ global $esc;
-  ChangePW_form($esc.'admin'.$esc, '*', $esc.'OldAdmin'.$esc); }
-
-function ChangePW_form($desc_new_pw, $new_auth, $desc_pw = 'Admin', 
-                       $auth = '*', $t = 'admin_sets_pw')
-# Output page for changing password keyed to $auth and described by $desc.
 { global $esc, $l, $nl, $nl2, $title_url;
-  $input = $esc.'NewPWfor'.$esc.' '.$desc_new_pw.':<br />'.$nl.
-           '<input type="hidden" name="new_auth" value="'.$new_auth.'">'.$nl
+  $input = $esc.'NewPWfor'.$esc.' '.$esc.'admin'.$esc.':<br />'.$nl.
+           '<input type="hidden" name="new_auth" value="*">'.$nl
           .'<input type="password" name="new_pw" /><br />'.$nl.
-           '<input type="hidden" name="auth" value="'.$auth.'">'.$nl.
-           $desc_pw.' '.$esc.'pw'.$esc.':<br />'.$nl.
+           '<input type="hidden" name="auth" value="*">'.$nl.
+           $esc.'OldAdmin'.$esc.' '.$esc.'pw'.$esc.':<br />'.$nl.
            '<input type="password" name="pw">';
-  $form = BuildPostForm($title_url.'&amp;action=write&amp;t='.$t, $input, '');
-  $l['title'] = $esc.'ChangePWfor'.$esc.' '.$desc_new_pw; $l['content'] = $form;
+  $form = BuildPostForm($title_url.'&amp;action=write&amp;t=admin_sets_pw',
+                        $input, '');
+  $l['title'] = $esc.'ChangePWfor'.$esc.' '.$esc.'admin'.$esc;
+  $l['content'] = $form;
   OutputHTML(); }
 
 function CheckPW($key, $pw_posted, $target)
