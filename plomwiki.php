@@ -222,7 +222,7 @@ function Action_write()
   $task_write_list = array();
   $prep_func = 'PrepareWrite_'.$t;
   if (function_exists($prep_func))
-    $x = $prep_func($task_write_list, $redir);
+    $prep_func($task_write_list, $redir);
   else 
     ErrorFail($esc.'InvalidTarget'.$esc);
 
