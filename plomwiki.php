@@ -222,9 +222,12 @@ function Action_write()
   $task_write_list = array();
   $prep_func = 'PrepareWrite_'.$t;
   if (function_exists($prep_func))
-    $prep_func($task_write_list, $redir);
+    $todo_tmp = $prep_func($redir);
   else 
     ErrorFail($esc.'InvalidTarget'.$esc);
+
+  # Make sure $todo_tmp ends with an empty line, as is expected by WorkTodo().
+  file_put_contents($todo_tmp, file_get_contents($todo_tmp).$nl);
 
   # Give a redir URL more harmless than a write action page if $redir is empty.
   if (empty($redir))
@@ -234,22 +237,8 @@ function Action_write()
   if (!CheckPW($auth, $pw, $t))
     ErrorFail($esc.'AuthFail'.$esc);
 
-  # From $task_write_list, add tasks to temp versions of todo lists.
-  $temps = array();
-  foreach ($task_write_list as $todo => $tasks)
-  { $old_todo = '';
-    if (is_file($todo))
-      $old_todo = file_get_contents($todo);
-    $temps[$todo] = NewTemp($old_todo);
-    foreach ($tasks as $task)
-      WriteTask($temps[$todo], $task[0], $task[1], $task[2]); }
-
-  # Write from temp files to todo files. Make sure any $todo_urgent comes first.
-  if ($temps[$todo_urgent])
-    rename($temps[$todo_urgent], $todo_urgent);
-  foreach ($temps as $todo => $content)
-    if ($todo != $todo_urgent)
-      rename($content, $todo);
+  # Atomic writing of new $todo_urgent file.
+  rename($todo_tmp, $todo_urgent);
 
   # Final HTML.
   WorkScreenReload($redir); }
@@ -298,25 +287,6 @@ function WorkTodo($todo, $do_reload = FALSE)
   # Reload.
   if ($do_reload)
     WorkScreenReload(); }
-
-function WriteTask($todo, $func, $values_easy = array(), $values_hard = array())
-# Write call to function $func into new $todo line, with $values_easy (use for
-# short, sans-dangerous-chars strings) passed as parameters directly, strings of
-# $values_hard only passed as paths to newly created temp files storing them. 
-{ global $nl;
-  $p_todo = fopen($todo, 'a+');
-
-  # Write $values_hard into temp files, add their paths to $values_easy.
-  if (!empty($values_hard))
-    foreach ($values_hard as $value_hard)
-      $values_easy[] = NewTemp($value_hard);
-
-  # Write eval()-executable function call with $func and $values_easy.
-  if (!empty($values_easy))
-    $values_easy = '\''.implode('\', \'', $values_easy).'\'';
-  $line = $func.'('.$values_easy.');'.$nl;
-  fwrite($p_todo, $line);
-  fclose($p_todo); }
 
 function Lock($path)
 # Check for and create lockfile for $path. Locks block $lock_dur seconds max.
@@ -387,7 +357,7 @@ function Action_set_pw_admin()
   $l['content'] = $form;
   OutputHTML(); }
   
-function PrepareWrite_admin_sets_pw(&$task_write_list, &$redir)
+function PrepareWrite_admin_sets_pw(&$redir)
 # Deliver to Action_write() all information needed for pw writing process.
 { global $esc, $legal_pw_key, $nl, $pw_path, $todo_urgent;
 
@@ -410,9 +380,9 @@ function PrepareWrite_admin_sets_pw(&$task_write_list, &$redir)
   foreach ($passwords as $key => $pw)
     $pw_file_text .= $key.':'.$pw.$nl;
 
-  # Actual writing tasks for Action_write().
-  $task_write_list[$todo_urgent][] = array('SafeWrite',
-                                      array($pw_path), array($pw_file_text)); }
+  # Return todo file with writing task.
+  $tmp = NewTemp('SafeWrite(\''.$pw_path.'\',\''.NewTemp($pw_file_text).'\');');
+  return $tmp; }
   
 function CheckPW($key, $pw_posted, $target)
 # Check if hash of $pw_posted fits $key password hash in internal password list.
@@ -479,10 +449,11 @@ function ReadPasswordList($path)
 # Page writing #
 ################
 
-function PrepareWrite_page(&$task_write_list, &$redir)
+function PrepareWrite_page(&$redir)
 # Deliver to Action_write() all information needed for page writing process.
 { global $esc, $page_max_lines, $page_max_length, $nl, $page_path, $title,
          $title_url, $todo_urgent, $work_dir;
+  $redir   = $title_url;
   $text    = Sanitize($_POST['text']);
   $summary = str_replace($nl, '', Sanitize($_POST['summary']));
   $author  = str_replace($nl, '', Sanitize($_POST['author'] ));
@@ -500,16 +471,17 @@ function PrepareWrite_page(&$task_write_list, &$redir)
   if (strlen($text) > $page_max_length)
     ErrorFail($esc.'MaxSizeText'.$esc.$page_max_length);
 
-  # Reserve empty temporary files for WritePage().
-  $tmp_0 = NewTemp(); $tmp_1 = NewTemp(); $tmp_2 = NewTemp();
+  # Reserve empty temporary files for WritePage(), and temp files with strings.
+  $t0 = NewTemp(); $t1 = NewTemp(); $t2 = NewTemp();
+  $t3 = NewTemp($text); $t4 = NewTemp($author); $t5 = NewTemp($summary);
 
   # $todo_plugin is for tasks added in WritePage() by plugins via hook.
   $todo_plugin = $work_dir.'todo_bonus';
-  $task_write_list[$todo_urgent][] = 
-             array('WritePage',array($title, $todo_plugin,$tmp_0,$tmp_1,$tmp_2),
-                   array($text, $author, $summary));
-  $task_write_list[$todo_urgent][] = array('WorkTodo', array($todo_plugin));
-  $redir = $title_url; }
+
+  return NewTemp('WritePage(\''.$title.'\',\''.$todo_plugin.'\',\''.$t0. '\','.
+                       '\''.$t1.'\',\''.$t2.'\',\''.$t3.'\',\''.$t4.'\',\''.$t5.
+                                                                     '\');'.$nl.
+                 'WorkTodo(\''.$todo_plugin.'\');'); }
 
 function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo, 
                    $path_tmp_page, $path_src_text, $path_src_author,
