@@ -222,12 +222,12 @@ function Action_write()
   $task_write_list = array();
   $prep_func = 'PrepareWrite_'.$t;
   if (function_exists($prep_func))
-    $todo_tmp = $prep_func($redir);
+    $todo_txt = $prep_func($redir);
   else 
     ErrorFail($esc.'InvalidTarget'.$esc);
 
-  # Make sure $todo_tmp ends with an empty line, as is expected by WorkTodo().
-  file_put_contents($todo_tmp, file_get_contents($todo_tmp).$nl);
+  # Write temporay todo file, with a trailing newline as WorkTodo() expects.
+  $todo_tmp = NewTemp($todo_txt.$nl);
 
   # Give a redir URL more harmless than a write action page if $redir is empty.
   if (empty($redir))
@@ -380,9 +380,8 @@ function PrepareWrite_admin_sets_pw(&$redir)
   foreach ($passwords as $key => $pw)
     $pw_file_text .= $key.':'.$pw.$nl;
 
-  # Return todo file with writing task.
-  $tmp = NewTemp('SafeWrite(\''.$pw_path.'\',\''.NewTemp($pw_file_text).'\');');
-  return $tmp; }
+  # Return todo file text.
+  return 'SafeWrite(\''.$pw_path.'\',\''.NewTemp($pw_file_text).'\');'; }
   
 function CheckPW($key, $pw_posted, $target)
 # Check if hash of $pw_posted fits $key password hash in internal password list.
@@ -478,10 +477,10 @@ function PrepareWrite_page(&$redir)
   # $todo_plugin is for tasks added in WritePage() by plugins via hook.
   $todo_plugin = $work_dir.'todo_bonus';
 
-  return NewTemp('WritePage(\''.$title.'\',\''.$todo_plugin.'\',\''.$t0. '\','.
-                       '\''.$t1.'\',\''.$t2.'\',\''.$t3.'\',\''.$t4.'\',\''.$t5.
-                                                                     '\');'.$nl.
-                 'WorkTodo(\''.$todo_plugin.'\');'); }
+  # Return todo file text.
+  return 'WritePage(\''.$title.'\',\''.$todo_plugin.'\',\''.$t0.'\',\''.$t1.
+                     '\',\''.$t2.'\',\''.$t3.'\',\''.$t4.'\',\''.$t5.'\');'.$nl.
+         'WorkTodo(\''.$todo_plugin.'\');'; }
 
 function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo, 
                    $path_tmp_page, $path_src_text, $path_src_author,
