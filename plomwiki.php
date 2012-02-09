@@ -6,7 +6,7 @@
 
 # Filesystem information.
 $config_dir = 'config/';            $markup_list_path = $config_dir.'markups';
-$plugin_dir = 'plugins/';           $pw_path          = $config_dir.'password';
+$plugin_dir = 'plugins/';           $pw_path          = $config_dir.'passwords';
 $pages_dir  = 'pages/';             $plugin_list_path = $config_dir.'plugins';
 $diff_dir   = $pages_dir.'diffs/';     $work_dir      = 'work/';
 $del_dir    = $pages_dir.'deleted/';   $work_temp_dir = $work_dir.'temp/';
