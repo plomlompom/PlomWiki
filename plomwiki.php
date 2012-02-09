@@ -179,29 +179,6 @@ function Action_page_revert()
   $l['content']= $form;
   OutputHTML(); }
   
-####################################
-# Page text manipulation functions #
-####################################
-
-function Markup($text)
-# Applying markup functions in the order described by markups file to $text.
-{ global $markup_list_path; 
-  $lines = ReadAndTrimLines($markup_list_path);
-  foreach ($lines as $line)
-    $text = $line($text);
-  return $text; }
-
-function Sanitize($text)
-# Remove $esc from text and magical_quotes horrors.
-{ global $esc;
-  if (get_magic_quotes_gpc())
-    $text = stripslashes($text);
-  return str_replace($esc, '', $text); }
-
-function EscapeHTML($text)
-# Replace symbols used by HTML. Correct ugly htmlspecialchars() formatting.
-{ return str_replace('&#039;', '&apos;', htmlspecialchars($text, ENT_QUOTES)); }
-
 ###########################
 #                         #
 #   D B   W R I T I N G   #
@@ -590,6 +567,13 @@ function GetUserAction($fallback = 'Action_page_view')
     $action_function = $fallback;
   return $action_function; }
 
+function Sanitize($text)
+# Remove $esc from text and magical_quotes horrors.
+{ global $esc;
+  if (get_magic_quotes_gpc())
+    $text = stripslashes($text);
+  return str_replace($esc, '', $text); }
+
 ##########
 # Output #
 ##########
@@ -648,6 +632,18 @@ function WorkScreenReload($redir = '')
        '<meta http-equiv="refresh" content="0'.$redir.'" />'.$nl.
        '<p>Working.</p>'; 
   exit(); }
+
+function Markup($text)
+# Applying markup functions in the order described by markups file to $text.
+{ global $markup_list_path; 
+  $lines = ReadAndTrimLines($markup_list_path);
+  foreach ($lines as $line)
+    $text = $line($text);
+  return $text; }
+
+function EscapeHTML($text)
+# Replace symbols used by HTML. Correct ugly htmlspecialchars() formatting.
+{ return str_replace('&#039;', '&apos;', htmlspecialchars($text, ENT_QUOTES)); }
 
 #########
 # Other #
