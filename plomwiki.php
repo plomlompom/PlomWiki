@@ -36,8 +36,8 @@ $title       = GetPageTitle();
   $diff_path = $diff_dir  .$title;
   $title_url = $title_root.$title; }
 
-# Allowed password keys: '*', pagenames and any "_"-preceded [a-z_] chars.
-$legal_pw_key = '\*|_[a-z_]+|'.$legal_title;
+# Allowed password keys: '*' plus what may be added by plugins.
+$legal_pw_key = '\*';
 
 # Insert plugins' code.
 foreach (ReadAndTrimLines($plugin_list_path) as $line) 
