@@ -493,7 +493,6 @@ function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo,
   $author          = file_get_contents($path_src_author);
   $summary         = file_get_contents($path_src_summary);
   $timestamp       = time();
-  $txt_PluginsTodo = '';
 
   # If 'delete', rename and timestamp page and its diff, move both to $del_dir.
   if ($text == 'delete')
@@ -503,39 +502,40 @@ function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo,
       $path_page_del = $del_dir.$title.',del-page-'.$timestamp;
       if (is_file($diff_path)) rename($diff_path, $path_diff_del);
       if (is_file($page_path)) rename($page_path, $path_page_del); } }
-    
-  else
-  { # Collect $old_text for diff generation. Abort if identical to $text.
-    $old_text = $esc;  # Code to PlomDiff() of $old_text having no lines at all.
-    if (is_file($page_path))
-      $old_text = file_get_contents($page_path);
-      
-    # This step should probably be deleted. But the plugins RecentChanges.php
-    # and AutoLink.php may need to be changed then, too.
-    if ($old_text == $text) return;
-    
-    # Diff to previous version, add to diff file.
-    $new_diff_id = 0;
-    $diff_add    = PlomDiff($old_text, $text);
-    if (is_file($diff_path))
-    { $diff_old    = file_get_contents($diff_path);
-      $diff_list   = DiffList($diff_path); 
-      $old_diff_id = 0;
-      foreach ($diff_list as $id => $diff_data)
-        if ($id > $old_diff_id)
-          $old_diff_id = $id;
-      $new_diff_id = $old_diff_id + 1; }
-    else
-      $diff_old = '';
-    eval($hook_WritePage_diff);         # The best place to construct a summary
-    if (!$summary) $summary = '?';      # from the diff, if so inclined.
-    $diff_new = $new_diff_id.$nl.$timestamp.$nl.$author.$nl.$summary.$nl.
-                $diff_add.'%%'.$nl.$diff_old;
 
-    # Safe overwriting of page & diff file. Tmp files' absences indicate: done.
+  else
+  { 
+	# Get diff to earlier version, add to old diffs, safely overwrite diff file.
     if (is_file($path_tmp_diff))
-    { file_put_contents($path_tmp_diff, $diff_new);
+    { 
+      # Collect $old_text for diff generation.
+      $old_text = $esc; # Code to PlomDiff(): $old_text has no lines at all.
+      if (is_file($page_path))
+        $old_text = file_get_contents($page_path);
+    
+      # Determine $diff_old and $new_diff_id based on previously existing diff.    
+      $new_diff_id = 0;
+      if (is_file($diff_path))
+      { $diff_old    = file_get_contents($diff_path);
+        $diff_list   = DiffList($diff_path); 
+        $old_diff_id = 0;
+        foreach ($diff_list as $id => $diff_data)
+          if ($id > $old_diff_id)
+            $old_diff_id = $id;
+        $new_diff_id = $old_diff_id + 1; }
+
+      # Determine new diff's text/metadata, add to $diff_old to get $diff_new.
+      $diff_add = PlomDiff($old_text, $text);
+      eval($hook_WritePage_diff); # Plugins may manipulate new diff's data here.
+      if (!$summary) $summary = '?';
+      $diff_new = $new_diff_id.$nl.$timestamp.$nl.$author.$nl.$summary.$nl.
+                  $diff_add.'%%'.$nl.$diff_old;
+
+      # Safely overwrite diff file.
+      file_put_contents($path_tmp_diff, $diff_new);
       rename($path_tmp_diff, $diff_path); }
+
+    # Page text is written *after* diff, for the diff work needs old page text.
     if (is_file($path_tmp_page))
     { file_put_contents($path_tmp_page, $text);
       rename($path_tmp_page, $page_path); } }
