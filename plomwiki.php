@@ -505,7 +505,7 @@ function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo,
 
   else
   { 
-	# Get diff to earlier version, add to old diffs, safely overwrite diff file.
+    # Get diff to earlier version, add to old diffs, safely overwrite diff file.
     if (is_file($path_tmp_diff))
     { 
       # Collect $old_text for diff generation.
