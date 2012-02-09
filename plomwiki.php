@@ -269,10 +269,10 @@ function WorkTodo($todo, $do_reload = FALSE)
       { fseek($p_todo, $pos);
         $call = substr($line, 0, -1);
         eval($call);
-        $finished = TRUE;
+        $WorkTodo_finished = TRUE;
         if (substr($call, 0, 9) == 'WorkTodo(')
-          eval('$finished = '.$call);
-        if ($finished)
+          eval('$WorkTodo_finished = '.$call);
+        if ($WorkTodo_finished)
         { fwrite($p_todo, '#');
           fgets($p_todo); } } }
 
@@ -282,9 +282,9 @@ function WorkTodo($todo, $do_reload = FALSE)
       unlink($todo);
     UnLock($todo); }
 
-  else return 'finished';
-
-  # Reload.
+  # No todo file or $do_reload? WorkTodo() may be a child process of itself.
+  else
+    return TRUE;
   if ($do_reload)
     WorkScreenReload(); }
 
