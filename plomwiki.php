@@ -331,12 +331,6 @@ function NewTemp($string = '')
   UnLock($work_temp_dir);
   return $temp_path; }
 
-function SafeWrite($path_original, $path_temp)
-# Avoid data corruption: Exit if no temp file. Rename, don't overwrite directly.
-{ if (!is_file($path_temp))    return;
-  if (is_file($path_original)) unlink($path_original); 
-  rename($path_temp, $path_original); }
-  
 #############
 # Passwords #
 #############
@@ -381,7 +375,8 @@ function PrepareWrite_admin_sets_pw(&$redir)
     $pw_file_text .= $key.':'.$pw.$nl;
 
   # Return todo file text.
-  return 'SafeWrite(\''.$pw_path.'\',\''.NewTemp($pw_file_text).'\');'; }
+  $tmp = NewTemp($pw_file_text);
+  return 'if (is_file(\''.$tmp.'\')) rename(\''.$tmp.'\', \''.$pw_path.'\');'; }
   
 function CheckPW($key, $pw_posted, $target)
 # Check if hash of $pw_posted fits $key password hash in internal password list.
