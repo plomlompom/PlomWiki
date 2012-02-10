@@ -426,6 +426,7 @@ function PrepareWrite_page(&$redir)
          $title_url, $todo_urgent, $work_dir;
   $redir   = $title_url;
   $text    = Sanitize($_POST['text']);
+  $time    = time();
   $summary = str_replace($nl, '', Sanitize($_POST['summary']));
   $author  = str_replace($nl, '', Sanitize($_POST['author'] ));
   if (!$author) $author  = '?';
@@ -451,12 +452,12 @@ function PrepareWrite_page(&$redir)
 
   # Return todo file text.
   return 'WritePage(\''.$title.'\',\''.$todo_plugin.'\',\''.$t0.'\',\''.$t1.
-                     '\',\''.$t2.'\',\''.$t3.'\',\''.$t4.'\',\''.$t5.'\');'.$nl.
+          '\',\''.$t2.'\',\''.$t3.'\',\''.$t4.'\',\''.$t5.'\', '.$time.');'.$nl.
          'WorkTodo(\''.$todo_plugin.'\');'; }
 
 function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo, 
                    $path_tmp_page, $path_src_text, $path_src_author,
-                   $path_src_summary)
+                   $path_src_summary, $timestamp)
 # Write text found at $path_src_text to page $title. Safely trigger file writing
 # actions only according to (non-)existence of appropriate $path_tmp_[…] files.
 # Use texts found at $path_src_author & $path_src_summary as diff descriptions. 
@@ -469,7 +470,6 @@ function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo,
   $text      = file_get_contents($path_src_text);
   $author    = file_get_contents($path_src_author);
   $summary   = file_get_contents($path_src_summary);
-  $timestamp = time();
 
   # If 'delete', rename and timestamp page and its diff, move both to $del_dir.
   if ($text == 'delete')
