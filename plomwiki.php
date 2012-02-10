@@ -443,7 +443,7 @@ function PrepareWrite_page(&$redir)
     ErrorFail($esc.'MaxSizeText'.$esc.$page_max_length);
 
   # Reserve empty temporary files for WritePage(), and temp files with strings.
-  $t0 = NewTemp(); $t1 = NewTemp(); $t2 = NewTemp();
+  $t0 = NewTemp();      $t1 = NewTemp();        $t2 = NewTemp();
   $t3 = NewTemp($text); $t4 = NewTemp($author); $t5 = NewTemp($summary);
 
   # $todo_plugin is for tasks added in WritePage() by plugins via hook.
@@ -517,7 +517,7 @@ function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo,
     { file_put_contents($path_tmp_page, $text);
       rename($path_tmp_page, $page_path); } }
 
-  # Add $txt_PluginTodo to $todo_plugin for plugin actions added via hook.
+  # Add $txt_PluginTodo to $todo_plugins for plugin actions added via hook.
   eval($hook_WritePage);
   if (is_file($path_tmp_PluginsTodo))
   { file_put_contents($path_tmp_PluginsTodo, $txt_PluginsTodo);
