@@ -105,9 +105,10 @@ function Action_page_edit()
                             '<input name="auth" type="hidden" value="*" />'.$nl.
           '<input type="submit" value="OK" />'.$nl.'</form>';
   
+  # Plugins may add stuff via $hook_action_page_edit and $add.
   eval($hook_Action_page_edit);
   $l['title'] = $esc.'Editing'.$esc.': "'.$title.'"';
-  $l['content'] = $form.$content;
+  $l['content'] = $form.$add;
   OutputHTML(); }
 
 function Action_page_history()
