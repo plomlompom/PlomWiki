@@ -536,7 +536,6 @@ function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo,
 function ReadAndTrimLines($path)
 # Read file $path into a list of all lines sans comments and ending whitespaces.
 { global $nl;
-
   $lines = explode($nl, file_get_contents($path));
   $list = array(); 
   foreach ($lines as $line)
