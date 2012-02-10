@@ -203,9 +203,6 @@ function Action_write()
   else 
     ErrorFail($esc.'InvalidTarget'.$esc);
 
-  # Write temporay todo file, with a trailing newline as WorkTodo() expects.
-  $todo_tmp = NewTemp($todo_txt.$nl);
-
   # Give a redir URL more harmless than a write action page if $redir is empty.
   if (empty($redir))
     $redir = $root_rel;
@@ -215,14 +212,14 @@ function Action_write()
     ErrorFail($esc.'AuthFail'.$esc);
 
   # Atomic writing of new $todo_urgent file.
-  rename($todo_tmp, $todo_urgent);
+  rename(NewTemp($todo_txt), $todo_urgent);
 
   # Final HTML.
   WorkScreenReload($redir); }
 
 function WorkTodo($todo, $do_reload = FALSE)
 # Work through todo file. Comment out finished lines. Delete file when finished.
-{ global $max_exec_time, $now;
+{ global $max_exec_time, $nl, $now;
 
   if (is_file($todo))
   { # Lock todo file while working on it.
@@ -238,18 +235,18 @@ function WorkTodo($todo, $do_reload = FALSE)
       { $stop_by_time = TRUE;
         break; }
     
-      # Eval lines not commented out. Comment out lines worked through, except
-      # for unfinished WorkTodo's.
+      # Eval / work through lines not empty or commented out. Comment out lines
+      # once worked through, except for unfinished WorkTodo's.
       $pos  = ftell($p_todo);
       $line = fgets($p_todo);
-      if ($line[0] !== '#')
+      if ($line[0] !== '#' and $line[0] !== $nl)
       { fseek($p_todo, $pos);
-        $call = substr($line, 0, -1);
-        eval($call);
-        $WorkTodo_finished = TRUE;
-        if (substr($call, 0, 9) == 'WorkTodo(')
-          eval('$WorkTodo_finished = '.$call);
-        if ($WorkTodo_finished)
+        $NoUnfinishedTodo = TRUE;
+        if (substr($line, 0, 9) == 'WorkTodo(') # Note: Any WorkTodo() call MUST
+          eval('$NoUnfinishedTodo = '.$line);   # start at the line beginning.
+        else
+          eval($line);
+        if ($NoUnfinishedTodo)
         { fwrite($p_todo, '#');
           fgets($p_todo); } } }
 
