@@ -575,8 +575,8 @@ function Sanitize($text)
 ##########
 
 function ErrorFail($msg)
-# Fail and output error $msg.
-{ global $esc, $hook_ErrorFail, $l, $nl;
+# Fail and output error $msg. Exit no matter what.
+{ global $esc, $hook_ErrorFail, $l;
   eval($hook_ErrorFail);
   $l['title'] = $esc.'Error'.$esc; $l['content'] = $msg;
   OutputHTML(); 
