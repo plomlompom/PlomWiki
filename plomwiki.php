@@ -192,8 +192,12 @@ function Action_page_revert()
 function Action_write()
 # User writing to DB. Expects password $_POST['pw'] and target type $_GET['t'],
 # which determines the function shaping the details (like what to write where).
-{ global $esc, $nl, $nl2, $root_rel, $todo_urgent; 
+{ global $esc, $nl, $root_rel, $todo_urgent; 
   $pw = $_POST['pw']; $auth = $_POST['auth']; $t = $_GET['t'];
+
+  # Password check.
+  if (!CheckPW($auth, $pw, $t))
+    ErrorFail($esc.'AuthFail'.$esc);
 
   # Target type chooses writing preparation function, gets variables from it.
   $task_write_list = array();
@@ -206,10 +210,6 @@ function Action_write()
   # Give a redir URL more harmless than a write action page if $redir is empty.
   if (empty($redir))
     $redir = $root_rel;
-
-  # Password check.
-  if (!CheckPW($auth, $pw, $t))
-    ErrorFail($esc.'AuthFail'.$esc);
 
   # Atomic writing of new $todo_urgent file.
   rename(NewTemp($todo_txt), $todo_urgent);
