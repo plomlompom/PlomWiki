@@ -297,7 +297,7 @@ function NewTemp($string = '')
 
   # Build new highest-number $temp_path, write $string into it.
   $new_max_int = max($tempfiles) + 1;
-  $temp_path = $work_temp_dir.$new_max_int;
+  $temp_path   = $work_temp_dir.$new_max_int;
   file_put_contents($temp_path, $string);
 
   # As our change to $work_temp_dir's filename list is finished, unlock dir.
