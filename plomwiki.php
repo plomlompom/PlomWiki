@@ -464,12 +464,12 @@ function WritePage($title, $todo_plugins, $path_tmp_diff, $path_tmp_PluginsTodo,
 # $txt_PluginTodo; WorkTodo() on $todo_plugin needs to be called externally.
 { global $del_dir, $diff_dir, $esc, $hook_WritePage, $hook_WritePage_diff, $nl,
          $pages_dir;
-  $page_path       = $pages_dir.$title; 
-  $diff_path       = $diff_dir .$title;
-  $text            = file_get_contents($path_src_text);
-  $author          = file_get_contents($path_src_author);
-  $summary         = file_get_contents($path_src_summary);
-  $timestamp       = time();
+  $page_path = $pages_dir.$title; 
+  $diff_path = $diff_dir .$title;
+  $text      = file_get_contents($path_src_text);
+  $author    = file_get_contents($path_src_author);
+  $summary   = file_get_contents($path_src_summary);
+  $timestamp = time();
 
   # If 'delete', rename and timestamp page and its diff, move both to $del_dir.
   if ($text == 'delete')
