@@ -578,8 +578,7 @@ function ErrorFail($msg)
 # Fail and output error $msg.
 { global $esc, $hook_ErrorFail, $l, $nl;
   eval($hook_ErrorFail);
-  $text = $msg;
-  $l['title'] = $esc.'Error'.$esc; $l['content'] = $text;
+  $l['title'] = $esc.'Error'.$esc; $l['content'] = $msg;
   OutputHTML(); 
   exit(); }
 
