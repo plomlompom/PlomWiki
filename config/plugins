@@ -1,9 +1,5 @@
 # Insert relative paths to plugin files here. Comment out with #.
 
-# Needed for a minimal PlomWiki. Only comment out if you have a replacement.
-plugins/DefaultVars.php
-plugins/DefaultDesign.php
-
 # You'll probably want to have *some* wiki markup functions.
 plugins/StandardMarkup.php
 
