@@ -75,8 +75,7 @@ if (!$title)
   ErrorFail('IllegalPageTitle');
 
 # Get user action, execute it; give plugins a chance to hook in before.
-$action = $_GET['action'];
-$action = 'Action_'.$action;
+$action = 'Action_'.$_GET['action'];
 if (!function_exists($action))           # If no appropriate function is
   $action = 'Action_page_view';          # found, use harmless fallback.
 eval($hook_before_action);
