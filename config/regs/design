@@ -1,0 +1,97 @@
+§
+pageview_params§
+§
+Action_page_edit_TextareaRows§20
+§
+css_class§default
+§
+ActionLinks_page§<a href="plomwiki.php?title=§page_title§&amp;action=page_view§pageview_params§">§View§</a> 
+<a href="plomwiki.php?title=§page_title§&amp;action=page_edit">§Edit§</a> 
+<a href="plomwiki.php?title=§page_title§&amp;action=page_history">§History§</a> 
+
+§
+design§<!DOCTYPE html>
+<meta charset="UTF-8">
+<style type="text/css">
+textarea { font-family: monospace; width:100%; }
+.default { padding: 10px; padding-top: 0px; }
+.fail { font-weight: bold; }
+.history pre { white-space: pre-wrap; text-indent:-12pt; margin-top:0px; margin-bottom:0px; padding-left: 20px; }
+.diff_text { margin-left:12pt; }
+.diff_desc { padding: 10px; text-indent:-8pt; }
+</style>
+<title>§title§</title>
+§head§
+PlomWiki BETA: 
+<a href="plomwiki.php?title=Start§pageview_params§">§JumpStart§</a> 
+<a href="plomwiki.php?action=set_pw_admin">§SetAdminPW§</a> 
+
+<h1>§title§</h1>
+<p>
+§ActionLinks_page§
+</p>
+<hr />
+<div class="§css_class§">§content§</div>
+§
+code§$hook_Action_page_edit    .= '$l["css_class"] = "edit";';
+$hook_Action_page_history .= '$l["css_class"] = "history";';
+$hook_ErrorFail           .= '$l["css_class"] = "default fail";';
+$hook_before_action       .= 'if (substr($action, 7, 5) !== "page_") $l["ActionLinks_page"] = "";';
+§
+redir§; URL=
+§
+WorkScreenReload§<!DOCTYPE html>
+<meta charset="UTF-8">
+<meta http-equiv="refresh" content="0§redir§" />
+<style type="text/css">
+body { background: black; color: white; }
+</style>
+<title>Working …</title>
+<body>
+<p>Working.</p>
+</body>
+§
+PageDisplayNone§§PageDontExist§ <a href="§title_url§&amp;action=page_edit">§PageCreate?§</a>
+§
+ActionPageEditForm§<form method="post" action="§title_url§&amp;action=write&amp;t=page">
+<textarea name="text" rows="§Action_page_edit_TextareaRows§">
+§text§</textarea>
+§Author§: <input name="author" type="text" />
+§Summary§: <input name="summary" type="text" />
+Admin §pw§: <input name="pw" type="password" /><input name="auth" type="hidden" value="*" />
+<input type="submit" value="OK" />
+</form>
+§
+i_diff§<div id="§i_id§" class="diff_desc">§i_time§: §i_summ§ (§i_auth§) (<a href="§title_url§&amp;action=page_revert&amp;id=§i_id§">§revert§</a>):</div>
+<div class="diff_text">
+§i_text§</div>
+
+§
+diff_meta§<pre style="background-color: #bbbbbb;">§line§</pre>
+
+§
+diff_ins§<pre style="background-color: #55ff55;">+ §line§</pre>
+
+§
+diff_del§<pre style="background-color: #ff5555;">- §line§</pre>
+
+§
+ActionPageHistoryTitle§§History§: "§page_title§"
+§
+ActionPageRevertForm§<form method="post" action="§title_url§&amp;action=write&amp;t=page">
+<input type="hidden" name="text" value="§text§">
+<input type="hidden" name="summary" value="revert">
+Admin §pw§: <input name="pw" type="password" />
+<input name="auth" type="hidden" value="*" />
+<input type="submit" value="OK" />
+</form>
+§
+ActionSetPwAdminForm§<form method="post" action="§title_url§&amp;action=write&amp;t=admin_sets_pw">
+§NewPWfor§ §admin§:<br />
+<input type="hidden" name="new_auth" value="*">
+<input type="password" name="new_pw" /><br />
+<input type="hidden" name="auth" value="*">
+§OldAdmin§ §pw§:<br />
+<input type="password" name="pw">
+<input type="submit" value="OK" />
+</form>
