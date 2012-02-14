@@ -43,23 +43,22 @@ $title_root = $root_rel.'?title=';
 $max_exec_time = ini_get('max_execution_time');
 $now           = time();
 
+# Regex for legal key names. '*' = admin key. Plugins may add via '|'.
+$legal_pw_key = '\*';
+    
 # Get page title, build dependent variables. $legal_title defines rules
 # for page titles: may consist of alphanum chars and hyphens. Violation
-# is be punished later. A harmless fallback replaces empty page titles. 
+# to be punished later. A harmless fallback replaces empty page titles. 
 $legal_title = '[a-zA-Z0-9-]+';
 $title       = $_GET['title'];
 if (!$title)
   $title     = 'Start';
 if (!preg_match('/^'.$legal_title.'$/', $title))
   $title     = '';
-$page_path = $pages_dir .$title;
-$diff_path = $diff_dir  .$title;
-$title_url = $title_root.$title;  
 $l['page_title'] = $title;
-$l['title_url']  = $title_url;
-
-# Regex for legal key names. '*' = admin key. Plugins may add via '|'.
-$legal_pw_key = '\*';
+$page_path       = $pages_dir.$title;
+$diff_path       = $diff_dir.$title;
+$l['title_url']  = $title_root.$title;
 
 # Add/execute code via $l['code'] and plugin files named in plugin list.
 eval($l['code']);
@@ -70,7 +69,7 @@ foreach (ReadAndTrimLines($plugin_list_path) as $line)
 if (is_file($todo_urgent))
   WorkTodo($todo_urgent, TRUE);
 
-# Fail if GetPageTitle() returned NULL due to failing $legal_title rule.
+# Fail if GetPageTitle() returned '' due to failing $legal_title rule.
 if (!$title)
   ErrorFail('IllegalPageTitle');
 
@@ -87,23 +86,21 @@ $action();
 
 function Action_page_view() {
 # Formatted / marked-up display of a wiki page.
-  global $hook_Action_page_view, $l, $page_path, $title;
-  $l['title'] = $title;
+  global $l, $page_path;
+  $l['title'] = $l['page_title'];
   
   # Get file text. If none, show page creation invitation. Else, markup.
   if (is_file($page_path))
     $l['content'] = Markup(file_get_contents($page_path));
   else
-    $l['content'] = $l['PageDisplayNone'];
+    $l['content'] = $l['Action_page_view():none'];
 
-  # Before output of result, execute plugin hook.
-  eval($hook_Action_page_view);
   OutputHTML(); }
 
 function Action_page_edit() {
 # Output edit form to a page source text. Send results to ?action=write.
   global $hook_Action_page_edit, $l, $page_path;
-  $l['title'] = $l['ActionPageEditTitle'];
+  $l['title'] = $l['Action_page_edit():title'];
 
   # If no page file, start $text empty. Otherwise, escape evil chars.
   if (is_file($page_path)) 
@@ -112,7 +109,7 @@ function Action_page_edit() {
     $l['text'] = '';
 
   # HTML of edit form.
-  $form = $l['ActionPageEditForm'];
+  $form = $l['Action_page_edit():form'];
   
   # Plugins may add stuff via $hook_action_page_edit and $add.
   eval($hook_Action_page_edit);
@@ -122,10 +119,10 @@ function Action_page_edit() {
 function Action_page_history() {
 # Show version history of page (based on diff file), offer reverting.
   global $diff_path, $l, $nl;
-  $l['title']   = $l['ActionPageHistoryTitle']; 
+  $l['title']   = $l['Action_page_history():title']; 
 
   # Read in diff list from path; if none found, output fallback message.
-  $l['content'] = $l['PageNoHistory'];
+  $l['content'] = $l['Action_page_history():none'];
   if (is_file($diff_path)) 
     $diff_list = DiffList($diff_path);
 
@@ -135,21 +132,24 @@ function Action_page_history() {
     foreach ($diff_list as $id => $diff_data) {
 
       # Move diff data into temporary $l values, to be applied at each
-      # cycle's end into $l['i_diff'] via ReplaceEscapedVariables().
-      $l['i_id']   = $id;
-      $l['i_time'] = date('Y-m-d H:i:s', (int) $diff_data['time']);
-      $l['i_auth'] = EscapeHTML($diff_data['author']);
-      $l['i_summ'] = EscapeHTML($diff_data['summary']);
-      $l['i_text'] = '';
+      # cycle's end into $l['i_diff'] via ReplaceEscapedVars().
+      $l['diff_id']   = $id;
+      $l['diff_time'] = date('Y-m-d H:i:s', (int) $diff_data['time']);
+      $l['diff_auth'] = EscapeHTML($diff_data['author']);
+      $l['diff_summ'] = EscapeHTML($diff_data['summary']);
+      $l['diff_text'] = '';
       foreach (explode($nl, $diff_data['text']) as $line_n => $line) {
-        if     ($line[0] == '>') $theme = 'diff_ins';
-        elseif ($line[0] == '<') $theme = 'diff_del';
-        else                     $theme = 'diff_meta';
+        if     ($line[0] == '>')
+          $theme = 'Action_page_history():diff_ins';
+        elseif ($line[0] == '<')
+          $theme = 'Action_page_history():diff_del';
+        else
+          $theme = 'Action_page_history():diff_meta';
         if ($line[0] == '<' or $line[0] == '>') 
           $line = EscapeHTML(substr($line, 1));
         $l['line'] = $line;
-        $l['i_text'] .= ReplaceEscapedVariables($l[$theme]); }
-      $diffs[]     = ReplaceEscapedVariables($l['i_diff']); }
+        $l['diff_text'] .= ReplaceEscapedVars($l[$theme]); }
+      $diffs[] = ReplaceEscapedVars($l['Action_page_history():diff']); }
 
     $l['content'] = implode($nl, $diffs); }
   OutputHTML(); }
@@ -162,7 +162,7 @@ function Action_page_revert() {
   $id        = $_GET['id'];
   $diff_list = DiffList($diff_path);
   if (!$diff_list[$id]['time'])
-    ErrorFail('InvalidRevertPoint');
+    ErrorFail('Action_page_revert():invalid');
   $l['time'] = date('Y-m-d H:i:s', (int) $diff_list[$id]['time']);
 
   # Reverse-patch $text back through $diff_list until $i hits $id.
@@ -174,8 +174,8 @@ function Action_page_revert() {
   $l['text'] = EscapeHTML($text);
 
   # Output.
-  $l['title']  = $l['ActionPageRevertTitle'];
-  $l['content']= $l['ActionPageRevertForm'];
+  $l['title']  = $l['Action_page_revert():title'];
+  $l['content']= $l['Action_page_revert():form'];
   OutputHTML(); }
   
 ########################################################################
@@ -194,14 +194,14 @@ function Action_write() {
 
   # Password check, for every DB writing the user requests.
   if (!CheckPW($auth, $pw, $t))
-    ErrorFail('AuthFail');
+    ErrorFail('Action_write():AuthFail');
 
   # Choose (according to "t="), execute function to build writing tasks.
   $prep_func = 'PrepareWrite_'.$t;
   if (function_exists($prep_func))
     $todo_txt = $prep_func($redir);
   else 
-    ErrorFail('InvalidTarget');
+    ErrorFail('Action_write():InvalidTarget');
 
   # If $redir URL was not determined, define the most harmless one.
   if (empty($redir))
@@ -269,7 +269,7 @@ function Lock($path) {
   if (is_file($lock)) {
     $time = file_get_contents($lock);
     if ($time + $l['lock_dur'] > $now)
-      ErrorFail('Locked'); }
+      ErrorFail('Lock():locked'); }
   file_put_contents($lock, $now); }
 
 function UnLock($path) {
@@ -306,8 +306,8 @@ function NewTemp($string = '') {
 function Action_set_pw_admin() {
 # Display page / form for setting new admin password.
   global $l;
-  $l['title']   = $l['ActionSetPwAdminTitle']; 
-  $l['content'] = $l['ActionSetPwAdminForm'];
+  $l['title']   = $l['Action_set_pw_admin():title']; 
+  $l['content'] = $l['Action_set_pw_admin():form'];
   OutputHTML(); }
   
 function PrepareWrite_admin_sets_pw() {
@@ -318,11 +318,11 @@ function PrepareWrite_admin_sets_pw() {
   $new_pw   = $_POST['new_pw'];
   $new_auth = $_POST['new_auth'];
   if (!$new_pw)
-    ErrorFail('EmptyPW');
+    ErrorFail('Action_set_pw_admin():EmptyPW');
   if (!$new_auth)
-    ErrorFail('EmptyAuth');
+    ErrorFail('Action_set_pw_admin():EmptyAuth');
   if (!preg_match('/^('.$legal_pw_key.')$/', $new_auth))
-    ErrorFail('InvalidPWKey');
+    ErrorFail('Action_set_pw_admin():InvalidPWKey');
 
   # Splice new password hash into text of password file at $pw_path.
   $passwords            = ReadPasswordList($pw_path);
@@ -376,7 +376,7 @@ function ReadPasswordList($path) {
 
   # Trigger error if password file is not found / empty.
   if (!$content)
-    ErrorFail('NoPWfile');
+    ErrorFail('ReadPasswordList():NoPWfile');
   
   # Build $passwords list from file's $content.
   $passwords = array();
@@ -412,13 +412,13 @@ function PrepareWrite_page(&$redir) {
   if (is_file($page_path))
     $old_text = file_get_contents($page_path);
   if (!$text)         
-    ErrorFail('NoEmptyPage');
+    ErrorFail('PrepareWrite_page():NoEmptyPage');
   if ($text == $old_text)  
-    ErrorFail('NothingChanged');
+    ErrorFail('PrepareWrite_page():NothingChanged');
   if (count(explode($nl, $text)) > $l['page_max_lines'])
-    ErrorFail('MaxLinesText');
+    ErrorFail('PrepareWrite_page():MaxLinesText');
   if (strlen($text) > $l['page_max_length'])
-    ErrorFail('MaxSizeText');
+    ErrorFail('PrepareWrite_page():MaxSizeText');
 
   # Temp files for WritePage(), some empty, some for dangerous strings.
   $t0 = NewTemp();
@@ -616,20 +616,20 @@ function WorkScreenReload($redir = '') {
 
   # $l["WorkScreenReload"] has a placeholder for $l['redir']; so set it.
   if (!empty($redir))
-    $redir = $l['redir'].$redir;
-  $l['redir'] = $redir;
+    $redir = $l['WorkScreenReload():redir'].$redir;
+  $l['WorkScreenReload():redir'] = $redir;
 
   # Apply $l["WorkScreenReload"] as design for OutputHTML() and exit.
-  $l['design'] = $l['WorkScreenReload'];
+  $l['design'] = $l['WorkScreenReload():design'];
   OutputHTML();
   exit(); }
 
 function ErrorFail($msg) {
 # Fail and output error $msg. Exit no matter what.
   global $hook_ErrorFail, $l;
-  eval($hook_ErrorFail);
-  $l['title']   = $l['Error'];
+  $l['title']   = $l['ErrorFail():title'];
   $l['content'] = $l[$msg];
+  eval($hook_ErrorFail);
   OutputHTML();
   exit(); }
 
@@ -637,10 +637,10 @@ function OutputHTML() {
 # Generate final HTML output by filling $l['design'] with content.
   global $esc, $l;
   while (FALSE !== strpos($l['design'], $esc))
-    $l['design'] = ReplaceEscapedVariables($l['design']);
+    $l['design'] = ReplaceEscapedVars($l['design']);
   echo $l['design']; }
 
-function ReplaceEscapedVariables($string) {
+function ReplaceEscapedVars($string) {
 # Replace substrings of $string delimited by $esc with values from $l.
   global $esc, $l; 
   $vars = array();
@@ -815,12 +815,12 @@ function PlomPatch($text_A, $diff) {
              if (!strpos($left, ',')) 
                $left               = $left.','.$left;
              list($start, $end)    = explode(',', $left);
-             $action = 'd'.$start;
-             $patch[$action] = $end; }
+             $action               = 'd'.$start;
+             $patch[$action]       = $end; }
     elseif (strpos($action_tmp, 'a')) {
              list($start, $ignore) = explode('a', $action_tmp);
              $action               = 'a'.$start;
-             $patch[$action] = $lines; }
+             $patch[$action]       = $lines; }
     elseif (strpos($action_tmp, 'c')) {
              list($left, $right)   = explode('c', $action_tmp);
              if (!strpos($left, ','))

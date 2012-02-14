@@ -1,72 +1,76 @@
 §
-admin§admin
+WikiTitle§PlomWiki BETA
 §
-AuthFail§Authentication failure.
+JumpStart§Jump to Start page
 §
-Author§Author
+SetAdminPW§Set admin password
 §
-ChangePWfor§Changing password for
+View§View
 §
 Edit§Edit
-§
-Editing§Editing
-§
-EmptyAuth§Not told what to set password for.
-§
-EmptyPW§Empty password not allowed.
-§
-Error§Error
 §
 History§History
 §
 IllegalPageTitle§Illegal page title. Only alphanumeric characters and "-" allowed.
 §
-InvalidTarget§No known target type specified.
-§
-InvalidPWKey§Invalid password key.
-§
-InvalidRevertPoint§Invalid revert point.
-§
-JumpStart§Jump to Start page
-§
-Locked§Stuck by a lockfile of too recent a timestamp. Try a bit later. Lock effective for (seconds): §lock_dur§
-§
-MaxLinesText§Number of lines in text must not exceed: §page_max_lines§
-§
-MaxSizeText§Size of text must not exceed: §page_max_length§
-§
-NewPWfor§New password for
-§
-NoEmptyPage§Empty pages not allowed. Replace text with "delete" to delete the page.
-§
-NoPWfile§No valid password file found.
-§
-NothingChanged§You changed nothing!
-§
-OldAdmin§Old admin
-§
-PageCreate?§Create page?
+Action_page_view():none§§PageDontExist§ <a href="§title_url§&amp;action=page_edit">§PageCreate?§</a>
 §
 PageDontExist§Page doesn't exist.
 §
-PageNoHistory§Page has no history.
+PageCreate?§Create page?
 §
-pw§password
+Action_page_history():none§Page has no history.
 §
-revert§revert
+Action_page_edit():title§§Editing§: "§page_title§"
 §
-Reverting§Reverting
+Editing§Editing
 §
-RevertToBefore§Revert page to before 
-§
-SetAdminPW§Set admin password
+Author§Author
 §
 Summary§Summary
 §
-View§View
+pw§password
 §
-ActionPageEditTitle§§Editing§: "§page_title§"
+Action_page_history():title§§History§: "§page_title§"
 §
-ActionPageRevertTitle§§RevertToBefore§ §time§?
+revert§revert
 §
-ActionSetPwAdminTitle§§ChangePWfor§ §admin§
+Action_page_revert():title§§RevertToBefore§ §time§?
+§
+RevertToBefore§Revert page to before 
+§
+Action_page_revert():invalid§Invalid revert point.
+§
+Action_write():AuthFail§Authentication failure.
+§
+Action_write():InvalidTarget§No known target type specified.
+§
+Lock():locked§Stuck by a lockfile of too recent a timestamp. Try a bit later. Lock effective for (seconds): §lock_dur§
+§
+Action_set_pw_admin():title§§ChangePWfor§ §admin§
+§
+ChangePWfor§Changing password for
+§
+admin§admin
+§
+Action_set_pw_admin():EmptyAuth§Not told what to set password for.
+§
+Action_set_pw_admin():EmptyPW§Empty password not allowed.
+§
+Action_set_pw_admin():InvalidPWKey§Invalid password key.
+§
+NewPWfor§New password for
+§
+OldAdmin§Old admin
+§
+ReadPasswordList():NoPWfile§No valid password file found.
+§
+PrepareWrite_page():MaxLinesText§Number of lines in text must not exceed: §page_max_lines§
+§
+PrepareWrite_page():MaxSizeText§Size of text must not exceed: §page_max_length§
+§
+PrepareWrite_page():NoEmptyPage§Empty pages not allowed. Replace text with "delete" to delete the page.
+§
+PrepareWrite_page():NothingChanged§You changed nothing!
+§
+ErrorFail():title§Error
