@@ -110,11 +110,7 @@ function Action_page_edit() {
     $l['text'] = '';
 
   # HTML of edit form.
-  $form = $l['Action_page_edit():form'];
-  
-  # Plugins may add stuff via $hook_action_page_edit and $add.
-  eval($hook_Action_page_edit);
-  $l['content'] = $form.$add;
+  $l['content'] = $l['Action_page_edit():form'];
   OutputHTML(); }
 
 function Action_page_history() {
