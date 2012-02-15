@@ -37,8 +37,8 @@ $l = ReadReg($reg_design, $l);
 $l = ReadReg($reg_phrases, $l);
 
 # Snippets used for URL generation.
-$root_rel   = 'plomwiki.php';
-$title_root = $root_rel.'?title=';
+$root_rel        = 'plomwiki.php';
+$l['title_root'] = $root_rel.'?title=';
 
 # These help to know when to orderly end before being killed by server. 
 $max_exec_time = ini_get('max_execution_time');
@@ -59,7 +59,7 @@ if (!preg_match('/^'.$legal_title.'$/', $title))
 $l['page_title'] = $title;
 $page_path       = $pages_dir.$title;
 $diff_path       = $diff_dir.$title;
-$l['title_url']  = $title_root.$title;
+$l['title_url']  = $l['title_root'].$title;
 
 # Add/execute code via $l['code'] and plugin files named in plugin list.
 eval($l['code']);

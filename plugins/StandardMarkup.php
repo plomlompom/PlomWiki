@@ -4,7 +4,6 @@
 # Provides the PlomWiki standard markup, via a regex-based engine.
 
 # Provide help message to be shown in editing window.
-$l['title_root'] = $title_root;
 $l = ReadReg($plugin_regs_dir.'StandardMarkup', $l);
 $l['Action_page_edit():form'] .= $l['markup_help'];
 
