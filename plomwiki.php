@@ -16,6 +16,7 @@ $pages_dir              = 'pages/';
 $diff_dir               = $pages_dir.'diffs/';
 $del_dir                = $pages_dir.'deleted/';
 $plugin_dir             = 'plugins/';
+$plugin_regs_dir        = $plugin_dir.'regs/';
 $setup_file             = 'setup.php';
 $work_dir               = 'work/';
 $todo_urgent            = $work_dir.'todo_urgent';

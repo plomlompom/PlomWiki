@@ -5,7 +5,7 @@
 
 # Provide help message to be shown in editing window.
 $l['title_root'] = $title_root;
-$l = ReadReg($plugin_dir.'regs/StandardMarkup', $l);
+$l = ReadReg($plugin_regs_dir.'StandardMarkup', $l);
 $l['Action_page_edit():form'] .= $l['markup_help'];
 
 # Escape marks. Remember $esc is stripped from any page texts.
