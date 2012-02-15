@@ -21,7 +21,7 @@ $esc_store = array();
 
 function MarkupLinks($text)
 # [[LinkedPagename]], [[Linked|Text displayed]], [[http://example.com]].
-{ global $esc, $nl, $title_root, $l, $legal_title, $pages_dir;
+{ global $esc, $nl, $l, $legal_title, $pages_dir;
   $legal_url = '(http|https|ftp):([A-Za-z0-9\.\-_~:/\?#\[\]@!\$&\'\(\)'.
                '\*\+,;=]|%[A-Fa-f0-9]{2})+';    # Stolen from erlehmann.
   $regex = '/\[\[([^'.$nl.']+?)]]/';
@@ -79,7 +79,7 @@ function MarkupLinks($text)
     { if ($page)
       { if (!is_file($pages_dir.$page)) 
           $style = 'style="color: red;" ';
-        $url = $title_root.$page; }
+        $url = $l['title_root'].$page; }
       $repl        = '<a '.$style.'href="'.$url.'">'.$desc.'</a>'; 
       $esc_store[] = $repl;
       $repl        = $esc_on.$esc_n.$esc_off;
