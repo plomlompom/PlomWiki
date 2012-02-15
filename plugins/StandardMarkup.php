@@ -1,27 +1,14 @@
 <?php
-# PlomWiki StandardMarkup
+# PlomWiki plugin: StandardMarkup
+# 
+# Provides the PlomWiki standard markup, via a regex-based engine.
 
 # Provide help message to be shown in editing window.
-$l['markup_help'] = '<h3>PlomWiki markup cheatsheet</h3>'.$nl.
-               '<p>In-line:</p>'.$nl
-              .'<pre style="white-space: pre-wrap;">[*<strong>strong</strong>*]'
-                   .' [/<em>emphasis</em>/] [-<del>deleted</del>-] [[<a href="'.
-               $title_root.'PagenameOrURL">PagenameOrURL</a>]] [[PagenameOrURL|'
-              .'<a href="'.$title_root.'PagenameOrURL">Text displayed instead</'
-                                 .'a>]] [=[/unformatted/] [*text*]=]</pre>'.$nl.
-               '<p>Multi-line:</p>'.$nl.'<pre>'.$nl.'!!!!!!] heading 1'.$nl.
-               '!!!!!] heading 1.1'.$nl.
-               '!!!!] heading 1.1.1 etc., down to !]'.$nl2.'*] list element'.$nl
-              .'  *] indented once'.$nl.'    *] indented twice'.$nl2.'[@'.$nl.
-               'preformatted'.$nl.'@]'.$nl.'</pre>';
-$hook_Action_page_edit .= '
-global $nl2; 
-$content .= $nl2.$esc.\'markup_help\'.$esc;';
+$l['title_root'] = $title_root;
+$l = ReadReg($plugin_dir.'regs/StandardMarkup', $l);
+$l['Action_page_edit():form'] .= $l['markup_help'];
 
-# Plug-ins may use this variable to add GET parameters to in-wiki page links.
-$l['pageview_params'] = '';
-
-# Escape marks. Remember $esc is stripped from any page text by plomwiki.php.
+# Escape marks. Remember $esc is stripped from any page texts.
 # A line starting with $esc escapes paragraphing by MarkupParagraphs().
 # $esc_{on,off,store} are used by MarkupEscape() and MarkupUnescape()
 # for the user-defined markup escaping via "[=...=]".
@@ -34,20 +21,23 @@ $esc_store = array();
 ##################
 
 function MarkupLinks($text)
-# [[LinkedPagename]], [[Linked|Text displayed]], [[http://linked-url.com]].
+# [[LinkedPagename]], [[Linked|Text displayed]], [[http://example.com]].
 { global $esc, $nl, $title_root, $l, $legal_title, $pages_dir;
-  $legal_url = '(http|https|ftp):([A-Za-z0-9\.\-_~:/\?#\[\]@!\$&\'\(\)\*\+,;=]|'.
-               '%[A-Fa-f0-9]{2})+'; # Taken in part from @erlehmann.
+  $legal_url = '(http|https|ftp):([A-Za-z0-9\.\-_~:/\?#\[\]@!\$&\'\(\)'.
+               '\*\+,;=]|%[A-Fa-f0-9]{2})+';    # Stolen from erlehmann.
   $regex = '/\[\[([^'.$nl.']+?)]]/';
-  $esc_store = array(); $esc_off = $esc.'}'; $esc_on = '{'.$esc; $esc_n = 0;
+  $esc_store = array();
+  $esc_off = $esc.'}';
+  $esc_on = '{'.$esc;
+  $esc_n = 0;
 
-  # Go through each potential linking markup and decide with what to replace it.
+  # Go through potential linking markup, decide with what to replace it.
   preg_match_all($regex, $text, $store);
   $store = $store[1];
   foreach ($store as $string)
   { $old  = '[['.$string.']]';
 
-    # Separate $string into $to_link and $desc, even if they're the same.
+    # Separate $string into $to_link & $desc, even if they're the same.
     $pos_sep = strpos($string, '|');
     if ($pos_sep)
     { $to_link = substr($string, 0, $pos_sep);
@@ -59,34 +49,38 @@ function MarkupLinks($text)
     if (preg_match('{^ *'.$legal_url.' *$}', $to_link))
       $to_link = str_replace(' ', '', $to_link);
 
-    # Try to force $to_link into $legal_title format if it's not URL-like.
-    $gaps    = array('&apos;', '&quot;', '&amp;', ';', ':', '\\', '/', ',', '.',
-                     ' ', '?', '!');
-    $umlauts = array(array('Ä', 'Ae'), array('Ö', 'Oe'), array('Ü', 'Ue'),
-                     array('ä', 'ae'), array('ö', 'oe'), array('ü', 'ue'), 
-                     array('ß', 'ss'));
+    # Try to force $to_link into $legal_title format if not URL-like.
+    $gaps    = array('&apos;', '&quot;', '&amp;', ';', ':', '\\', '/',
+                     ',', '.', ' ', '?', '!');
+    $umlauts = array(array('Ä','Ae'), array('Ö','Oe'), array('Ü','Ue'),
+                     array('ä','ae'), array('ö','oe'), array('ü','ue'), 
+                     array('ß','ss'));
     if (!preg_match('{^'.$legal_url.'$}', $to_link))
     { foreach ($umlauts as $umlaut) 
         $to_link = str_replace($umlaut[0], $umlaut[1], $to_link);
       foreach ($gaps as $gap)
         $to_link = str_replace($gap, ' ', $to_link);
-      $to_link = preg_replace('/ ([a-z])/e', 'strtoupper("$1")', $to_link); 
-      $to_link = str_replace(' ', '', $to_link); }
+      $to_link=preg_replace('/ ([a-z])/e','strtoupper("$1")',$to_link); 
+      $to_link=str_replace(' ', '', $to_link); }
 
     # Try collecting from $to_link HTML link parameters.
-    $link = TRUE; $page = FALSE;
-    if (preg_match('{^'.$legal_url.'$}', $to_link))       $url  = $to_link;
-    elseif (preg_match('/^'.$legal_title.'$/', $to_link)) $page = $to_link;
-    else                                                  $link = FALSE;
+    $link = TRUE;
+    $page = FALSE;
+    if (preg_match('{^'.$legal_url.'$}', $to_link))
+      $url  = $to_link;
+    elseif (preg_match('/^'.$legal_title.'$/', $to_link))
+      $page = $to_link;
+    else
+      $link = FALSE;
 
-    # If $link, build HTML link to replace markup; else, leave text unchanged.
-    # Don't replace right away but place markers to replace later.
+    # If $link, build HTML link to replace markup; else, leave text 
+    # unchanged. Don't replace now; place markers to replace later.
     $style = FALSE;
     if ($link)
     { if ($page)
       { if (!is_file($pages_dir.$page)) 
           $style = 'style="color: red;" ';
-        $url = $title_root.$page.$l['pageview_params']; }
+        $url = $title_root.$page; }
       $repl        = '<a '.$style.'href="'.$url.'">'.$desc.'</a>'; 
       $esc_store[] = $repl;
       $repl        = $esc_on.$esc_n.$esc_off;
@@ -97,7 +91,8 @@ function MarkupLinks($text)
 
   # Link URLs outside of linking markup.
   $text = preg_replace('{('.$legal_url.')}',
-                       '<a style="text-decoration: none;" href="$1">$1</a>',
+                       '<a style="text-decoration: none;" href="$1">$1'.
+                                                                 '</a>',
                        $text);
 
   # Replace linking markup markers with HTML link strings.
@@ -119,7 +114,7 @@ function MarkupDeleted($text)
 { return preg_replace('/\[-(.*?)-]/',   '<del>$1</del>',       $text); }
 
 function MarkupEscape($text)
-# Replace "[=This"=]" with $esc_{on,off}-escaped key to "This" in $escaped.
+# Replace "[=This"=]" with $esc_{on,off}-aped key to "This" in $escaped.
 { global $esc_off, $esc_on, $esc_store;
   $regex = '/\[=(.*?)=]/';
 
@@ -128,7 +123,7 @@ function MarkupEscape($text)
   preg_match_all($regex, $text, $store_tmp);
   $store_tmp = $store_tmp[1];
 
-  # Replace escapes in $text with placeholders for / keys to escaped strings.
+  # Replace escs in $text with placeholders for/keys to escaped strings.
   $offset = count($esc_store);
   foreach ($store_tmp as $n => $string)
   { $n += $offset;
@@ -157,17 +152,17 @@ function MarkupHeadings($text)
 # !] => <h6>...</h6>, !!] => <h5>...</h5>, !!!!!!] => <h1>...</h1>.
 { global $esc, $nl;
   $text = preg_replace('/(^|'.$nl.')!!!!!!] (.+)($|'.$nl.')/',
-                                            '$1'.$esc.'<h1>$2</h1>$3', $text);
+                                    '$1'.$esc.'<h1>$2</h1>$3', $text);
   $text = preg_replace('/(^|'.$nl.')!!!!!] (.+)($|'.$nl.')/',
-                                            '$1'.$esc.'<h2>$2</h2>$3', $text);
+                                    '$1'.$esc.'<h2>$2</h2>$3', $text);
   $text = preg_replace('/(^|'.$nl.')!!!!] (.+)($|'.$nl.')/',
-                                            '$1'.$esc.'<h3>$2</h3>$3', $text);
+                                    '$1'.$esc.'<h3>$2</h3>$3', $text);
   $text = preg_replace('/(^|'.$nl.')!!!] (.+)($|'.$nl.')/',
-                                            '$1'.$esc.'<h4>$2</h4>$3', $text);
+                                    '$1'.$esc.'<h4>$2</h4>$3', $text);
   $text = preg_replace('/(^|'.$nl.')!!] (.+)($|'.$nl.')/',     
-                                            '$1'.$esc.'<h5>$2</h5>$3', $text);
+                                    '$1'.$esc.'<h5>$2</h5>$3', $text);
   return  preg_replace('/(^|'.$nl.')!] (.+)($|'.$nl.')/',
-                                            '$1'.$esc.'<h6>$2</h6>$3', $text); }
+                                    '$1'.$esc.'<h6>$2</h6>$3', $text); }
 
 #####################
 # Multi-line markup #
@@ -180,14 +175,15 @@ function MarkupCode($text)
   $line_end   = '$|'.$nl;
   $regex      = '\[@(.*?)@]';
   
-  # For further modification, temporarily store marked up code in $store.
+  # For further modification, temporarily save marked up code in $store.
   $store = array();
   preg_match_all('/('.$line_start.')'.$regex.'('.$line_end.')/s', 
                  $text, $store);
   $store = $store[2];
 
-  # Escape $store'd lines. Replace marked up code with these, <pre>-format it.
-  # Solve some problems with symbols that are dangerous or confuse formatting.
+  # Escape $store'd lines. Replace marked up code with these, <pre>-
+  # format it. Solve some problems with symbols that are dangerous or
+  # confuse formatting.
   foreach ($store as $pre)
   { $pre  = str_replace('$', $esc.'dollar'.$esc, $pre);
     $pre  = str_replace('\\', $esc.'backslash'.$esc, $pre);
@@ -195,7 +191,8 @@ function MarkupCode($text)
                          $esc.'$1 ', $pre);
     $pre  = preg_replace('/^'.$esc.' '.$nl.$esc.'/', $esc, $pre);
     $pre  = preg_replace('/'.$esc.' $/', '', $pre);
-    $text = preg_replace('/(?<='.$line_start.')'.$regex.'(?='.$line_end.')/s', 
+    $text = preg_replace('/(?<='.$line_start.')'.$regex.'(?='.$line_end.
+                                                                  ')/s', 
                          $esc.'<pre>'.$nl.$pre.$nl.$esc.'</pre>', 
                          $text, $limit = 1); 
     $text = str_replace($esc.'backslash'.$esc, '\\', $text);
@@ -204,16 +201,17 @@ function MarkupCode($text)
   return $text; }
 
 function MarkupLists($text)
-# Lines starting with '*] ' preceded by multiples of double whitespace -> lists.
+# Lists: Lines started with '*] ' preceded by multiples of 2*whitespace.
 { global $nl, $esc;
   $li_on = '*] '; 
   $lines = explode($nl, $text);
-  $lines[] = ''; # Add virtual last line for backwards line-by-line comparisons.
+  $lines[] = ''; # Add last line for backwards line-by-line comparisons.
   $mark_list = $esc.'l'.$esc;
   $ln_mark = strlen($mark_list);
 
-  # Find lines marked as list elements. Search up to $failed_tries_limit depth.
-  # Transform any line identified into "$mark_list[depth]<li>[line text]</li>".
+  # Find lines marked as list elements. Search up to $failed_tries_limit
+  # depth. Transform any line identified into
+  # "$mark_list[depth]<li>[line text]</li>".
   $failed_tries_limit = 10;
   $ln_li_on = strlen($li_on); 
   $depth = 1;
@@ -232,7 +230,7 @@ function MarkupLists($text)
   # Nest lists elements into "<ul>"/"</ul>" by depth number differences.
   $lines_new = array();
   $n_new = -1;
-  $last_depth = 0;                 # $depth = 0 is assumed for non-list lines.
+  $last_depth = 0;           # $depth = 0 is assumed for non-list lines.
   foreach ($lines as $line)
   { $depth = 0;
     $is_list = FALSE;
@@ -242,7 +240,7 @@ function MarkupLists($text)
       
     # As depth ascends, add "<ul>" and "<li>" as needed.
     if ($depth > $last_depth)
-    { if ($last_depth != 0)        # If nested in list, delete previous "</li>".
+    { if ($last_depth != 0) # If nested in list, delete earlier "</li>".
         $lines_new[$n_new] = substr($lines_new[$n_new], 0, -5);
       for ($i = $last_depth; $i < $depth; $i++)
       { $lines_new[] = $mark_list.$i.'<ul> <li>'; $n_new++; }
@@ -254,8 +252,8 @@ function MarkupLists($text)
     { for ($i = $last_depth - 1; $i >= $depth; $i--)
       { $lines_new[] = $mark_list.$i.'</ul></li>'; $n_new++; }
       $lines_new[] = $line; $n_new++; 
-      if (!$is_list)               # If outside list, delete previous "</li>".
-        $lines_new[$n_new - 1] =  substr($lines_new[$n_new - 1], 0, -5); }
+      if (!$is_list)          # If outside list, delete earlier "</li>".
+        $lines_new[$n_new - 1] =  substr($lines_new[$n_new-1], 0, -5); }
 
     else
     { $lines_new[] = $line; $n_new++; }
@@ -275,15 +273,16 @@ function MarkupLists($text)
   return implode($nl, $lines_new); }
 
 function MarkupParagraphs($text)
-# Build paragraphs (& linebreaks therein) from lines not started by $esc.
+# Build paragraphs (& linebreaks therein) from lines not $esc-started.
 { global $nl, $esc;
   
-  # For line-by-line comparison reasons, add virtual, temporary last line.
+  # For line-by-line comparison reasons, add temporary last line.
   $lines   = explode($nl, $text);
   $lines[] = $esc;
 
-  # Empty p-lines coming before non-empty p-lines? Absorb to latter's paragraph.
-  # (Mark every empty line following a non-empty one as a paragraph break.)
+  # Empty p-lines coming before non-empty p-lines? Absorb to latter's
+  #  paragraph. (Mark every empty line following a non-empty one as a
+  # paragraph break.)
   $line_prev = '';
   foreach ($lines as $n => $line)
   { if ($line_prev != '' 
@@ -299,9 +298,9 @@ function MarkupParagraphs($text)
   { if ($line[0] != $esc)           # Line is a p-line.
       if ($line_prev[0] == $esc)      # First p-line, prepend '<p>'.
         $line = '<p>'.$line; 
-      else                                   # Later p-line, prepend '<br />'.
-        $lines_new[$n_new] .= '<br />';
-    elseif ($line_prev[0] != $esc) # Non-p-line after p-line? Add '</p>'.
+      else                                   # Later p-line, prepend 
+        $lines_new[$n_new] .= '<br />';      # '<br />'.
+    elseif ($line_prev[0] != $esc) # Non-p-line after p-line? Add '</p>'
       $lines_new[$n_new] .= '</p>';
     $line_prev = $line; 
     if ($line != $esc)

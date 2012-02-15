@@ -1,0 +1,19 @@
+§
+markup_help§
+<h3>PlomWiki markup cheatsheet</h3>
+<p>In-line:</p>
+<pre style="white-space: pre-wrap;">[*<strong>strong</strong>*] [/<em>emphasis</em>/] [-<del>deleted</del>-] [[<a href="§$title_root§PagenameOrURL">PagenameOrURL</a>]] [[PagenameOrURL|<a href="§$title_root§PagenameOrURL">Text displayed instead</a>]] [=[/unformatted/] [*text*]=]</pre>
+<p>Multi-line:</p>
+<pre>
+!!!!!!] heading 1
+!!!!!] heading 1.1
+!!!!] heading 1.1.1 etc., down to !]
+
+*] list element
+  *] indented once
+    *] indented twice
+    
+[@
+preformatted
+@]
+</pre>
