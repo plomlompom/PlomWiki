@@ -37,8 +37,8 @@ $l = ReadReg($reg_design, $l);
 $l = ReadReg($reg_phrases, $l);
 
 # Snippets used for URL generation.
-$root_rel        = 'plomwiki.php';
-$l['title_root'] = $root_rel.'?title=';
+$l['root_rel']   = 'plomwiki.php';
+$l['title_root'] = $l['root_rel'].'?title=';
 
 # These help to know when to orderly end before being killed by server. 
 $max_exec_time = ini_get('max_execution_time');
@@ -184,7 +184,7 @@ function Action_page_revert() {
 function Action_write() {
 # Trigger writing to DB. Expects password $_POST['pw'] and target type
 # $_GET['t'], determining which PrepareWrite_() function shapes details.
-  global $root_rel, $todo_urgent; 
+  global $l, $todo_urgent; 
   $pw   = $_POST['pw'];
   $auth = $_POST['auth'];
   $t    = $_GET['t'];
@@ -202,7 +202,7 @@ function Action_write() {
 
   # If $redir URL was not determined, define the most harmless one.
   if (empty($redir))
-    $redir = $root_rel;
+    $redir = $l['root_rel'];
 
   # Atomic writing of new $todo_urgent file with $todo_txt task list.
   rename(NewTemp($todo_txt), $todo_urgent);
