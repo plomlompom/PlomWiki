@@ -87,7 +87,7 @@ Action_set_pw_admin():form§<form method="post" action="§title_url§&amp;action
 §
 WorkScreenReload():design§<!DOCTYPE html>
 <meta charset="UTF-8">
-<meta http-equiv="refresh" content="0§WorkScreenReload:redir§" />
+<meta http-equiv="refresh" content="0§WorkScreenReload():redir§" />
 <style type="text/css">
 body { background: black; color: white; }
 </style>
