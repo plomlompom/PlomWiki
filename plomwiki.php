@@ -8,15 +8,15 @@ $config_dir             = 'config/';
 $markup_list_path       = $config_dir.'markups';
 $pw_path                = $config_dir.'passwords';
 $plugin_list_path       = $config_dir.'plugins';
-$reg_dir                = $config_dir.'regs/';
-$reg_config             = $reg_dir.'config';
-$reg_design             = $reg_dir.'design';
-$reg_phrases            = $reg_dir.'phrases';
+$strings_dir            = $config_dir.'strings/';
+$strings_config         = $strings_dir.'config';
+$strings_design         = $strings_dir.'design';
+$strings_phrases        = $strings_dir.'phrases';
 $pages_dir              = 'pages/';
 $diff_dir               = $pages_dir.'diffs/';
 $del_dir                = $pages_dir.'deleted/';
 $plugin_dir             = 'plugins/';
-$plugin_regs_dir        = $plugin_dir.'regs/';
+$plugin_strings_dir     = $plugin_dir.'strings/';
 $setup_file             = 'setup.php';
 $work_dir               = 'work/';
 $todo_urgent            = $work_dir.'todo_urgent';
@@ -32,13 +32,13 @@ if (is_file($setup_file))
   require($setup_file);
 
 # Read in registries: default values for configuration, HTML, phrases.
-$l = ReadReg($reg_config);
-$l = ReadReg($reg_design, $l);
-$l = ReadReg($reg_phrases, $l);
+$s = ReadStringsFile($strings_config);
+$s = ReadStringsFile($strings_design, $s);
+$s = ReadStringsFile($strings_phrases, $s);
 
 # Snippets used for URL generation.
-$l['root_rel']   = 'plomwiki.php';
-$l['title_root'] = $l['root_rel'].'?title=';
+$s['root_rel']   = 'plomwiki.php';
+$s['title_root'] = $s['root_rel'].'?title=';
 
 # These help to know when to orderly end before being killed by server. 
 $max_exec_time = ini_get('max_execution_time');
@@ -56,13 +56,13 @@ if (!$title)
   $title     = 'Start';
 if (!preg_match('/^'.$legal_title.'$/', $title))
   $title     = '';
-$l['page_title'] = $title;
+$s['page_title'] = $title;
 $page_path       = $pages_dir.$title;
 $diff_path       = $diff_dir.$title;
-$l['title_url']  = $l['title_root'].$title;
+$s['title_url']  = $s['title_root'].$title;
 
-# Add/execute code via $l['code'] and plugin files named in plugin list.
-eval($l['code']);
+# Add/execute code via $s['code'] and plugin files named in plugin list.
+eval($s['code']);
 foreach (ReadAndTrimLines($plugin_list_path) as $line)
   require($line);
 
@@ -87,39 +87,39 @@ $action();
 
 function Action_page_view() {
 # Formatted / marked-up display of a wiki page.
-  global $l, $page_path;
-  $l['title'] = $l['page_title'];
+  global $s, $page_path;
+  $s['title'] = $s['page_title'];
   
   # Get file text. If none, show page creation invitation. Else, markup.
   if (is_file($page_path))
-    $l['content'] = Markup(file_get_contents($page_path));
+    $s['content'] = Markup(file_get_contents($page_path));
   else
-    $l['content'] = $l['Action_page_view():none'];
+    $s['content'] = $s['Action_page_view():none'];
 
   OutputHTML(); }
 
 function Action_page_edit() {
 # Output edit form to a page source text. Send results to ?action=write.
-  global $hook_Action_page_edit, $l, $page_path;
-  $l['title'] = $l['Action_page_edit():title'];
+  global $hook_Action_page_edit, $s, $page_path;
+  $s['title'] = $s['Action_page_edit():title'];
 
   # If no page file, start $text empty. Otherwise, escape evil chars.
   if (is_file($page_path)) 
-    $l['text'] = EscapeHTML(file_get_contents($page_path));
+    $s['text'] = EscapeHTML(file_get_contents($page_path));
   else
-    $l['text'] = '';
+    $s['text'] = '';
 
   # HTML of edit form.
-  $l['content'] = $l['Action_page_edit():form'];
+  $s['content'] = $s['Action_page_edit():form'];
   OutputHTML(); }
 
 function Action_page_history() {
 # Show version history of page (based on diff file), offer reverting.
-  global $diff_path, $l, $nl;
-  $l['title']   = $l['Action_page_history():title']; 
+  global $diff_path, $s, $nl;
+  $s['title']   = $s['Action_page_history():title']; 
 
   # Read in diff list from path; if none found, output fallback message.
-  $l['content'] = $l['Action_page_history():none'];
+  $s['content'] = $s['Action_page_history():none'];
   if (is_file($diff_path)) 
     $diff_list = DiffList($diff_path);
 
@@ -128,13 +128,13 @@ function Action_page_history() {
     $diffs = array();
     foreach ($diff_list as $id => $diff_data) {
 
-      # Move diff data into temporary $l values, to be applied at each
-      # cycle's end into $l['i_diff'] via ReplaceEscapedVars().
-      $l['diff_id']   = $id;
-      $l['diff_time'] = date('Y-m-d H:i:s', (int) $diff_data['time']);
-      $l['diff_auth'] = EscapeHTML($diff_data['author']);
-      $l['diff_summ'] = EscapeHTML($diff_data['summary']);
-      $l['diff_text'] = '';
+      # Move diff data into temporary $s values, to be applied at each
+      # cycle's end into $s['i_diff'] via ReplaceEscapedVars().
+      $s['diff_id']   = $id;
+      $s['diff_time'] = date('Y-m-d H:i:s', (int) $diff_data['time']);
+      $s['diff_auth'] = EscapeHTML($diff_data['author']);
+      $s['diff_summ'] = EscapeHTML($diff_data['summary']);
+      $s['diff_text'] = '';
       foreach (explode($nl, $diff_data['text']) as $line_n => $line) {
         if     ($line[0] == '>')
           $theme = 'Action_page_history():diff_ins';
@@ -144,23 +144,23 @@ function Action_page_history() {
           $theme = 'Action_page_history():diff_meta';
         if ($line[0] == '<' or $line[0] == '>') 
           $line = EscapeHTML(substr($line, 1));
-        $l['line'] = $line;
-        $l['diff_text'] .= ReplaceEscapedVars($l[$theme]); }
-      $diffs[] = ReplaceEscapedVars($l['Action_page_history():diff']); }
+        $s['line'] = $line;
+        $s['diff_text'] .= ReplaceEscapedVars($s[$theme]); }
+      $diffs[] = ReplaceEscapedVars($s['Action_page_history():diff']); }
 
-    $l['content'] = implode($nl, $diffs); }
+    $s['content'] = implode($nl, $diffs); }
   OutputHTML(); }
 
 function Action_page_revert() {
 # Prepare version reversion and ask user for confirmation.
-  global $diff_path, $l, $page_path;
+  global $diff_path, $s, $page_path;
   
   # Try diff ID provided by user, determine its time. Fail if necessary.
   $id        = $_GET['id'];
   $diff_list = DiffList($diff_path);
   if (!$diff_list[$id]['time'])
     ErrorFail('Action_page_revert():invalid');
-  $l['time'] = date('Y-m-d H:i:s', (int) $diff_list[$id]['time']);
+  $s['time'] = date('Y-m-d H:i:s', (int) $diff_list[$id]['time']);
 
   # Reverse-patch $text back through $diff_list until $i hits $id.
   $text = file_get_contents($page_path);
@@ -168,11 +168,11 @@ function Action_page_revert() {
     $reversed_diff = PlomDiffReverse($diff_data['text']); 
     $text          = PlomPatch($text, $reversed_diff);
     if ($id == $i) break; }
-  $l['text'] = EscapeHTML($text);
+  $s['text'] = EscapeHTML($text);
 
   # Output.
-  $l['title']  = $l['Action_page_revert():title'];
-  $l['content']= $l['Action_page_revert():form'];
+  $s['title']  = $s['Action_page_revert():title'];
+  $s['content']= $s['Action_page_revert():form'];
   OutputHTML(); }
   
 ########################################################################
@@ -184,7 +184,7 @@ function Action_page_revert() {
 function Action_write() {
 # Trigger writing to DB. Expects password $_POST['pw'] and target type
 # $_GET['t'], determining which PrepareWrite_() function shapes details.
-  global $l, $todo_urgent; 
+  global $s, $todo_urgent; 
   $pw   = $_POST['pw'];
   $auth = $_POST['auth'];
   $t    = $_GET['t'];
@@ -202,7 +202,7 @@ function Action_write() {
 
   # If $redir URL was not determined, define the most harmless one.
   if (empty($redir))
-    $redir = $l['root_rel'];
+    $redir = $s['root_rel'];
 
   # Atomic writing of new $todo_urgent file with $todo_txt task list.
   rename(NewTemp($todo_txt), $todo_urgent);
@@ -257,15 +257,15 @@ function WorkTodo($todo, $do_reload = FALSE) {
 
 function Lock($path) {
 # Check for/create lockfile for $path. Blocks for 2 * max_exec_time max.
-  global $l, $max_exec_time;
-  $l['lock_dur'] = 2 * $max_exec_time;
+  global $s, $max_exec_time;
+  $s['lock_dur'] = 2 * $max_exec_time;
   $now           = time();
   $lock          = $path.'_lock';
 
   # Fail if $lock file exists *and* is too young. Else, write new $lock.
   if (is_file($lock)) {
     $time = file_get_contents($lock);
-    if ($time + $l['lock_dur'] > $now)
+    if ($time + $s['lock_dur'] > $now)
       ErrorFail('Lock():locked'); }
   file_put_contents($lock, $now); }
 
@@ -302,9 +302,9 @@ function NewTemp($string = '') {
 
 function Action_set_pw_admin() {
 # Display page / form for setting new admin password.
-  global $l;
-  $l['title']   = $l['Action_set_pw_admin():title']; 
-  $l['content'] = $l['Action_set_pw_admin():form'];
+  global $s;
+  $s['title']   = $s['Action_set_pw_admin():title']; 
+  $s['content'] = $s['Action_set_pw_admin():form'];
   OutputHTML(); }
   
 function PrepareWrite_admin_sets_pw() {
@@ -397,8 +397,8 @@ function ReadPasswordList($path) {
 
 function PrepareWrite_page(&$redir) {
 # Prepare todo lists for page writing, via WritePage() and todo_bonus.
-  global $l, $nl, $now, $page_path, $title, $todo_urgent, $work_dir;
-  $redir   = $l['title_url'];
+  global $s, $nl, $now, $page_path, $title, $todo_urgent, $work_dir;
+  $redir   = $s['title_url'];
   $text    = Sanitize($_POST['text']);
   $summary = str_replace($nl, '', Sanitize($_POST['summary']));
   $author  = str_replace($nl, '', Sanitize($_POST['author'] ));
@@ -412,9 +412,9 @@ function PrepareWrite_page(&$redir) {
     ErrorFail('PrepareWrite_page():NoEmptyPage');
   if ($text == $old_text)  
     ErrorFail('PrepareWrite_page():NothingChanged');
-  if (count(explode($nl, $text)) > $l['page_max_lines'])
+  if (count(explode($nl, $text)) > $s['page_max_lines'])
     ErrorFail('PrepareWrite_page():MaxLinesText');
-  if (strlen($text) > $l['page_max_length'])
+  if (strlen($text) > $s['page_max_length'])
     ErrorFail('PrepareWrite_page():MaxSizeText');
 
   # Temp files for WritePage(), some empty, some for dangerous strings.
@@ -555,19 +555,19 @@ function DiffList($diff_path) {
 
   return $diff_list; }
 
-function ReadReg($path, $reg = array()) {
-# Read in registry file to, and return $reg. May overwrite its values. 
-  global $esc, $l, $nl;
+function ReadStringsFile($path, $strings = array()) {
+# Read in Strings file to, & return $strings. May overwrite its values. 
+  global $esc, $s, $nl;
 
-  # If empty, set $l variables necessary for a minimal ErrorFail().
-  if (!$l['Error'])
-    $l['Error'] = 'Error';
-  if (!$l['NoR'])
-    $l['NoR']   = 'Registry not found at path: '.$path;
-  if (!$l['BadR'])
-    $l['BadR']  = 'Registry at '.$path.' is bad.';
-  if (!$l['design'])
-    $l['design'] = '<!DOCTYPE html><title>'.$esc.'title'.$esc.'</title>'
+  # If empty, set $s variables necessary for a minimal ErrorFail().
+  if (!$s['Error'])
+    $s['Error'] = 'Error';
+  if (!$s['NoR'])
+    $s['NoR']   = 'Registry not found at path: '.$path;
+  if (!$s['BadR'])
+    $s['BadR']  = 'Registry at '.$path.' is bad.';
+  if (!$s['design'])
+    $s['design'] = '<!DOCTYPE html><title>'.$esc.'title'.$esc.'</title>'
                    .$nl.'<body><p>'.$esc.'content'.$esc.'</p></body>';
 
   # Read in file and escape character from 1st line. Fail if necessary.  
@@ -586,11 +586,11 @@ function ReadReg($path, $reg = array()) {
     $pos = strpos($field, $e);
     $key = substr($field, 0, $pos);
     if ($key) {
-      $value     = substr($field, $pos + strlen($e));
-      $value     = str_replace($e, $esc, $value);
-      $reg[$key] = $value; } }
+      $value         = substr($field, $pos + strlen($e));
+      $value         = str_replace($e, $esc, $value);
+      $strings[$key] = $value; } }
   
-  return $reg; }
+  return $strings; }
   
 ################################ Output ################################
 
@@ -609,37 +609,37 @@ function EscapeHTML($text) {
 
 function WorkScreenReload($redir = '') {
 # Just output HTML of a work message and instantly redirect to $redir.
-  global $l;
+  global $s;
 
-  # $l["WorkScreenReload"] has a placeholder for $l['redir']; so set it.
+  # $s["WorkScreenReload"] has a placeholder for $s['redir']; so set it.
   if (!empty($redir))
-    $redir = $l['WorkScreenReload():redir'].$redir;
-  $l['WorkScreenReload():redir'] = $redir;
+    $redir = $s['WorkScreenReload():redir'].$redir;
+  $s['WorkScreenReload():redir'] = $redir;
 
-  # Apply $l["WorkScreenReload"] as design for OutputHTML() and exit.
-  $l['design'] = $l['WorkScreenReload():design'];
+  # Apply $s["WorkScreenReload"] as design for OutputHTML() and exit.
+  $s['design'] = $s['WorkScreenReload():design'];
   OutputHTML();
   exit(); }
 
 function ErrorFail($msg) {
 # Fail and output error $msg. Exit no matter what.
-  global $hook_ErrorFail, $l;
-  $l['title']   = $l['ErrorFail():title'];
-  $l['content'] = $l[$msg];
+  global $hook_ErrorFail, $s;
+  $s['title']   = $s['ErrorFail():title'];
+  $s['content'] = $s[$msg];
   eval($hook_ErrorFail);
   OutputHTML();
   exit(); }
 
 function OutputHTML() {
-# Generate final HTML output by filling $l['design'] with content.
-  global $esc, $l;
-  while (FALSE !== strpos($l['design'], $esc))
-    $l['design'] = ReplaceEscapedVars($l['design']);
-  echo $l['design']; }
+# Generate final HTML output by filling $s['design'] with content.
+  global $esc, $s;
+  while (FALSE !== strpos($s['design'], $esc))
+    $s['design'] = ReplaceEscapedVars($s['design']);
+  echo $s['design']; }
 
 function ReplaceEscapedVars($string) {
-# Replace substrings of $string delimited by $esc with values from $l.
-  global $esc, $l; 
+# Replace substrings of $string delimited by $esc with values from $s.
+  global $esc, $s; 
   $vars = array();
 
   # Explode $string by $esc, collect $esc-surrounded strings in $vars.
@@ -652,9 +652,9 @@ function ReplaceEscapedVars($string) {
     else 
       $collect = TRUE;
 
-  # Replace variable names in $vars with $l variable contents.
+  # Replace variable names in $vars with $s variable contents.
   foreach ($vars as $n => $var)
-    $vars[$n] = $l[$var];
+    $vars[$n] = $s[$var];
 
   # Echo elements of $strings alternately as-is or as values from $vars.
   $string = '';

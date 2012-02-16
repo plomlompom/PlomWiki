@@ -4,8 +4,8 @@
 # Provides the PlomWiki standard markup, via a regex-based engine.
 
 # Provide help message to be shown in editing window.
-$l = ReadReg($plugin_regs_dir.'StandardMarkup', $l);
-$l['Action_page_edit():form'] .= $l['markup_help'];
+$s = ReadStringsFile($plugin_strings_dir.'StandardMarkup', $s);
+$s['Action_page_edit():form'] .= $s['markup_help'];
 
 # Escape marks. Remember $esc is stripped from any page texts.
 # A line starting with $esc escapes paragraphing by MarkupParagraphs().
@@ -21,7 +21,7 @@ $esc_store = array();
 
 function MarkupLinks($text) {
 # [[LinkedPagename]], [[Linked|Text displayed]], [[http://example.com]].
-  global $esc, $nl, $l, $legal_title, $pages_dir;
+  global $esc, $nl, $s, $legal_title, $pages_dir;
   $legal_url = '(http|https|ftp):([A-Za-z0-9\.\-_~:/\?#\[\]@!\$&\'\(\)'.
                '\*\+,;=]|%[A-Fa-f0-9]{2})+';    # Stolen from erlehmann.
   $regex     = '/\[\[([^'.$nl.']+?)]]/';
@@ -79,7 +79,7 @@ function MarkupLinks($text) {
       if ($page) {
         if (!is_file($pages_dir.$page)) 
           $style = 'style="color: red;" ';
-        $url = $l['title_root'].$page; }
+        $url = $s['title_root'].$page; }
       $repl        = '<a '.$style.'href="'.$url.'">'.$desc.'</a>'; 
       $esc_store[] = $repl;
       $repl        = $esc_on.$esc_n.$esc_off;
