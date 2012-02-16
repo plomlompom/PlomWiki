@@ -29,15 +29,16 @@ textarea { font-family: monospace; width:100%; }
 <a href="plomwiki.php?action=set_pw_admin">§SetAdminPW§</a> 
 
 <h1>§title§</h1>
-<p>
 §ActionLinks_page§
-</p>
 <hr />
 <div class="§css_class§">§content§</div>
 §
-ActionLinks_page§<a href="plomwiki.php?title=§page_title§&amp;action=page_view">§View§</a> 
+ActionLinks_page§
+<p>
+<a href="plomwiki.php?title=§page_title§&amp;action=page_view">§View§</a> 
 <a href="plomwiki.php?title=§page_title§&amp;action=page_edit">§Edit§</a> 
 <a href="plomwiki.php?title=§page_title§&amp;action=page_history">§History§</a> 
+</p>
 
 §
 css_class§default
