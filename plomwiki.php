@@ -31,7 +31,7 @@ $esc = "\r";
 if (is_file($setup_file))
   require($setup_file);
 
-# Read in registries: default values for configuration, HTML, phrases.
+# Read in string files: default values for configuration, HTML, phrases.
 $s = ReadStringsFile($strings_config);
 $s = ReadStringsFile($strings_design, $s);
 $s = ReadStringsFile($strings_phrases, $s);
@@ -562,21 +562,21 @@ function ReadStringsFile($path, $strings = array()) {
   # If empty, set $s variables necessary for a minimal ErrorFail().
   if (!$s['Error'])
     $s['Error'] = 'Error';
-  if (!$s['NoR'])
-    $s['NoR']   = 'Registry not found at path: '.$path;
-  if (!$s['BadR'])
-    $s['BadR']  = 'Registry at '.$path.' is bad.';
+  if (!$s['NoS'])
+    $s['NoR']   = 'String file not found at path: '.$path;
+  if (!$s['BadS'])
+    $s['BadR']  = 'String file at '.$path.' is bad.';
   if (!$s['design'])
     $s['design'] = '<!DOCTYPE html><title>'.$esc.'title'.$esc.'</title>'
                    .$nl.'<body><p>'.$esc.'content'.$esc.'</p></body>';
 
   # Read in file and escape character from 1st line. Fail if necessary.  
   if (!is_file($path))
-    ErrorFail('NoR');
+    ErrorFail('NoS');
   $txt = file_get_contents($path);
   $pos = strpos($txt, $nl);
   if (!$pos)
-    ErrorFail('BadR');
+    ErrorFail('BadS');
   $e   = substr($txt, 0, $pos);
   
   # Read in $r variables from remaining file. Set $esc as escape char. 
