@@ -1,4 +1,8 @@
 §
+#§######################################################
+  # Code to execute during plomwiki.php initialization #
+  ######################################################
+§
 code§
 $hook_before_action .= '
 if ($action == "Action_page_history")
@@ -11,6 +15,10 @@ $s["css_class"] = "fail";
 if ($msg = "IllegalPageTitle")
   $s["ActionLinks_page"] = "";
 ';
+§
+#§#################################
+  # Main template, for every page #
+  #################################
 §
 design§<!DOCTYPE html>
 <meta charset="UTF-8">
@@ -43,6 +51,10 @@ ActionLinks_page§
 §
 css_class§default
 §
+#§######################
+  # Action_page_edit() #
+  ######################
+§
 Action_page_edit():form§<form method="post" action="§title_url§&amp;action=write&amp;t=page">
 <textarea name="text" rows="§Action_page_edit():TextareaRows§">
 §text§</textarea>
@@ -54,6 +66,10 @@ Admin §pw§: <input name="pw" type="password" /><input name="auth" type="hidden
 §
 Action_page_edit():TextareaRows§20
 §
+#§########################
+  # Action_page_revert() #
+  ########################
+§
 Action_page_revert():form§<form method="post" action="§title_url§&amp;action=write&amp;t=page">
 <input type="hidden" name="text" value="§text§">
 <input type="hidden" name="summary" value="revert">
@@ -61,6 +77,10 @@ Admin §pw§: <input name="pw" type="password" />
 <input name="auth" type="hidden" value="*" />
 <input type="submit" value="OK" />
 </form>
+§
+#§#########################
+  # Action_page_history() #
+  #########################
 §
 Action_page_history():diff§<div id="§diff_id§" class="diff_desc">§diff_time§: §diff_summ§ (§diff_auth§) (<a href="§title_url§&amp;action=page_revert&amp;id=§diff_id§">§revert§</a>):</div>
 <div class="diff_text">
@@ -76,6 +96,10 @@ Action_page_history():diff_ins§<pre style="background-color: #55ff55;">+ §line
 Action_page_history():diff_del§<pre style="background-color: #ff5555;">- §line§</pre>
 
 §
+#§#########################
+  # Action_set_pw_admin() #
+  #########################
+§
 Action_set_pw_admin():form§<form method="post" action="§title_url§&amp;action=write&amp;t=admin_sets_pw">
 §NewPWfor§ §admin§:<br />
 <input type="hidden" name="new_auth" value="*">
@@ -85,6 +109,10 @@ Action_set_pw_admin():form§<form method="post" action="§title_url§&amp;action
 <input type="password" name="pw">
 <input type="submit" value="OK" />
 </form>
+§
+#§######################
+  # WorkScreenReload() #
+  ######################
 §
 WorkScreenReload():design§<!DOCTYPE html>
 <meta charset="UTF-8">

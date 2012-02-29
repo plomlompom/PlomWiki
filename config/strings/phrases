@@ -1,4 +1,8 @@
 §
+#§#######################################################
+  # Phrases for initialization and main design template #
+  #######################################################
+§
 WikiTitle§PlomWiki BETA
 §
 JumpStart§Jump to Start page
@@ -13,13 +17,19 @@ History§History
 §
 IllegalPageTitle§Illegal page title. Only alphanumeric characters and "-" allowed.
 §
+#§######################
+  # Action_page_view() #
+  ######################
+§
 Action_page_view():none§§PageDontExist§ <a href="§title_url§&amp;action=page_edit">§PageCreate?§</a>
 §
 PageDontExist§Page doesn't exist.
 §
 PageCreate?§Create page?
 §
-Action_page_history():none§Page has no history.
+#§######################
+  # Action_page_edit() #
+  ######################
 §
 Action_page_edit():title§§Editing§: "§page_title§"
 §
@@ -31,9 +41,19 @@ Summary§Summary
 §
 pw§password
 §
+#§#########################
+  # Action_page_history() #
+  #########################
+§
+Action_page_history():none§Page has no history.
+§
 Action_page_history():title§§History§: "§page_title§"
 §
 revert§revert
+§
+#§########################
+  # Action_page_revert() #
+  ########################
 §
 Action_page_revert():title§§RevertToBefore§ §time§?
 §
@@ -41,11 +61,19 @@ RevertToBefore§Revert page to before
 §
 Action_page_revert():invalid§Invalid revert point.
 §
+#§##################
+  # Action_write() #
+  ##################
+§
 Action_write():AuthFail§Authentication failure.
 §
 Action_write():InvalidTarget§No known target type specified.
 §
 Lock():locked§Stuck by a lockfile of too recent a timestamp. Try a bit later. Lock effective for (seconds): §lock_dur§
+§
+#§#########################
+  # Action_set_pw_admin() #
+  #########################
 §
 Action_set_pw_admin():title§§ChangePWfor§ §admin§
 §
@@ -63,7 +91,15 @@ NewPWfor§New password for
 §
 OldAdmin§Old admin
 §
+#§###############################
+  # More general password stuff #
+  ###############################
+§
 ReadPasswordList():NoPWfile§No valid password file found.
+§
+#§#######################
+  # PrepareWrite_page() #
+  #######################
 §
 PrepareWrite_page():MaxLinesText§Number of lines in text must not exceed: §page_max_lines§
 §
@@ -72,5 +108,9 @@ PrepareWrite_page():MaxSizeText§Size of text must not exceed: §page_max_length
 PrepareWrite_page():NoEmptyPage§Empty pages not allowed. Replace text with "delete" to delete the page.
 §
 PrepareWrite_page():NothingChanged§You changed nothing!
+§
+#§###############
+  # ErrorFail() #
+  ###############
 §
 ErrorFail():title§Error
