@@ -43,13 +43,12 @@ textarea { font-family: monospace; width:100%; }
 §
 ActionLinks_page§
 <p>
-§ActionLinks_page_content§
+<a href="plomwiki.php?title=§page_title§&amp;action=page_view">§View§</a> 
+<a href="plomwiki.php?title=§page_title§&amp;action=page_edit">§Edit§</a> 
+<a href="plomwiki.php?title=§page_title§&amp;action=page_history">§History§</a>
+§ActionLinks_page_Plugins§
 </p>
 
-§
-ActionLinks_page_content§<a href="plomwiki.php?title=§page_title§&amp;action=page_view">§View§</a> 
-<a href="plomwiki.php?title=§page_title§&amp;action=page_edit">§Edit§</a> 
-<a href="plomwiki.php?title=§page_title§&amp;action=page_history">§History§</a> 
 §
 css_class§default
 §
