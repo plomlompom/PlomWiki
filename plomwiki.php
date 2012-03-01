@@ -354,7 +354,7 @@ function CheckPW($key, $pw_posted, $target) {
 
   # Fail if $key not authorized for $target. Admin is always authorized.
   if ($key != '*' and !in_array($key, $permissions[$target]))
-      return $return;
+    return $return;
 
   # Check PW to $key. If hash fits list, delete IP from failed logins.
   $passwords   = ReadPasswordList($pw_path);
@@ -632,7 +632,8 @@ function ErrorFail($msg) {
 
 function OutputHTML() {
 # Generate final HTML output by filling $s['design'] with content.
-  global $esc, $s;
+  global $hook_OutputHTML, $esc, $s;
+  eval($hook_OutputHTML);
   while (FALSE !== strpos($s['design'], $esc))
     $s['design'] = ReplaceEscapedVars($s['design']);
   echo $s['design']; }
