@@ -3,9 +3,7 @@
 # 
 # Provides the PlomWiki standard markup, via a regex-based engine.
 
-# Provide help message to be shown in editing window.
 $s = ReadStringsFile($plugin_strings_dir.'StandardMarkup', $s);
-$s['Action_page_edit():form'] .= $s['markup_help'];
 
 # Escape marks. Remember $esc is stripped from any page texts.
 # A line starting with $esc escapes paragraphing by MarkupParagraphs().

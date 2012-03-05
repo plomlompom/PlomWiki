@@ -79,6 +79,8 @@ Action_page_edit():form§<form method="post" action="§title_url§&amp;action=wr
 Admin §pw§: <input name="pw" type="password" /><input name="auth" type="hidden" value="*" />
 <input type="submit" value="OK" />
 </form>
+
+§markup_help§
 §
 Action_page_edit():TextareaRows§20
 §
