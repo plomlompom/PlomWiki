@@ -62,9 +62,9 @@ $diff_path       = $diff_dir.$title;
 $s['title_url']  = $s['title_root'].$title;
 
 # Add/execute code via $s['code'] and plugin files named in plugin list.
-eval($s['code']);
 foreach (ReadAndTrimLines($plugin_list_path) as $line)
   require($line);
+eval($s['code']);
 
 # Before executing user's action, do urgent work if todo_urgent found.
 if (is_file($todo_urgent))
