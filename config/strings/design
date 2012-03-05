@@ -6,15 +6,20 @@
 code§
 $hook_before_action .= '
 if ($action == "Action_page_history")
-  $s["css_class"] = "history";
-if (substr($action, 7, 5) !== "page_")
+  $s["css"]         .= $s["css_history"];
+else if ($action == "Action_page_edit")
+  $s["css"]         .= $s["css_edit"];
+else if (substr($action, 7, 5) !== "page_")
   $s["ActionLinks_page"] = "";
 ';
 $hook_ErrorFail .= '
-$s["css_class"] = "fail";
+# $s["css_class"]  = "fail";
+$s["css"]        = $s["css_fail"];
 if ($msg = "IllegalPageTitle")
   $s["ActionLinks_page"] = "";
 ';
+if ("main" == substr($s["css_class"], 0, 7))
+  $s["css"] .= $s["css_main"];
 §
 #§#################################
   # Main template, for every page #
@@ -23,12 +28,7 @@ if ($msg = "IllegalPageTitle")
 design§<!DOCTYPE html>
 <meta charset="UTF-8">
 <style type="text/css">
-textarea { font-family: monospace; width:100%; }
-.default { padding: 10px; padding-top: 0px; }
-.fail { font-weight: bold; }
-.history pre { white-space: pre-wrap; text-indent:-12pt; margin-top:0px; margin-bottom:0px; padding-left: 20px; }
-.diff_text { margin-left:12pt; }
-.diff_desc { padding: 10px; text-indent:-8pt; }
+§css§
 </style>
 <title>§title§</title>
 
@@ -36,26 +36,36 @@ textarea { font-family: monospace; width:100%; }
 <a href="§root_rel§?title=Start">§JumpStart§</a> 
 <a href="§root_rel§?action=set_pw_admin">§SetAdminPW§</a>
 §ActionLinks_Plugins§ 
-
-<h1>§title§</h1>
-§ActionLinks_page§
+<h1>§title§</h1>§ActionLinks_page§
 <hr />
-<div class="§css_class§">§content§</div>
+
+<div class="§css_class§">
+§content§
+</div>
 §
 ActionLinks_page§
 <p>
 <a href="plomwiki.php?title=§page_title§&amp;action=page_view">§View§</a> 
 <a href="plomwiki.php?title=§page_title§&amp;action=page_edit">§Edit§</a> 
 <a href="plomwiki.php?title=§page_title§&amp;action=page_history">§History§</a>
-§ActionLinks_page_Plugins§
-</p>
-
+§ActionLinks_page_Plugins§</p>
 §
-css_class§default
+#§#######
+  # CSS #
+  #######
+§
+css_class§main
+§
+css_main§.main { padding: 10px; padding-top: 0px; }
+§
+css_fail§.main { font-weight: bold; }
 §
 #§######################
   # Action_page_edit() #
   ######################
+§
+css_edit§
+textarea { font-family: monospace; width:100%; }
 §
 Action_page_edit():form§<form method="post" action="§title_url§&amp;action=write&amp;t=page">
 <textarea name="text" rows="§Action_page_edit():TextareaRows§">
@@ -84,18 +94,26 @@ Admin §pw§: <input name="pw" type="password" />
   # Action_page_history() #
   #########################
 §
+css_history§
+pre { white-space: pre-wrap; text-indent:-12pt; margin-top:0px; margin-bottom:0px; padding-left: 20px; }
+.diff_text { margin-left:12pt; }
+.diff_desc { padding: 10px; text-indent:-8pt; }
+.diff_meta { background-color: #bbbbbb }
+.diff_ins { background-color: #55ff55 }
+.diff_del { background-color: #ff5555 }
+§
 Action_page_history():diff§<div id="§diff_id§" class="diff_desc">§diff_time§: §diff_summ§ (§diff_auth§) (<a href="§title_url§&amp;action=page_revert&amp;id=§diff_id§">§revert§</a>):</div>
 <div class="diff_text">
 §diff_text§</div>
 
 §
-Action_page_history():diff_meta§<pre style="background-color: #bbbbbb;">§line§</pre>
+Action_page_history():diff_meta§<pre class="diff_meta">§line§</pre>
 
 §
-Action_page_history():diff_ins§<pre style="background-color: #55ff55;">+ §line§</pre>
+Action_page_history():diff_ins§<pre class="diff_ins">+ §line§</pre>
 
 §
-Action_page_history():diff_del§<pre style="background-color: #ff5555;">- §line§</pre>
+Action_page_history():diff_del§<pre class="diff_del">- §line§</pre>
 
 §
 #§#########################
