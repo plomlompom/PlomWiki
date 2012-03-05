@@ -1,4 +1,6 @@
 # Insert relative paths to plugin files here. Comment out with #.
+# Commented-out plugins can be found at:
+# https://github.com/plomlompom/PlomWikiPlugins
 
 # You'll probably want to have *some* wiki markup functions.
 plugins/StandardMarkup.php
@@ -14,13 +16,12 @@ plugins/StandardMarkup.php
 #plugins/PwPages.php
 #plugins/AutoSum.php
 #plugins/Today.php
-#plugins/ReplaceAll.php
 
-# For debugging.
-#plugins/DiffRepair.php
+# Debugging.
+#plugins/DiffCheck.php
 
 # Alternative designs.
 #plugins/PlomDesign.php
 
-# Non-English language plugins. Put these at the end.
+# Language translation plugins. Put these at the end.
 #plugins/German.php
