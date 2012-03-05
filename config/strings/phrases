@@ -21,8 +21,6 @@ IllegalPageTitle§Illegal page title. Only alphanumeric characters and "-" allow
   # Action_page_view() #
   ######################
 §
-Action_page_view():none§§PageDontExist§ <a href="§title_url§&amp;action=page_edit">§PageCreate?§</a>
-§
 PageDontExist§Page doesn't exist.
 §
 PageCreate?§Create page?
@@ -45,9 +43,9 @@ pw§password
   # Action_page_history() #
   #########################
 §
-Action_page_history():none§Page has no history.
-§
 Action_page_history():title§§History§: "§page_title§"
+§
+PageNoHistory§Page has no history.
 §
 revert§revert
 §
