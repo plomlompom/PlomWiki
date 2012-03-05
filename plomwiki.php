@@ -27,14 +27,14 @@ $work_failed_logins_dir = $work_dir.'failed_logins/';
 $nl  = "\n";
 $esc = "\r";
 
-# Check for existence of setup file; execute it if found.
-if (is_file($setup_file))
-  require($setup_file);
-
 # Read in string files: default values for configuration, HTML, phrases.
 $s = ReadStringsFile($strings_config);
 $s = ReadStringsFile($strings_design, $s);
 $s = ReadStringsFile($strings_phrases, $s);
+
+# Check for existence of setup file; execute it if found.
+if (is_file($setup_file))
+  require($setup_file);
 
 # Snippets used for URL generation.
 $s['root_rel']   = 'plomwiki.php';
