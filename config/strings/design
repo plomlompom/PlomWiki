@@ -18,8 +18,8 @@ $s["css"]        = $s["css_fail"];
 if ($msg = "IllegalPageTitle")
   $s["ActionLinks_page"] = "";
 ';
-if ("main" == substr($s["css_class"], 0, 7))
-  $s["css"] .= $s["css_main"];
+if ('main' == substr($s['css_class'], 0, 7))
+  $s['css'] .= $s['css_main'];
 §
 #§#################################
   # Main template, for every page #
