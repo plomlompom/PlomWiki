@@ -1,5 +1,6 @@
 §
 markup_help§
+
 <h3>PlomWiki markup cheatsheet</h3>
 <p>In-line:</p>
 <pre style="white-space: pre-wrap;">[*<strong>strong</strong>*] [/<em>emphasis</em>/] [-<del>deleted</del>-] [[<a href="§$title_root§PagenameOrURL">PagenameOrURL</a>]] [[PagenameOrURL|<a href="§$title_root§PagenameOrURL">Text displayed instead</a>]] [=[/unformatted/] [*text*]=]</pre>
