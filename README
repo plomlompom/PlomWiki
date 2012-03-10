@@ -64,7 +64,7 @@ called to fill Action_write() with all it needs to know.
 
 As single bottleneck for DB writing, Action_write() also is the point where all
 password checks are called. It delivers POST "password=" and GET "t=" parameters
-to CheckPW() and waits for its OK. CheckPW() reads from config/password a list
+to CheckPW() and waits for its OK. CheckPW() reads from config/passwords a list
 of keys (could be the names of pages, users, whatever) mapped to password
 hashes; looks up (plugin-extendable) $permissions if the user-provided key is
 allowed to open targets of type "t=" (i.e. a password for page editing should

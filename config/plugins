@@ -16,6 +16,7 @@ plugins/StandardMarkup.php
 #plugins/PwPages.php
 #plugins/AutoSum.php
 #plugins/Today.php
+#plugins/Atom.php
 
 # Debugging.
 #plugins/DiffCheck.php
