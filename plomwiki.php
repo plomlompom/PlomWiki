@@ -561,7 +561,7 @@ function DiffList($diff_path) {
   return $diff_list; }
 
 function ReadStringsFile($path, $strings = array()) {
-# Read in Strings file to, & return $strings. May overwrite its values. 
+# Read in strings file to, & return $strings. May overwrite its values. 
   global $esc, $s, $nl;
 
   # If empty, set $s variables necessary for a minimal ErrorFail().

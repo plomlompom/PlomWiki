@@ -4,7 +4,7 @@ Copyright 2010-2012 Christian Heller / <http://www.plomlompom.de/>
 License: AGPLv3 or any later version. See file LICENSE for details.
 
 INTRODUCTION
-------------
+============
 
 PlomWiki is a small wiki written in PHP and (by default) using only a
 file tree of text files as its database. Highly extensible through
@@ -19,7 +19,7 @@ my real-world use of it. There, I also use a number of plugins, code of
 which is available at <https://github.com/plomlompom/PlomWikiPlugins>.
 
 INSTALLATION
-------------
+============
 
 Copy the file tree into a web-accessible directory of yours that can run
 PHP scripts. Access plomwiki.php via your browser; a setup script will
@@ -30,7 +30,7 @@ further instructions. Follow them to change your default admin password
 from "Password" to something more original.
 
 USE
----
+===
 
 In the default configuration, you can view each page's current text by
 clicking on the "View" link below its title and, if you know the
@@ -57,7 +57,10 @@ To delete a page, reduce page text to "delete". Empty page text won't be
 posted.
 
 INTRODUCTION TO TECHNICAL DETAILS (see source code comments for details)
----------------------------------
+=================================
+
+Page and history files
+----------------------
 
 Wiki pages are stored as text files of their current version in pages/
 with the pagename as the filename. In pages/diffs/, edit histories of
@@ -67,6 +70,9 @@ to the output of the Unix diff utility. Page deletion does not actually
 remove the files but just renames, timestamps and moves page and page
 history files to pages/deleted/.
 
+User actions
+------------
+
 The "action=" GET parameter in page URLs determines the user action.
 Values like "page_view" and "page_edit" correspond to functions like
 Action_page_view() and Action_page_edit() in plomwiki.php by prepending
@@ -74,9 +80,12 @@ the value with "Action_" and calling either a function found with that
 name or defaulting to "Action_page_view". This should give you an idea
 on how to add new user actions by adding functions like "Action_xyz()".
 
+Plugins, markups
+----------------
+
 Plugins are implemented as code added by plomwiki.php to its run by
-examining config/plugins and requiring the contents of all files
-referenced therein as relative paths (and not commented out with a "#").
+examining config/plugins and incorporating the contents of all files
+referenced therein (and not commented out with a "#") as PHP code.
 Feel free to add not only functions, but also to extend global
 variables, especially those acting as hooks in the flow of certain
 important functions which eval() them as code, like $hook_OutputHTML.
@@ -84,7 +93,11 @@ important functions which eval() them as code, like $hook_OutputHTML.
 Wiki page markup is achieved by running the original page text through
 page text manipulation functions named and put into order in
 config/markups. PlomWiki's standard markup is built from functions
-defined in the plugin plugins/StandardMarkup.php.
+defined in the plugin plugins/StandardMarkup.php. New markup functions
+can be made available by incorporating them as plugin code (see above).
+
+Database writing
+----------------
 
 Writing to PlomWiki's database starts with user input to Action_write(),
 which generates a list of appropriate DB manipulation tasks and writes
@@ -96,8 +109,11 @@ through and have to be finished before any user action can be performed.
 Other todo files could be named and separate WorkTodo() calls on them
 defined as new user actions; such details of Action_write()'s behavior
 depend on the "t=" GET parameter delivered to it. Functions named
-"PrepareWrite_$t()" (with $t the "t=" parameter), if found, are called
-to fill Action_write() with all it needs to know.
+"PrepareWrite_$t()" (with $t the "t=" parameter) are called to fill
+Action_write() with all it needs to know: what to write where, etc.
+
+Passwords
+---------
 
 As single bottleneck for DB writing, Action_write() also is the point
 where all password checks are called. It delivers POST "password=" and
@@ -110,3 +126,38 @@ editing users); and if so, compares the hash of "password=" with the
 appropriate one in the passwords file. CheckPW() will also delay for 10
 seconds after a failed authentication attempt any further one from the
 same IP.
+
+HTML output, string files
+-------------------------
+
+All the strings from which the final HTML output is built are stored in
+files in config/strings and plugins/strings; plomwiki.php and plugins
+are to merely contain internal code arranging these files' contents.
+The first line of these string files defines a separator (usually "§").
+A single line containing only the separator separates string entries;
+each entry starts with a key name, again separated from the string value
+by the separator. Entries with "#" as key can be used as comments. An
+empty "#" entry may be used at the end to ensure previous entries don't
+end with a newline as affixed by many text editors.
+
+The key-value pairs from these files are read in via ReadStringsFile() 
+to the global array $s; the separator string is replaced by the string
+value of $esc ("\r" by default; it can be safely used as it is filtered
+from all user input by Sanitize()). $s' most important value is
+$s["design"]: it's used by OutputHTML() as its main template for HTML
+output. As all string values may, it contains placeholders for other
+values, identified by the value's key name starting and
+end by $esc. OutputHTML() recursively calls ReplaceEscapedVars(), which
+looks up and replaces all these placeholders with their respective $s
+value.
+
+Naming conventions
+------------------
+
+Function names, global variables and $s key names provided by plugins
+are supposed to start with the plugin name, with two exceptions for
+functions: Here, "PrepareWrite_" and "Action_" may be prepended to the
+plugin name. As $s["#"] is used for string file comments and repeatedly
+overwritten, it's unusable for in-code purposes. $s key names starting
+with "i_" are reserved for values repeatedly generated, used and
+overwritten in loops.
