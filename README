@@ -15,8 +15,8 @@ syntax, histories of page edits and reverting pages to earlier versions.
 In practice, PlomWiki so far serves as little more than a programming
 exercise and content management system personally used by me, its author
 Christian Heller; see website <http://www.plomlompom.de/PlomWiki/> for
-my real-world use of it. There, I also use a number of plugins the code
-of which is available at <https://github.com/plomlompom/PlomWikPlugins>.
+my real-world use of it. There, I also use a number of plugins, code of
+which is available at <https://github.com/plomlompom/PlomWikiPlugins>.
 
 INSTALLATION
 ------------
