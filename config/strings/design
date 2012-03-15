@@ -35,6 +35,7 @@ if ('main' == substr($s['css_class'], 0, 7))
 design§<!DOCTYPE html>
 <meta charset="UTF-8">
 <style type="text/css">
+.license { text-align: right; font-size: 0.8em; }
 §css§
 </style>
 <title>§title§</title>
@@ -49,6 +50,8 @@ design§<!DOCTYPE html>
 <div class="§css_class§">
 §content§
 </div>
+
+<div class="license">§LicensePhrase§</div>
 §
 ActionLinks_page§
 <a href="plomwiki.php?title=§page_title§&amp;action=page_view">§View§</a> 
