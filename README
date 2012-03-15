@@ -1,75 +1,112 @@
-PlomWiki: @plomlompom tries to build his own wiki, optimized for his own needs.
-As @plomlompom is rather inexperienced, he starts with some not-too-good PHP.
+PlomWiki: extensible PHP wiki with wiki markup and page versioning.
+
+Copyright 2010-2012 Christian Heller / <http://www.plomlompom.de/>
+License: AGPLv3 or any later version. See file LICENSE for details.
+
+INTRODUCTION
+------------
+
+PlomWiki is a small wiki written in PHP and (by default) using only a
+file tree of text files as its database. Highly extensible through
+plugins, its default feature set is small and mostly only includes
+viewing and single-user editing of wiki pages, a simple wiki markup
+syntax, histories of page edits and reverting pages to earlier versions.
+
+In practice, PlomWiki so far serves as little more than a programming
+exercise and content management system personally used by me, its author
+Christian Heller; see my website <http://www.plomlompom.de/PlomWiki> for
+a real-world use of it. There, I also use a number of plugins the code
+of which is available at <https://github.com/plomlompom/PlomWikPlugins>.
 
 INSTALLATION
+------------
 
-Copy PlomWiki/ and everything below onto your server. Access your wiki via URL
-"http://[YourDomain/YourPath]/plomwiki.php". Default admin password: "Password".
+Copy the file tree into a web-accessible directory of yours that can run
+PHP scripts. Access plomwiki.php via your browser; a setup script will
+run to finalize your installation, creating more files/directories; make
+sure your filesystem permissions are set liberally. When the script is
+finished, you should see a default wiki page named "Start" that contains
+further instructions. Follow them to change your default admin password
+from "Password" to something more original.
 
 USE
+---
 
-You can view each page's current text by clicking on the "View" link below its
-title and, if you know the password, edit it by clicking on "Edit". Click on
-"History" to can examine previous changes to the page text and, via "Revert"
-links, return the page text to its state before each such change (here, too,
-only if you know the password).
+In the default configuration, you can view each page's current text by
+clicking on the "View" link below its title and, if you know the
+password, edit it by clicking on "Edit". Click on "History" to examine
+previous changes to the page text and, via the "Revert" links there,
+revert the page text to earlier versions.
 
-Per default, only little markup is possible on pages, though more could be added
-as plugins (see Technical Details section). For examples of usable markups, see
-the markup cheatcodes below the page text editing window.
+Reverting and saving edits to the page needs the admin password. You can
+set it by clicking on "Set admin password".
 
-To create a new page, either in your address bar enter the new pagename preceded
-by "http://[YourDomain/YourPath]/plomwiki.php?title=", or write a link to the
-new pagename into an existing page's text via the PlomWiki linking markup (like
-this: "[[NewPagename]]") and click on it. Notice PlomWiki pagenames are case-
-sensitive and may only contain a-z, A-Z, 0-9 and hyphens ("-").
+Per default, only little markup is possible for page formatting, though
+more can easily be added as plugins (see Technical Details section). For
+markup syntax explanations, see the markup cheatcodes below the page
+text editing window.
 
-To delete a page, reduce page text to "delete". Empty page text won't be posted.
+To create a new page, either in your address bar enter the new pagename
+preceded by "http://[YourDomain/YourPath]/plomwiki.php?title=", or write
+a link to the new pagename into an existing page's text via the default
+PlomWiki linking markup (like this: "[[NewPagename]]") and click on it.
+Notice PlomWiki pagenames are case-sensitive and may only contain the
+symbols a-z, A-Z, 0-9 and hyphens ("-").
 
-TECHNICAL DETAILS
+To delete a page, reduce page text to "delete". Empty page text won't be
+posted.
 
-Wiki pages are stored as text files of their current version in PlomWiki/pages/
-with the pagename as the filename. In PlomWiki/pages/diffs/, diffs to previous
-versions are stored. Page deletion does not actually remove the files but just
-renames, timestamps and moves page files into PlomWiki/pages/deleted/.
+INTRODUCTION TO TECHNICAL DETAILS (see source code comments for details)
+----------------------------------
 
-The "action=" GET parameter in page URLs determines the user action. Values like
-"view" and "edit" correspond to functions like Action_view() and Action_edit()
-in plomwiki.php by prepending the value with "Action_" and calling either a
-function found with that name or defaulting to "Action_view". This should give
-you an idea on how to add new actions by adding functions like "Action_xyz()".
+Wiki pages are stored as text files of their current version in pages/
+with the pagename as the filename. In pages/diffs/, edit histories of
+pages are stored, with single page edits formatted in a diff style
+defined by the plomwiki.php function PlomDiff(), aiming at resemblance
+to the output of the Unix diff utility. Page deletion does not actually
+remove the files but just renames, timestamps and moves page and page
+history files to pages/deleted/.
 
-Plugins are implemented as code added by plomwiki.php to its run by examining
-PlomWiki/config/plugins and requiring the contents of all files referenced
-therein as relative paths (and not commented out with a "#"). Feel free to add
-not only functions, but also to extend global variables, especially those acting
-as hooks in the flow of certain important functions which eval() them as code.
+The "action=" GET parameter in page URLs determines the user action.
+Values like "page_view" and "page_edit" correspond to functions like
+Action_page_view() and Action_page_edit() in plomwiki.php by prepending
+the value with "Action_" and calling either a function found with that
+name or defaulting to "Action_page_view". This should give you an idea
+on how to add new user actions by adding functions like "Action_xyz()".
 
-Wiki page markup is achieved by running the original page text through page text
-manipulation functions named and put into order in PlomWiki/config/markups.
-PlomWiki's standard markup is built from functions defined in the plugin 
-StandardMarkup.php.
+Plugins are implemented as code added by plomwiki.php to its run by
+examining config/plugins and requiring the contents of all files
+referenced therein as relative paths (and not commented out with a "#").
+Feel free to add not only functions, but also to extend global
+variables, especially those acting as hooks in the flow of certain
+important functions which eval() them as code, like $hook_OutputHTML.
 
-Writing to PlomWiki's database starts with user input into Action_write(), which
-generates a list of appropriate DB manipulation tasks and writes them into a
-todo file in PlomWiki/work. Tasks in this file are worked through independently
-from the user process that triggered them via WorkTodo(). Tasks written into the
-todo file work/todo_urgent are worked through and have to be finished before any
-other wiki action can be performed.
+Wiki page markup is achieved by running the original page text through
+page text manipulation functions named and put into order in
+config/markups. PlomWiki's standard markup is built from functions
+defined in the plugin plugins/StandardMarkup.php.
 
-Other todo files could be named and separate WorkTodo() calls on them defined as
-new user actions; such details of Action_write()'s behavior depend on the "t="
-GET parameter delivered to it. The function "PrepareWrite_$t()", if found, is
-called to fill Action_write() with all it needs to know.
+Writing to PlomWiki's database starts with user input to Action_write(),
+which generates a list of appropriate DB manipulation tasks and writes
+them into a todo file in PlomWiki/work. Tasks in this file are worked
+through independently from the user process that triggered them via
+WorkTodo(). Tasks written into the todo file work/todo_urgent are worked
+through and have to be finished before any user action can be performed.
 
-As single bottleneck for DB writing, Action_write() also is the point where all
-password checks are called. It delivers POST "password=" and GET "t=" parameters
-to CheckPW() and waits for its OK. CheckPW() reads from config/passwords a list
-of keys (could be the names of pages, users, whatever) mapped to password
-hashes; looks up (plugin-extendable) $permissions if the user-provided key is
-allowed to open targets of type "t=" (i.e. a password for page editing should
-not be usable for editing users); and if so, compares the hash of "password="
-with the appropriate one in the password file. CheckPW() will also delay for 10
-seconds after a failed authentication attempt any further one from the same IP.
+Other todo files could be named and separate WorkTodo() calls on them
+defined as new user actions; such details of Action_write()'s behavior
+depend on the "t=" GET parameter delivered to it. Functions named
+"PrepareWrite_$t()" (with $t the "t=" parameter), if found, are called
+to fill Action_write() with all it needs to know.
 
-For more details on PlomWiki's inner workings, read the source code's comments.
+As single bottleneck for DB writing, Action_write() also is the point
+where all password checks are called. It delivers POST "password=" and
+GET "t=" parameters to CheckPW() and waits for its OK. CheckPW() reads
+from config/passwords a list of keys (could be the names of pages,
+users, whatever) mapped to password hashes; looks up (plugin-extendable)
+$permissions to see if the user-provided key is allowed to open targets
+of type "t=" (i.e. a password for page editing should not be usable for
+editing users); and if so, compares the hash of "password=" with the
+appropriate one in the passwords file. CheckPW() will also delay for 10
+seconds after a failed authentication attempt any further one from the
+same IP.

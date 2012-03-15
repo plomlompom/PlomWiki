@@ -1,28 +1,6 @@
-# Insert relative paths to plugin files here. Comment out with #.
-# Commented-out plugins can be found at:
-# https://github.com/plomlompom/PlomWikiPlugins
+# Plugins file. Insert plugin files' relative paths. Comment out with #.
+#
+# Copyright 2010-2012 Christian Heller / <http://www.plomlompom.de/>
+# License: AGPLv3 or any later version. See file LICENSE for details.
 
-# You'll probably want to have *some* wiki markup functions.
 plugins/StandardMarkup.php
-
-# Functions used by more than one plugin (like Search and AutoLink).
-#plugins/StandardLib.php
-
-# Nice-to-have plug-ins.
-#plugins/Search.php
-#plugins/RecentChanges.php
-#plugins/AutoLink.php
-#plugins/Comments.php
-#plugins/PwPages.php
-#plugins/AutoSum.php
-#plugins/Today.php
-#plugins/Atom.php
-
-# Debugging.
-#plugins/DiffCheck.php
-
-# Alternative designs.
-#plugins/PlomDesign.php
-
-# Language translation plugins. Put these at the end.
-#plugins/German.php

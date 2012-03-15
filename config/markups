@@ -1,4 +1,8 @@
-# Insert markups in the order they're to be called on pages. Comment out with #.
+# Markups file. Sets order of markup functions. Comment out with #.
+#
+# Copyright 2010-2012 Christian Heller / <http://www.plomlompom.de/>
+# License: AGPLv3 or any later version. See file LICENSE for details.
+
 EscapeHTML
 MarkupEscape
 MarkupLinks
@@ -6,9 +10,7 @@ MarkupHeadings
 MarkupStrong
 MarkupEmphasis
 MarkupDeleted
-#MarkupToday
 MarkupCode
 MarkupLists
 MarkupParagraphs
 MarkupUnescape
-#Autolink_Markup

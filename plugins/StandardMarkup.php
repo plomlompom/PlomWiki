@@ -1,7 +1,8 @@
 <?php
-# PlomWiki plugin: StandardMarkup
+# PlomWiki plugin: StandardMarkup. Provides default markup functions.
 # 
-# Provides the PlomWiki standard markup, via a regex-based engine.
+# Copyright 2010-2012 Christian Heller / <http://www.plomlompom.de/>
+# License: AGPLv3 or any later version. See file LICENSE for details.
 
 $s = ReadStringsFile($plugin_strings_dir.'StandardMarkup', $s);
 

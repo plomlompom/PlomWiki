@@ -1,4 +1,11 @@
 §
+#§######################################################################
+  # Default design strings file. Sets snippets for HTML generation.    #
+  #                                                                    #
+  # Copyright 2010-2012 Christian Heller / <http://www.plomlompom.de/> #
+  # License: AGPLv3 or any later version. See file LICENSE for details.#
+  ######################################################################
+§
 #§######################################################
   # Code to execute during plomwiki.php initialization #
   ######################################################
@@ -154,3 +161,5 @@ body { background: black; color: white; }
 </body>
 §
 WorkScreenReload():redir§; URL=
+§
+#§

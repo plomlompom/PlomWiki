@@ -1,4 +1,11 @@
 §
+#§######################################################################
+  # Default phrases strings file. Sets English phrases for HTML output.#
+  #                                                                    #
+  # Copyright 2010-2012 Christian Heller / <http://www.plomlompom.de/> #
+  # License: AGPLv3 or any later version. See file LICENSE for details.#
+  ######################################################################
+§
 #§#######################################################
   # Phrases for initialization and main design template #
   #######################################################
@@ -16,6 +23,12 @@ Edit§Edit
 History§History
 §
 IllegalPageTitle§Illegal page title. Only alphanumeric characters and "-" allowed.
+§
+LicensePhrase§"PlomWiki" licensed under the <a href="§URL_AGPLv3§">AGPLv3</a>. Source code available <a href="§URL_Source§">on GitHub</a>.
+§
+URL_Source§https://github.com/plomlompom/PlomWiki
+§
+URL_AGPLv3§http://www.gnu.org/licenses/agpl-3.0.html
 §
 #§######################
   # Action_page_view() #
@@ -112,3 +125,5 @@ PrepareWrite_page():NothingChanged§You changed nothing!
   ###############
 §
 ErrorFail():title§Error
+§
+#§

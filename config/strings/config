@@ -1,4 +1,13 @@
 §
+#§######################################################################
+  # Default config values strings file.                                #
+  #                                                                    #
+  # Copyright 2010-2012 Christian Heller / <http://www.plomlompom.de/> #
+  # License: AGPLv3 or any later version. See file LICENSE for details.#
+  ######################################################################
+§
 page_max_lines§6000
 §
 page_max_length§250000
+§
+#§
