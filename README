@@ -57,7 +57,7 @@ To delete a page, reduce page text to "delete". Empty page text won't be
 posted.
 
 INTRODUCTION TO TECHNICAL DETAILS (see source code comments for details)
-----------------------------------
+---------------------------------
 
 Wiki pages are stored as text files of their current version in pages/
 with the pagename as the filename. In pages/diffs/, edit histories of
