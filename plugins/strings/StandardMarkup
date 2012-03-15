@@ -1,4 +1,11 @@
 §
+#§######################################################################
+  # StandardMarkup strings file, providing markup syntax cheatsheet.   #
+  #                                                                    #
+  # Copyright 2010-2012 Christian Heller / <http://www.plomlompom.de/> #
+  # License: AGPLv3 or any later version. See file LICENSE for details.#
+  ######################################################################
+§
 markup_help§<h3>PlomWiki markup cheatsheet</h3>
 <p>In-line:</p>
 <pre style="white-space: pre-wrap;">[*<strong>strong</strong>*] [/<em>emphasis</em>/] [-<del>deleted</del>-] [[<a href="§$title_root§PagenameOrURL">PagenameOrURL</a>]] [[PagenameOrURL|<a href="§$title_root§PagenameOrURL">Text displayed instead</a>]] [=[/unformatted/] [*text*]=]</pre>
@@ -16,3 +23,5 @@ markup_help§<h3>PlomWiki markup cheatsheet</h3>
 preformatted
 @]
 </pre>
+§
+#§
