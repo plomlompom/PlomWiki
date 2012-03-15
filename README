@@ -146,10 +146,9 @@ value of $esc ("\r" by default; it can be safely used as it is filtered
 from all user input by Sanitize()). $s' most important value is
 $s["design"]: it's used by OutputHTML() as its main template for HTML
 output. As all string values may, it contains placeholders for other
-values, identified by the value's key name starting and
-end by $esc. OutputHTML() recursively calls ReplaceEscapedVars(), which
-looks up and replaces all these placeholders with their respective $s
-value.
+values, identified by the value's key name starting and end by $esc. 
+OutputHTML() recursively calls ReplaceEscapedVars(), which looks up and
+replaces all these placeholders with their respective $s value.
 
 Naming conventions
 ------------------
