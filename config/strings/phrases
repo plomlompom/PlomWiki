@@ -10,7 +10,7 @@
   # Phrases for initialization and main design template #
   #######################################################
 §
-WikiTitle§PlomWiki BETA
+WikiTitle§PlomWiki
 §
 JumpStart§Jump to Start page
 §
@@ -124,6 +124,6 @@ PrepareWrite_page():NothingChanged§You changed nothing!
   # ErrorFail() #
   ###############
 §
-ErrorFail():title§Error
+ErrorFail():title§Error!
 §
 #§

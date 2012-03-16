@@ -20,13 +20,10 @@ else if (substr($action, 7, 5) !== "page_")
   $s["ActionLinks_page"] = "";
 ';
 $hook_ErrorFail .= '
-# $s["css_class"]  = "fail";
-$s["css"]        = $s["css_fail"];
+$s["css_main"]       .= $s["css_fail"];
 if ($msg = "IllegalPageTitle")
   $s["ActionLinks_page"] = "";
 ';
-if ('main' == substr($s['css_class'], 0, 7))
-  $s['css'] .= $s['css_main'];
 §
 #§#################################
   # Main template, for every page #
@@ -36,6 +33,7 @@ design§<!DOCTYPE html>
 <meta charset="UTF-8">
 <style type="text/css">
 .license { text-align: right; font-size: 0.8em; }
+.main { padding: 10px; padding-top: 0px; §css_main§}
 §css§
 </style>
 <title>§title§</title>
@@ -47,7 +45,7 @@ design§<!DOCTYPE html>
 <h1>§title§</h1> §ActionLinks_page§
 <hr />
 
-<div class="§css_class§">
+<div class="main">
 §content§
 </div>
 
@@ -62,11 +60,18 @@ ActionLinks_page§
   # CSS #
   #######
 §
-css_class§main
+css_fail§font-weight: bold;
 §
-css_main§.main { padding: 10px; padding-top: 0px; }
+css_edit§
+textarea { font-family: monospace; width:100%; }
 §
-css_fail§.main { font-weight: bold; }
+css_history§
+pre { white-space: pre-wrap; text-indent:-12pt; margin-top:0px; margin-bottom:0px; padding-left: 20px; }
+.diff_text { margin-left:12pt; }
+.diff_desc { padding: 10px; text-indent:-8pt; }
+.diff_meta { background-color: #bbbbbb }
+.diff_ins { background-color: #55ff55 }
+.diff_del { background-color: #ff5555 }
 §
 #§######################
   # Action_page_view() #
@@ -77,9 +82,6 @@ Action_page_view():none§<p>§PageDontExist§ <a href="§title_url§&amp;action=
 #§######################
   # Action_page_edit() #
   ######################
-§
-css_edit§
-textarea { font-family: monospace; width:100%; }
 §
 Action_page_edit():form§<form method="post" action="§title_url§&amp;action=write&amp;t=page">
 <textarea name="text" rows="§Action_page_edit():TextareaRows§">
@@ -109,14 +111,6 @@ Admin §pw§: <input name="pw" type="password" />
 #§#########################
   # Action_page_history() #
   #########################
-§
-css_history§
-pre { white-space: pre-wrap; text-indent:-12pt; margin-top:0px; margin-bottom:0px; padding-left: 20px; }
-.diff_text { margin-left:12pt; }
-.diff_desc { padding: 10px; text-indent:-8pt; }
-.diff_meta { background-color: #bbbbbb }
-.diff_ins { background-color: #55ff55 }
-.diff_del { background-color: #ff5555 }
 §
 Action_page_history():none§<p>§PageNoHistory§</p>
 §
