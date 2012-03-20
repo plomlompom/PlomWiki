@@ -113,7 +113,7 @@ Admin §pw§: <input name="pw" type="password" />
 §
 Action_page_history():none§<p>§PageNoHistory§</p>
 §
-Action_page_history():diff§<div id="§diff_id§" class="diff_desc">§diff_time§: §diff_summ§ (§diff_auth§) (<a href="§title_url§&amp;action=page_revert&amp;id=§diff_id§">§revert§</a>):</div>
+Action_page_history():diff§<div id="§diff_id§" class="diff_desc">§diff_time§ (<a href="§title_url§&amp;action=page_revert&amp;id=§diff_id§">§revert§</a>): §diff_summ§ (§diff_auth§):</div>
 <div class="diff_text">
 §diff_text§</div>
 
