@@ -13,14 +13,14 @@
 code§
 $hook_before_action .= '
 if ($action == "Action_page_history")
-  $s["css"]         .= $s["css_history"];
+  $s["css"] .= $s["css_history"];
 else if ($action == "Action_page_edit")
-  $s["css"]         .= $s["css_edit"];
+  $s["css"] .= $s["css_edit"];
 else if (substr($action, 7, 5) !== "page_")
   $s["ActionLinks_page"] = "";
 ';
 $hook_ErrorFail .= '
-$s["css_main"]       .= $s["css_fail"];
+$s["css_main"] .= $s["css_fail"];
 if ($msg = "IllegalPageTitle")
   $s["ActionLinks_page"] = "";
 ';
@@ -32,10 +32,8 @@ if ($msg = "IllegalPageTitle")
 design§<!DOCTYPE html>
 <meta charset="UTF-8">
 <style type="text/css">
-.license { text-align: right; font-size: 0.8em; }
-.main { padding: 10px; padding-top: 0px; §css_main§}
-§css§
-</style>
+.main { padding: 0px 10px; §css_main§}
+§css§</style>
 <title>§title§</title>
 
 §WikiTitle§: 
@@ -49,7 +47,8 @@ design§<!DOCTYPE html>
 §content§
 </div>
 
-<div class="license">§LicensePhrase§</div>
+<hr />
+§LicensePhrase§
 §
 ActionLinks_page§
 <a href="plomwiki.php?title=§page_title§&amp;action=page_view">§View§</a> 
@@ -62,16 +61,16 @@ ActionLinks_page§
 §
 css_fail§font-weight: bold;
 §
-css_edit§
-textarea { font-family: monospace; width:100%; }
+css_edit§textarea { font-family: monospace; width:100%; }
+
 §
-css_history§
-pre { white-space: pre-wrap; text-indent:-12pt; margin-top:0px; margin-bottom:0px; padding-left: 20px; }
-.diff_text { margin-left:12pt; }
+css_history§pre { white-space: pre-wrap; text-indent:-12pt; margin-top:0px; margin-bottom:0px; padding-left: 20px; }
 .diff_desc { padding: 10px; text-indent:-8pt; }
+.diff_text { margin-left:12pt; }
 .diff_meta { background-color: #bbbbbb }
 .diff_ins { background-color: #55ff55 }
 .diff_del { background-color: #ff5555 }
+
 §
 #§######################
   # Action_page_view() #
