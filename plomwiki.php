@@ -1,12 +1,15 @@
 <?php
 # PlomWiki: extensible PHP wiki with wiki markup and page versioning.
-# 
+#
 # Copyright 2010-2012 Christian Heller / <http://www.plomlompom.de/>
 # License: AGPLv3 or any later version. See file LICENSE for details.
 
 ########################################################################
 #                     I N I T I A L I Z A T I O N                      #
 ########################################################################
+
+# Report all real errors, only.
+error_reporting(E_ALL ^ E_NOTICE);
 
 # Filesystem info / important paths.
 $config_dir             = 'config/';
