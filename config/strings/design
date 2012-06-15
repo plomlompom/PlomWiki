@@ -84,16 +84,18 @@ Action_page_view():none§<p>§PageDontExist§ <a href="§title_url§&amp;action=
 §
 Action_page_edit():form§<form method="post" action="§title_url§&amp;action=write&amp;t=page">
 <textarea name="text" rows="§Action_page_edit():TextareaRows§">
-§text§</textarea>
+§text§</textarea>§Action_page_edit():form_Plugins§
 §Author§: <input name="author" type="text" />
 §Summary§: <input name="summary" type="text" />
-Admin §pw§: <input name="pw" type="password" /><input name="auth" type="hidden" value="*" />
+§PageEditAuth§
 <input type="submit" value="OK" />
 </form>
 
 §markup_help§
 §
 Action_page_edit():TextareaRows§20
+§
+PageEditAuth§Admin §pw§: <input name="pw" type="password" /><input name="auth" type="hidden" value="*" />
 §
 #§########################
   # Action_page_revert() #
