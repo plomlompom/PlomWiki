@@ -40,7 +40,9 @@ design§<!DOCTYPE html>
 <a href="§root_rel§?title=Start">§JumpStart§</a>
 <a href="§root_rel§?action=set_pw_admin">§SetAdminPW§</a> §ActionLinks_Plugins§
 
-<h1>§title§</h1> §ActionLinks_page§
+<h1>§title§</h1>
+§BelowTitle§
+§ActionLinks_page§
 <hr />
 
 <div class="main">
@@ -50,8 +52,7 @@ design§<!DOCTYPE html>
 <hr />
 §LicensePhrase§
 §
-ActionLinks_page§
-<a href="plomwiki.php?title=§page_title§&amp;action=page_view">§View§</a>
+ActionLinks_page§<a href="plomwiki.php?title=§page_title§&amp;action=page_view">§View§</a>
 <a href="plomwiki.php?title=§page_title§&amp;action=page_edit">§Edit§</a>
 <a href="plomwiki.php?title=§page_title§&amp;action=page_history">§History§</a> §ActionLinks_page_Plugins§
 §
