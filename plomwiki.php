@@ -48,16 +48,16 @@ if (is_file($setup_file))
 $s['root_rel']   = 'plomwiki.php';
 $s['title_root'] = $s['root_rel'].'?title=';
 
-# These help to know when to orderly end before being killed by server. 
+# These help to know when to orderly end before being killed by server.
 $max_exec_time = ini_get('max_execution_time');
 $now           = time();
 
 # Regex for legal key names. '*' = admin key. Plugins may add via '|'.
 $legal_pw_key = '\*';
-    
+
 # Get page title, build dependent variables. $legal_title defines rules
 # for page titles: may consist of alphanum chars and hyphens. Violation
-# to be punished later. A harmless fallback replaces empty page titles. 
+# to be punished later. A harmless fallback replaces empty page titles.
 $legal_title = '[a-zA-Z0-9-]+';
 $title       = $_GET['title'];
 if (!$title)
@@ -97,7 +97,7 @@ function Action_page_view() {
 # Formatted / marked-up display of a wiki page.
   global $s, $page_path;
   $s['title'] = $s['page_title'];
-  
+
   # Get file text. If none, show page creation invitation. Else, markup.
   if (is_file($page_path))
     $s['content'] = Markup(file_get_contents($page_path));
@@ -112,7 +112,7 @@ function Action_page_edit() {
   $s['title'] = $s['Action_page_edit():title'];
 
   # If no page file, start $text empty. Otherwise, escape evil chars.
-  if (is_file($page_path)) 
+  if (is_file($page_path))
     $s['text'] = EscapeHTML(file_get_contents($page_path));
   else
     $s['text'] = '';
@@ -124,11 +124,11 @@ function Action_page_edit() {
 function Action_page_history() {
 # Show version history of page (based on diff file), offer reverting.
   global $diff_path, $s, $nl;
-  $s['title']   = $s['Action_page_history():title']; 
+  $s['title']   = $s['Action_page_history():title'];
 
   # Read in diff list from path; if none found, output fallback message.
   $s['content'] = $s['Action_page_history():none'];
-  if (is_file($diff_path)) 
+  if (is_file($diff_path))
     $diff_list = DiffList($diff_path);
 
   # Add to output diff element by diff element, formatted.
@@ -150,7 +150,7 @@ function Action_page_history() {
           $theme = 'Action_page_history():diff_del';
         else
           $theme = 'Action_page_history():diff_meta';
-        if ($line[0] == '<' or $line[0] == '>') 
+        if ($line[0] == '<' or $line[0] == '>')
           $line = EscapeHTML(substr($line, 1));
         $s['line'] = $line;
         $s['diff_text'] .= ReplaceEscapedVars($s[$theme]); }
@@ -162,7 +162,7 @@ function Action_page_history() {
 function Action_page_revert() {
 # Prepare version reversion and ask user for confirmation.
   global $diff_path, $s, $page_path;
-  
+
   # Try diff ID provided by user, determine its time. Fail if necessary.
   $id        = $_GET['id'];
   $diff_list = DiffList($diff_path);
@@ -173,7 +173,7 @@ function Action_page_revert() {
   # Reverse-patch $text back through $diff_list until $i hits $id.
   $text = file_get_contents($page_path);
   foreach ($diff_list as $i => $diff_data) {
-    $reversed_diff = PlomDiffReverse($diff_data['text']); 
+    $reversed_diff = PlomDiffReverse($diff_data['text']);
     $text          = PlomPatch($text, $reversed_diff);
     if ($id == $i) break; }
   $s['text'] = EscapeHTML($text);
@@ -182,7 +182,7 @@ function Action_page_revert() {
   $s['title']  = $s['Action_page_revert():title'];
   $s['content']= $s['Action_page_revert():form'];
   OutputHTML(); }
-  
+
 ########################################################################
 #                        D B      W R I T I N G                        #
 ########################################################################
@@ -192,7 +192,7 @@ function Action_page_revert() {
 function Action_write() {
 # Trigger writing to DB. Expects password $_POST['pw'] and target type
 # $_GET['t'], determining which PrepareWrite_() function shapes details.
-  global $s, $todo_urgent; 
+  global $s, $todo_urgent;
   $pw   = $_POST['pw'];
   $auth = $_POST['auth'];
   $t    = $_GET['t'];
@@ -205,7 +205,7 @@ function Action_write() {
   $prep_func = 'PrepareWrite_'.$t;
   if (function_exists($prep_func))
     $todo_txt = $prep_func($redir);
-  else 
+  else
     ErrorFail('Action_write():InvalidTarget');
 
   # If $redir URL was not determined, define the most harmless one.
@@ -235,7 +235,7 @@ function WorkTodo($todo, $do_reload = FALSE) {
       if (time() >= $limit_pos) {
         $stop_by_time = TRUE;
         break; }
-    
+
       # Eval / work through lines not empty or commented out. Comment
       # out lines worked through, except for unfinished WorkTodo's.
       $pos  = ftell($p_todo);
@@ -253,7 +253,7 @@ function WorkTodo($todo, $do_reload = FALSE) {
 
     # Delete file only if stopped by EOF. In any case, unlock it.
     fclose($p_todo);
-    if (!$stop_by_time) 
+    if (!$stop_by_time)
       unlink($todo);
     UnLock($todo); }
 
@@ -292,7 +292,7 @@ function NewTemp($string = '') {
 
   # Collect numerical filenames of temp files in $tempfiles.
   $tempfiles = array(0);
-  while (FALSE !== ($fn = readdir($p_dir))) 
+  while (FALSE !== ($fn = readdir($p_dir)))
     if (preg_match('/^[0-9]*$/', $fn))
       $tempfiles[] = $fn;
 
@@ -311,10 +311,10 @@ function NewTemp($string = '') {
 function Action_set_pw_admin() {
 # Display page / form for setting new admin password.
   global $s;
-  $s['title']   = $s['Action_set_pw_admin():title']; 
+  $s['title']   = $s['Action_set_pw_admin():title'];
   $s['content'] = $s['Action_set_pw_admin():form'];
   OutputHTML(); }
-  
+
 function PrepareWrite_admin_sets_pw() {
 # Return todo file text for adding adding/updating PW in password file.
   global $legal_pw_key, $nl, $pw_path;
@@ -341,12 +341,12 @@ function PrepareWrite_admin_sets_pw() {
   # Return todo file text.
   $tmp = NewTemp(substr($pw_file_text, 0, -1));
   return 'if (is_file("'.$tmp.'")) rename("'.$tmp.'","'.$pw_path.'");';}
-  
+
 function CheckPW($key, $pw_posted, $target) {
 # Check for authorization of $key to write to $target with $pw_posted.
   global $permissions, $pw_path, $work_failed_logins_dir;
   $return = FALSE;
- 
+
   # Recently failed IPs wait $delay seconds before login next chance.
   $ip_file = $work_failed_logins_dir.$_SERVER['REMOTE_ADDR'];
   $delay   = 10;
@@ -382,7 +382,7 @@ function ReadPasswordList($path) {
   # Trigger error if password file is not found / empty.
   if (!$content)
     ErrorFail('ReadPasswordList():NoPWfile');
-  
+
   # Build $passwords list from file's $content.
   $passwords = array();
   $lines     = explode($nl, $content);
@@ -398,7 +398,7 @@ function ReadPasswordList($path) {
       $passwords[$range] = $pw; } }
 
   # Overwrite any key '$salt' smuggled in DESPITE $legal_pw_key.
-  $passwords['$salt'] = $salt; 
+  $passwords['$salt'] = $salt;
   return $passwords; }
 
 ############################# Page writing #############################
@@ -416,9 +416,9 @@ function PrepareWrite_page(&$redir) {
   # Check for error conditions: $text empty /unchanged / too long/large.
   if (is_file($page_path))
     $old_text = file_get_contents($page_path);
-  if (!$text)         
+  if (!$text)
     ErrorFail('PrepareWrite_page():NoEmptyPage');
-  if ($text == $old_text)  
+  if ($text == $old_text)
     ErrorFail('PrepareWrite_page():NothingChanged');
   if (count(explode($nl, $text)) > $s['page_max_lines'])
     ErrorFail('PrepareWrite_page():MaxLinesText');
@@ -441,13 +441,13 @@ function PrepareWrite_page(&$redir) {
              .',"'.$t2.'","'.$t3.'","'.$t4.'","'.$t5.'",'.$now.');'.$nl.
          'WorkTodo("'.$todo_plugin.'");'; }
 
-function WritePage($title, $todo_plugins, $tmp_diff, $tmp_PluginsTodo, 
+function WritePage($title, $todo_plugins, $tmp_diff, $tmp_PluginsTodo,
                    $tmp_page, $path_src_text, $path_src_author,
                    $path_src_summary, $timestamp) {
 # Do all the tasks connected to the updating of a wiki page.
   global $del_dir, $diff_dir, $esc, $hook_WritePage,
          $hook_WritePage_diff, $nl, $pages_dir;
-  $page_path = $pages_dir.$title; 
+  $page_path = $pages_dir.$title;
   $diff_path = $diff_dir .$title;
   $text      = file_get_contents($path_src_text);
   $author    = file_get_contents($path_src_author);
@@ -456,14 +456,14 @@ function WritePage($title, $todo_plugins, $tmp_diff, $tmp_PluginsTodo,
   # If 'delete', rename / timestamp page & diff, move both to $del_dir.
   if ($text == 'delete') {
     if (is_file($page_path)) {
-      unlink($tmp_diff); # Clean up
-      unlink($tmp_page); # unneeded temps.
       $path_diff_del = $del_dir.$title.',del-diff-'.$timestamp;
       $path_page_del = $del_dir.$title.',del-page-'.$timestamp;
       if (is_file($diff_path))
         rename($diff_path, $path_diff_del);
       if (is_file($page_path))
-        rename($page_path, $path_page_del); } }
+        rename($page_path, $path_page_del); }
+    unlink($tmp_diff); # Clean up
+    unlink($tmp_page); } # unneeded temps.
   else {
 
     # Get diff to earlier version, add to old diffs, safely overwrite.
@@ -473,8 +473,8 @@ function WritePage($title, $todo_plugins, $tmp_diff, $tmp_PluginsTodo,
       $old_text = $esc;  # Code to PlomDiff(): $old_text has zero lines.
       if (is_file($page_path))
         $old_text = file_get_contents($page_path);
-    
-      # Determine $diff_old and $new_diff_id based on previous diffs.    
+
+      # Determine $diff_old and $new_diff_id based on previous diffs.
       $new_diff_id = 0;
       if (is_file($diff_path)) {
         $diff_old    = file_get_contents($diff_path);
@@ -518,14 +518,14 @@ function ReadAndTrimLines($path) {
 # Read file into list of all lines, sans comments and ending whitespace.
   global $nl;
   $lines = explode($nl, file_get_contents($path));
-  $list = array(); 
+  $list = array();
   foreach ($lines as $line) {
     $hash_pos = strpos($line, '#');
     if ($hash_pos !== FALSE)
       $line = substr($line, 0, $hash_pos);
     $line = rtrim($line);
     if ($line)
-      $list[] = $line; } 
+      $list[] = $line; }
   return $list; }
 
 function Sanitize($text) {
@@ -553,7 +553,7 @@ function DiffList($diff_path) {
       # Harvest diff data/metadata from $diff_txt into $diff_list[$id].
       $diff_lines = explode($nl, $diff_txt);
       $diff_txt_new = array();
-      foreach ($diff_lines as $line_n => $line) 
+      foreach ($diff_lines as $line_n => $line)
         if     ($line_n == 0) $id                        = $line;
         elseif ($line_n == 1) $diff_list[$id]['time']    = $line;
         elseif ($line_n == 2) $diff_list[$id]['author']  = $line;
@@ -564,7 +564,7 @@ function DiffList($diff_path) {
   return $diff_list; }
 
 function ReadStringsFile($path, $strings = array()) {
-# Read in strings file to, & return $strings. May overwrite its values. 
+# Read in strings file to, & return $strings. May overwrite its values.
   global $esc, $s, $nl;
 
   # If empty, set $s variables necessary for a minimal ErrorFail().
@@ -578,7 +578,7 @@ function ReadStringsFile($path, $strings = array()) {
     $s['design'] = '<!DOCTYPE html><title>'.$esc.'title'.$esc.'</title>'
                    .$nl.'<body><p>'.$esc.'content'.$esc.'</p></body>';
 
-  # Read in file and escape character from 1st line. Fail if necessary.  
+  # Read in file and escape character from 1st line. Fail if necessary.
   if (!is_file($path))
     ErrorFail('NoS');
   $txt = file_get_contents($path);
@@ -586,8 +586,8 @@ function ReadStringsFile($path, $strings = array()) {
   if (!$pos)
     ErrorFail('BadS');
   $e   = substr($txt, 0, $pos);
-  
-  # Read in $r variables from remaining file. Set $esc as escape char. 
+
+  # Read in $r variables from remaining file. Set $esc as escape char.
   $txt    = substr($txt, $pos + 1);
   $fields = explode($nl.$e.$nl, $txt);
   foreach ($fields as $field) {
@@ -597,14 +597,14 @@ function ReadStringsFile($path, $strings = array()) {
       $value         = substr($field, $pos + strlen($e));
       $value         = str_replace($e, $esc, $value);
       $strings[$key] = $value; } }
-  
+
   return $strings; }
-  
+
 ################################ Output ################################
 
 function Markup($text) {
 # Apply to $text markup functions in order described by markups file.
-  global $markup_list_path; 
+  global $markup_list_path;
   $lines = ReadAndTrimLines($markup_list_path);
   foreach ($lines as $line)
     $text = $line($text);
@@ -648,7 +648,7 @@ function OutputHTML() {
 
 function ReplaceEscapedVars($string) {
 # Replace substrings of $string delimited by $esc with values from $s.
-  global $esc, $s; 
+  global $esc, $s;
   $vars = array();
 
   # Explode $string by $esc, collect $esc-surrounded strings in $vars.
@@ -658,7 +658,7 @@ function ReplaceEscapedVars($string) {
     if ($collect) {
       $vars[] = $part;
       $collect = FALSE; }
-    else 
+    else
       $collect = TRUE;
 
   # Replace variable names in $vars with $s variable contents.
@@ -670,11 +670,11 @@ function ReplaceEscapedVars($string) {
   $collect = FALSE;
   $i = 0;
   foreach ($strings as $n => $part)
-    if ($collect) { 
+    if ($collect) {
       $string .= $vars[$i];
       $i++;
       $collect = FALSE; }
-    else { 
+    else {
       $string .= $part;
       $collect = TRUE; }
 
@@ -689,7 +689,7 @@ function PlomDiff($text_A, $text_B) {
   global $esc, $nl;
 
   # Transform $text_{A,B} into arrays of lines, append empty line 0.
-  $lines_A = explode($nl, $text_A);    $lines_B = explode($nl, $text_B); 
+  $lines_A = explode($nl, $text_A);    $lines_B = explode($nl, $text_B);
   array_unshift($lines_A, $esc);       array_unshift($lines_B, $esc);
   $lines_A[] = $esc;                   $lines_B[] = $esc;
 
@@ -712,18 +712,18 @@ function PlomDiff($text_A, $text_B) {
     if ($offset_A == $n_A_next + 1) {
       $char = 'a';
       $A = $offset_A - 1;
-      list($B, $txt_A) = 
+      list($B, $txt_A) =
              PlomDiff_RangeLines($lines_B, $offset_B, $n_B_next, '>'); }
     elseif ($offset_B == $n_B_next + 1) {
       $char = 'd';
       $B = $offset_B - 1;
-      list($A, $txt_B) = 
+      list($A, $txt_B) =
              PlomDiff_RangeLines($lines_A, $offset_A, $n_A_next, '<'); }
     else {
-      $char = 'c'; 
-      list($A, $txt_A) = 
+      $char = 'c';
+      list($A, $txt_A) =
              PlomDiff_RangeLines($lines_A, $offset_A, $n_A_next, '<');
-      list($B, $txt_B) = 
+      list($B, $txt_B) =
              PlomDiff_RangeLines($lines_B, $offset_B, $n_B_next, '>'); }
     $diffs .= $A.$char.$B.$txt_A.$txt_B.$nl; }
 
@@ -741,7 +741,7 @@ function PlomDiff_AddUnchangedSections($lines_A, $lines_B, &$equals) {
 
 function PlomDiff_AddUnchangedSection($lines_A, $lines_B, &$equals) {
 # Add to $equal largest non-change between A and B, return before/after.
- 
+
   # Find the largest section of unchanged lines between $lines_{A,B}.
   $ln_old = 0;
   foreach ($lines_A as $n_A => $line_A) {
@@ -763,7 +763,7 @@ function PlomDiff_AddUnchangedSection($lines_A, $lines_B, &$equals) {
       if ($n_A == $largest_equal[0]) break; $a++; }
   foreach ($lines_B as $n_B => $dump) {
       if ($n_B == $largest_equal[1]) break; $b++; }
-  $start_A  = key($lines_A); 
+  $start_A  = key($lines_A);
   $start_B  = key($lines_B);
   $bef[] = array_slice($lines_A, 0, $largest_equal[0] - $start_A, TRUE);
   $bef[] = array_slice($lines_B, 0, $largest_equal[1] - $start_B, TRUE);
@@ -787,13 +787,13 @@ function PlomDiffReverse($old_diff) {
   $old_diff = explode($nl, $old_diff);
   $new_diff = '';
   foreach ($old_diff as $line_n => $line) {
-    if     ($line[0] == '<') $line[0] = '>'; 
+    if     ($line[0] == '<') $line[0] = '>';
     elseif ($line[0] == '>') $line[0] = '<';
     else {
-      foreach (array('c' => 'c', 'a' => 'd', 'd' => 'a') 
+      foreach (array('c' => 'c', 'a' => 'd', 'd' => 'a')
                as $char => $reverse) {
         if (strpos($line, $char)) {
-          list($left, $right) = explode($char, $line); 
+          list($left, $right) = explode($char, $line);
           $line = $right.$reverse.$left; break; } } }
     $new_diff .= $line.$nl; }
   $new_diff = substr($new_diff, 0, -1);
@@ -818,7 +818,7 @@ function PlomPatch($text_A, $diff) {
   foreach ($patch_tmp as $action_tmp => $lines) {
     if     (strpos($action_tmp, 'd')) {
              list($left, $ignore)  = explode('d', $action_tmp);
-             if (!strpos($left, ',')) 
+             if (!strpos($left, ','))
                $left               = $left.','.$left;
              list($start, $end)    = explode(',', $left);
              $action               = 'd'.$start;
@@ -834,7 +834,7 @@ function PlomPatch($text_A, $diff) {
              list($start, $end)    = explode(',', $left);
              $action               = 'd'.$start;
              $patch[$action]       = $end;
-             $action               = 'a'.$start; 
+             $action               = 'a'.$start;
              foreach ($lines as $line) if ($line[0] == '>')
                $patch[$action][]   = $line; } }
 
@@ -845,9 +845,9 @@ function PlomPatch($text_A, $diff) {
     $lines_A[$key + 1] = $nl.$line;
   if     ($text_A == '')   $lines_A = array($nl);    # Special cases for
   elseif ($text_A == $esc) $lines_A = array($nl);     # empty or almost-
-  elseif ($text_A == $nl)  $lines_A = array($nl, $nl); # empty texts. 
+  elseif ($text_A == $nl)  $lines_A = array($nl, $nl); # empty texts.
   $lines_B = $lines_A;
-  
+
   # According to $patch, add or delete line lengths on $lines_B.
   foreach ($patch as $action => $value) {
     $char          = $action[0];
