@@ -58,7 +58,9 @@ function MarkupLinks($text) {
         $to_link = str_replace($umlaut[0], $umlaut[1], $to_link);
       foreach ($gaps as $gap)
         $to_link = str_replace($gap, ' ', $to_link);
-      $to_link=preg_replace('/ ([a-z])/e','strtoupper("$1")',$to_link); 
+      $to_link=preg_replace_callback('/ ([a-z])/',
+        function($match) { return strtoupper($match[1]); },
+        $to_link);
       $to_link=str_replace(' ', '', $to_link); }
 
     # Try collecting from $to_link HTML link parameters.
