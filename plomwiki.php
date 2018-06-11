@@ -1,7 +1,7 @@
 <?php
 # PlomWiki: extensible PHP wiki with wiki markup and page versioning.
 #
-# Copyright 2010-2012 Christian Heller / <http://www.plomlompom.de/>
+# Copyright 2010-2012, 2018 Christian Heller / <http://www.plomlompom.de/>
 # License: AGPLv3 or any later version. See file LICENSE for details.
 
 ########################################################################
@@ -73,6 +73,15 @@ $s['title_url']  = $s['title_root'].$title;
 foreach (ReadAndTrimLines($plugin_list_path) as $line)
   require($line);
 eval($s['code']);
+
+# Remove login failure files older than one day.
+Lock($work_failed_logins_dir);
+$p_dir = opendir($work_failed_logins_dir);
+while (FALSE !== ($fn = readdir($p_dir)))
+  if ('.' !== $fn[0])
+    if ((time()-filectime($work_failed_logins_dir.$fn)) > 86400)
+      unlink($work_failed_logins_dir.$fn);
+UnLock($work_failed_logins_dir);
 
 # Before executing user's action, do urgent work if todo_urgent found.
 if (is_file($todo_urgent))
